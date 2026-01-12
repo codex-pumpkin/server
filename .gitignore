@@ -1,0 +1,8 @@
+myenv
+.env
+.idea
+database.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
