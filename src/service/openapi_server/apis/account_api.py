@@ -4,10 +4,9 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from service.openapi_server.apis.account_api_base import BaseAccountApi
-#TODO: replace impl with business package
-import service.openapi_server.impl
+#TODO: reduce import to needed imports
 
+import business
 from fastapi import (  # noqa: F401
     APIRouter,
     Body,
@@ -21,6 +20,8 @@ from fastapi import (  # noqa: F401
     Response,
     Security,
     status,
+    UploadFile,
+    File
 )
 
 from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
@@ -35,8 +36,8 @@ from service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
-#TODO: replace impl with business package
-ns_pkg = service.openapi_server.impl
+#TODO: import will be reduced to necessary files
+ns_pkg = business
 for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     importlib.import_module(name)
 
@@ -57,9 +58,7 @@ async def account_get(
     ),
 ) -> AccountResponse:
     """Returns the account information for the currently authenticated user."""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_get()
+    #TODO: call business logic
 
 
 @router.put(

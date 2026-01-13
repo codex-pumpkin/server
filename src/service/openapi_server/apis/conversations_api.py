@@ -4,9 +4,13 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from service.openapi_server.apis.conversations_api_base import BaseConversationsApi
-#TODO: replace impl with business package
-import service.openapi_server.impl
+#TODO: businesslogic needs to implement IInterface Manager
+from business import IInferenceManger
+
+#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
+#should return a object extending from IInferenceManager
+from business import ObjectHandler
+
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -36,9 +40,6 @@ from service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
-ns_pkg = service.openapi_server.impl
-for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
-    importlib.import_module(name)
 
 
 @router.get(
@@ -57,9 +58,8 @@ async def conversations_get(
     ),
 ) -> List[ConversationResponse]:
     """Returns a list of all conversations for the current user. """
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_get()
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.getConversationsByUser(token_JWT.user_id)
 
 
 @router.post(
@@ -81,9 +81,8 @@ async def conversations_post(
     ),
 ) -> ConversationResponse:
     """Starts a new conversation with the given message, LLM configuration, and target language. """
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_post(conversation_request)
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.startConversation(token_JWT.user_id, conversation_request)
 
 
 @router.put(
@@ -106,9 +105,8 @@ async def conversations_id_put(
     ),
 ) -> ConversationResponse:
     """Updates the &#x60;name&#x60; and &#x60;pinned&#x60; attributes of a conversation. """
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_id_put(id, update_conversation_request)
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.executeRegeneration(token_JWT.user_id, id, update_conversation_request)
 
 
 @router.delete(
@@ -129,10 +127,8 @@ async def conversations_id_delete(
     ),
 ) -> None:
     """Deletes the conversation with the given Id. """
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_id_delete(id)
-
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.removeConversation(token_JWT.user_id, id)
 
 @router.put(
     "/conversations/{id}/messages",
@@ -151,9 +147,8 @@ async def conversations_id_messages_put(
     ),
 ) -> MessageResponse:
     """Resend a message by providing a new prompt."""
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_id_messages_put(id, message_request)
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.reprocessLastExchange(token_JWT.user_id, id, message_request)
 
 
 @router.post(
@@ -177,6 +172,6 @@ async def conversations_id_messages_post(
     ),
 ) -> MessageResponse:
     """Adds a new message to an existing conversation. """
-    if not BaseConversationsApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseConversationsApi.subclasses[0]().conversations_id_messages_post(id, message_request)
+    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
+    return await inference_manger.processMessage(token_JWT.user_id, id, message_request)
+

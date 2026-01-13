@@ -4,9 +4,13 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from service.openapi_server.apis.quota_api_base import BaseQuotaApi
-#TODO: replace impl with business package
-import service.openapi_server.impl
+
+#TODO: implement business logic interface
+from business import ISystemManger
+
+#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
+#should return a object extending from ISystemManger
+from business import ObjectHandler
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -30,10 +34,6 @@ from service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
-#TODO: replace impl with business package
-ns_pkg = service.openapi_server.impl
-for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
-    importlib.import_module(name)
 
 
 @router.get(
@@ -51,9 +51,8 @@ async def quota_get(
     ),
 ) -> QuotaConfig:
     """Returns the current quota configuration."""
-    if not BaseQuotaApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseQuotaApi.subclasses[0]().quota_get()
+    system_manger = ObjectHandler.get_system_manager()
+    return await system_manger.getQuotaSettings()
 
 
 @router.put(
@@ -74,6 +73,5 @@ async def quota_put(
     ),
 ) -> QuotaConfig:
     """Updates the quota limits for members and admins. Only for admins."""
-    if not BaseQuotaApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseQuotaApi.subclasses[0]().quota_put(quota_config)
+    system_manger = ObjectHandler.get_system_manager()
+    return await system_manger.applyQuotaAdjustment(quota_config)

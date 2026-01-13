@@ -4,9 +4,30 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from service.openapi_server.apis.authentication_api_base import BaseAuthenticationApi
+'''
+authenticate(request: LoginRequest): Tokens
+register(request: SignupRequestRequest): AccountResponse
+authenticateWithGoogle(request: GoogleLoginRequest): Tokens
+terminateSession(): void
+refreshAccessToken(request: RefreshRequest): Tokens
+validateAccessToken(sessionToken: String): ValidationResult
+verifyEmailToken(request: EmailVerificationSubmitRequest): boolean
+initiatePasswordRecovery(request: PasswordResetRequestRequest): void
+completePasswordRecovery(request: PasswordResetSubmitRequest): boolean
+retrieveAccount(userId: UUID): AccountResponse
+modifyAccount(accountUpdate: UpdateAccountRequest): AccountResponse
+generateEmailVerification(userId: UUID): void
+checkEmailVerificationStatus(userId: UUID): boolean
+getCurrentAccountFromToken(token: String): AccountResponse
+invalidateRefreshToken(refreshToken: String): void
+checkAccountExists(email: String): boolean
+'''
 #TODO: replace impl with business package
-import service.openapi_server.impl
+from business import IAuthManger
+
+#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
+#should return a object extending from IAuthManger
+from business import ObjectHandler
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -23,19 +44,19 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from openapi_server.models.extra_models import TokenModel  # noqa: F401
+from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field
 from typing import Any, Optional
 from typing_extensions import Annotated
 from uuid import UUID
-from openapi_server.models.email_verification_submit_request import EmailVerificationSubmitRequest
-from openapi_server.models.login_request import LoginRequest
-from openapi_server.models.password_reset_request_request import PasswordResetRequestRequest
-from openapi_server.models.password_reset_submit_request import PasswordResetSubmitRequest
-from openapi_server.models.refresh_request import RefreshRequest
-from openapi_server.models.signup_request import SignupRequest
-from openapi_server.models.token_response import TokenResponse
-from openapi_server.security_api import get_token_JWT
+from service.openapi_server.models.email_verification_submit_request import EmailVerificationSubmitRequest
+from service.openapi_server.models.login_request import LoginRequest
+from service.openapi_server.models.password_reset_request_request import PasswordResetRequestRequest
+from service.openapi_server.models.password_reset_submit_request import PasswordResetSubmitRequest
+from service.openapi_server.models.refresh_request import RefreshRequest
+from service.openapi_server.models.signup_request import SignupRequest
+from service.openapi_server.models.token_response import TokenResponse
+from service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
@@ -59,9 +80,8 @@ async def auth_google_login_get(
         get_token_JWT
     ),
 ) -> TokenResponse:
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_google_login_get()
+    authManeger: IAuthManger = ObjectHandler.get_auth_manager()
+    return await authManeger.authenticateWithGoogle()
 
 
 @router.get(
@@ -79,9 +99,8 @@ async def auth_google_callback_get(
         get_token_JWT
     ),
 ) -> TokenResponse:
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_google_callback_get()
+    authManeger: IAuthManger = ObjectHandler.get_auth_manager()
+    return await authManeger.authenticateWithGoogle()
 
 
 @router.post(
@@ -98,9 +117,8 @@ async def auth_google_callback_get(
 async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
 ) -> TokenResponse:
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_login_post(login_request)
+    authManger = ObjectHandler.get_auth_manager()
+    return await authManger.authenticate(login_request)
 
 
 @router.post(
@@ -117,9 +135,8 @@ async def auth_login_post(
 async def auth_signup_post(
     signup_request: SignupRequest = Body(None, description=""),
 ) -> TokenResponse:
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_signup_post(signup_request)
+    authManger = ObjectHandler.get_auth_manager()
+    return await authManger.register(signup_request)
 
 
 @router.post(
@@ -136,9 +153,8 @@ async def auth_signup_post(
 async def auth_refresh_post(
     refresh_request: RefreshRequest = Body(None, description=""),
 ) -> TokenResponse:
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_refresh_post(refresh_request)
+    authManger = ObjectHandler.get_auth_manager()
+    return await authManger.refreshAccessToken(refresh_request)
 
 
 @router.post(

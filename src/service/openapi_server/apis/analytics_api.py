@@ -4,7 +4,6 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from service.openapi_server.apis.analytics_api_base import BaseAnalyticsApi
 #TODO: replace impl with business package
 import service.openapi_server.impl
 
