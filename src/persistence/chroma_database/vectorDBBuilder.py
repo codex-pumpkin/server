@@ -15,7 +15,7 @@ ids = []
 # max_tokens: maximum tokens per chunk
 # overlap: number of overlapping tokens between chunks
 # Returns a list of text chunks
-def chunk_by_tokens(text, max_tokens=500, overlap=100):
+def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
     tokens = enc.encode(text)
     chunks = []
 
@@ -31,31 +31,38 @@ def chunk_by_tokens(text, max_tokens=500, overlap=100):
 # Read markdown files and create chunks
 # For each chunk, create metadata and unique ID
 # Store in documents, metadatas, and ids lists
-for md_file in folder.glob("*.md"):
-    name = md_file.name
-    content = md_file.read_text(encoding="utf-8")
-    chunks = chunk_by_tokens(content)
+def main() -> None:
+    for md_file in folder.glob("*.md"):
+        name = md_file.name
+        content = md_file.read_text(encoding="utf-8")
+        chunks = chunk_by_tokens(content)
 
-    for i, chunk in enumerate(chunks):
-        documents.append(chunk)
-        metadatas.append({
-            "source": name,
-            "chunk": i
-        })
-        ids.append(str(uuid.uuid4()))
+        for i, chunk in enumerate(chunks):
+            documents.append(chunk)
+            metadatas.append({
+                "source": name,
+                "chunk": i
+            })
+            ids.append(str(uuid.uuid4()))
+
+    build_vector_db()        
 
 
 # Initialize ChromaDB client and get or create collection
 # Add documents to the collection
-client = chromadb.PersistentClient(path="./chroma_db")
+def build_vector_db() -> None:
+    client = chromadb.PersistentClient(path="./chroma_db")
 
-collection = client.get_or_create_collection(
-    name="pdf_markdown",
-    embedding_function=embedding_functions.DefaultEmbeddingFunction()
-)
+    collection = client.get_or_create_collection(
+        name="SPICE_Docs",
+        embedding_function=embedding_functions.DefaultEmbeddingFunction()
+    )
 
-collection.add(
-    documents=documents,
-    metadatas=metadatas,
-    ids=ids
-)
+    collection.add(
+        documents=documents,
+        metadatas=metadatas,
+        ids=ids
+    )
+
+if __name__ == "__main__":
+    main()
