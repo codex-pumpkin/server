@@ -10,7 +10,7 @@ class UsersOrm(Base):
 
     id: Mapped[uuid_pk]
     created_at: Mapped[created_at_type]
-    username: Mapped[str] = mapped_column()
+    username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str] = mapped_column()
     is_admin: Mapped[bool] = mapped_column(default=False)
