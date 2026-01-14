@@ -6,11 +6,9 @@ import pkgutil
 
 
 #TODO: implement business logic interface
-from business import ISystemManger
+from business.logic_interfaces.ISystemManger import ISystemManger
 
-#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
-#should return a object extending from ISystemManger
-from business import ObjectHandler
+from service.openapi_server.dependencies import get_system_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -51,8 +49,8 @@ async def quota_get(
     ),
 ) -> QuotaConfig:
     """Returns the current quota configuration."""
-    system_manger = ObjectHandler.get_system_manager()
-    return await system_manger.getQuotaSettings()
+    system_manger : ISystemManger = Depends(get_system_manager())
+    return await system_manger.getQuotaSettings(token_JWT)
 
 
 @router.put(
@@ -73,5 +71,5 @@ async def quota_put(
     ),
 ) -> QuotaConfig:
     """Updates the quota limits for members and admins. Only for admins."""
-    system_manger = ObjectHandler.get_system_manager()
-    return await system_manger.applyQuotaAdjustment(quota_config)
+    system_manger: ISystemManger = Depends(get_system_manager())
+    return await system_manger.applyQuotaAdjustment(token_JWT,quota_config)

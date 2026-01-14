@@ -4,7 +4,10 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-#TODO: reduce import to needed imports
+from business.api_interfaces.IUserInfoMange import IUserInfoMange
+from business.api_interfaces.ISystemManger import ISystemManger
+
+from service.openapi_server.dependencies import get_user_info_manager, get_system_manager
 
 import business
 from fastapi import (  # noqa: F401
@@ -80,11 +83,10 @@ async def account_put(
     ),
 ) -> None:
     """Updates the authenticated user&#39;s email and username.  - **Both fields must be provided**.   - If the email is changed:   - User will be logged out from all sessions.   - Account will be set to unverified.   - A new email-verification email will be sent. """
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_put(update_account_request)
+    user_info: IUserInfoMange = Depends(get_user_info_manager())
+    return await user_info.update_user_name_email(token_JWT,update_account_request)
 
-
+#TODO: set file type for image
 @router.get(
     "/account/profile-picture",
     responses={
@@ -101,9 +103,8 @@ async def account_profile_picture_get(
     ),
 ) -> file:
     """Returns the profile picture for the authenticated user. The response is a binary image."""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_profile_picture_get()
+    user_info: IUserInfoMange = Depends(get_user_info_manager())
+    return await user_info.get_profile_picture(token_JWT)
 
 
 @router.put(
@@ -124,9 +125,8 @@ async def account_profile_picture_put(
     ),
 ) -> None:
     """Updates the profile picture of the user that is authenticated"""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_profile_picture_put(file)
+    user_info: IUserInfoMange = Depends(get_user_info_manager())
+    return await user_info.updateProfilePicture(file)
 
 
 @router.post(
@@ -147,9 +147,8 @@ async def account_llm_configurations_post(
     ),
 ) -> None:
     """Adds a new LLM configuration for the authenticated user."""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_llm_configurations_post(llm_configuration_request)
+    system_manager: ISystemManger = Depends(get_user_info_manager())
+    return await system_manager.validateAndPersistLLMConfig(token_JWT,llm_configuration_request)
 
 
 @router.put(
@@ -172,9 +171,8 @@ async def account_llm_configurations_id_put(
     ),
 ) -> LLMConfigurationResponse:
     """Updates an existing LLM configuration of the authenticated user by its id."""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_llm_configurations_id_put(id, llm_configuration_request)
+    system_manager: ISystemManger = Depends(get_user_info_manager())
+    return await system_manager.updateLLMConfig(token_JWT,id, llm_configuration_request)
 
 
 @router.delete(
@@ -195,6 +193,5 @@ async def account_llm_configurations_id_delete(
     ),
 ) -> None:
     """Deletes an LLM configuration of the authenticated user by its id."""
-    if not BaseAccountApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAccountApi.subclasses[0]().account_llm_configurations_id_delete(id)
+    system_manager: ISystemManger = Depends(get_user_info_manager())
+    return await system_manager.processLLMRemoval(token_JWT,id)

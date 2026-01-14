@@ -23,11 +23,10 @@ invalidateRefreshToken(refreshToken: String): void
 checkAccountExists(email: String): boolean
 '''
 #TODO: replace impl with business package
-from business import IAuthManger
+from business.logic_interfaces.IBasicAuthMang import IBasicAuthMang
 
-#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
-#should return a object extending from IAuthManger
-from business import ObjectHandler
+from service.openapi_server.dependencies import get_auth_manager
+
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -60,9 +59,6 @@ from service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
-ns_pkg = openapi_server.impl
-for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
-    importlib.import_module(name)
 
 
 @router.get(
@@ -80,8 +76,8 @@ async def auth_google_login_get(
         get_token_JWT
     ),
 ) -> TokenResponse:
-    authManeger: IAuthManger = ObjectHandler.get_auth_manager()
-    return await authManeger.authenticateWithGoogle()
+    authManeger: IBasicAuthMang = Depends(get_auth_manager())
+    return await authManeger.authenticateWithGoogle(token_JWT)
 
 
 @router.get(
@@ -99,8 +95,8 @@ async def auth_google_callback_get(
         get_token_JWT
     ),
 ) -> TokenResponse:
-    authManeger: IAuthManger = ObjectHandler.get_auth_manager()
-    return await authManeger.authenticateWithGoogle()
+    authManager: IBasicAuthMang = Depends(get_auth_manager())
+    return await authManager.google_callback(token_JWT)
 
 
 @router.post(
@@ -117,7 +113,7 @@ async def auth_google_callback_get(
 async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
 ) -> TokenResponse:
-    authManger = ObjectHandler.get_auth_manager()
+    authManger = Depends(get_auth_manager())
     return await authManger.authenticate(login_request)
 
 
@@ -135,7 +131,7 @@ async def auth_login_post(
 async def auth_signup_post(
     signup_request: SignupRequest = Body(None, description=""),
 ) -> TokenResponse:
-    authManger = ObjectHandler.get_auth_manager()
+    authManger = Depends(get_auth_manager())
     return await authManger.register(signup_request)
 
 
@@ -153,7 +149,7 @@ async def auth_signup_post(
 async def auth_refresh_post(
     refresh_request: RefreshRequest = Body(None, description=""),
 ) -> TokenResponse:
-    authManger = ObjectHandler.get_auth_manager()
+    authManger = Depends(get_auth_manager())
     return await authManger.refreshAccessToken(refresh_request)
 
 
@@ -175,9 +171,8 @@ async def auth_logout_post(
     ),
 ) -> None:
     """If a refresh token is provided as a query parameter, only that session is logged out. If none is provided, **all** sessions for the user are logged out. """
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_logout_post(refresh_token)
+    authManger = Depends(get_auth_manager())
+    return await authManger.user_logout(token_JWT,refresh_token)
 
 
 @router.post(
@@ -193,9 +188,9 @@ async def auth_request_password_reset_post(
     password_reset_request_request: PasswordResetRequestRequest = Body(None, description=""),
 ) -> None:
     """Sends a password-reset token to the specified email-address, if an account exists for that email address. """
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_request_password_reset_post(password_reset_request_request)
+    authManger = Depends(get_auth_manager())
+
+    return await authManger.initiatePasswordRecovery(password_reset_request_request)
 
 
 @router.post(
@@ -213,9 +208,9 @@ async def auth_submit_password_reset_post(
     password_reset_submit_request: PasswordResetSubmitRequest = Body(None, description=""),
 ) -> None:
     """Accepts the password-reset token sent via email and a new password. Does not require the user to be logged in. """
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_submit_password_reset_post(password_reset_submit_request)
+    authManger = Depends(get_auth_manager())
+
+    return await authManger.completePasswordRecovery(password_reset_submit_request)
 
 
 @router.post(
@@ -235,9 +230,9 @@ async def auth_request_email_verification_post(
     ),
 ) -> None:
     """Sends an email-verification token to the authenticated user&#39;s email. """
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_request_email_verification_post()
+    authManger = Depends(get_auth_manager())
+
+    return await authManger.generateEmailVerification(token_JWT)
 
 
 @router.post(
@@ -255,6 +250,6 @@ async def auth_submit_email_verification_post(
     email_verification_submit_request: EmailVerificationSubmitRequest = Body(None, description=""),
 ) -> None:
     """Accepts the email-verification token sent to the user&#39;s email. """
-    if not BaseAuthenticationApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAuthenticationApi.subclasses[0]().auth_submit_email_verification_post(email_verification_submit_request)
+    authManger = Depends(get_auth_manager())
+
+    return await authManger.verifyEmailToken(email_verification_submit_request)

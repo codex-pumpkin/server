@@ -5,11 +5,9 @@ import importlib
 import pkgutil
 
 #TODO: businesslogic needs to implement IInterface Manager
-from business import IInferenceManger
+from business.logic_interfaces.IInferenceManger import IInferenceManger
 
-#TODO: add object getting in businesslayer objects (tmp package nameing)(using singleton pattern or factory pattern depending on a needed statefulness)
-#should return a object extending from IInferenceManager
-from business import ObjectHandler
+from service.openapi_server.dependencies import get_inference_manager
 
 
 from fastapi import (  # noqa: F401
@@ -58,8 +56,8 @@ async def conversations_get(
     ),
 ) -> List[ConversationResponse]:
     """Returns a list of all conversations for the current user. """
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.getConversationsByUser(token_JWT.user_id)
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.getConversationsByUser(token_JWT)
 
 
 @router.post(
@@ -81,8 +79,8 @@ async def conversations_post(
     ),
 ) -> ConversationResponse:
     """Starts a new conversation with the given message, LLM configuration, and target language. """
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.startConversation(token_JWT.user_id, conversation_request)
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.startConversation(token_JWT, conversation_request)
 
 
 @router.put(
@@ -104,9 +102,9 @@ async def conversations_id_put(
         get_token_JWT
     ),
 ) -> ConversationResponse:
-    """Updates the &#x60;name&#x60; and &#x60;pinned&#x60; attributes of a conversation. """
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.executeRegeneration(token_JWT.user_id, id, update_conversation_request)
+    """Alters metadata of a conversation, such as its name or pinned state."""
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.update_conversation(token_JWT.user_id, id, update_conversation_request)
 
 
 @router.delete(
@@ -127,8 +125,8 @@ async def conversations_id_delete(
     ),
 ) -> None:
     """Deletes the conversation with the given Id. """
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.removeConversation(token_JWT.user_id, id)
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.removeConversation(token_JWT, id)
 
 @router.put(
     "/conversations/{id}/messages",
@@ -147,8 +145,8 @@ async def conversations_id_messages_put(
     ),
 ) -> MessageResponse:
     """Resend a message by providing a new prompt."""
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.reprocessLastExchange(token_JWT.user_id, id, message_request)
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.message_regeneration(token_JWT, id, message_request)
 
 
 @router.post(
@@ -172,6 +170,6 @@ async def conversations_id_messages_post(
     ),
 ) -> MessageResponse:
     """Adds a new message to an existing conversation. """
-    inference_manger : IInferenceManger = ObjectHandler.get_inference_manager()
-    return await inference_manger.processMessage(token_JWT.user_id, id, message_request)
+    inference_manger : IInferenceManger = Depends(get_inference_manager())
+    return await inference_manger.post_message_to_conversation(token_JWT, id, message_request)
 
