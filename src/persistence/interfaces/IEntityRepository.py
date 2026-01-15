@@ -4,7 +4,7 @@ from typing_extensions import runtime_checkable
 from abc import ABC, abstractmethod
 
 
-# --- Domain models (placeholders) ---
+# --- Domain dtos (placeholders) ---
 
 class User: ...
 class ChatMetaData: ...
