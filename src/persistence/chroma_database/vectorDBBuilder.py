@@ -2,20 +2,21 @@ from pathlib import Path
 import uuid
 import tiktoken
 import chromadb
+from typing import Union
 from chromadb.utils import embedding_functions
 
 enc = tiktoken.get_encoding("cl100k_base")
-folder = Path("markdown")
 
 documents = []
 metadatas = []
 ids = []
 
-# Function to chunk text by tokens
-# max_tokens: maximum tokens per chunk
-# overlap: number of overlapping tokens between chunks
-# Returns a list of text chunks
-def chunk_by_tokens(text, max_tokens=500, overlap=100):
+''' Function to chunk text by tokens
+    max_tokens: maximum tokens per chunk  
+    overlap: number of overlapping tokens between chunks
+    Returns a list of text chunks
+'''
+def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
     tokens = enc.encode(text)
     chunks = []
 
@@ -28,34 +29,44 @@ def chunk_by_tokens(text, max_tokens=500, overlap=100):
 
     return chunks
 
-# Read markdown files and create chunks
-# For each chunk, create metadata and unique ID
-# Store in documents, metadatas, and ids lists
-for md_file in folder.glob("*.md"):
-    name = md_file.name
-    content = md_file.read_text(encoding="utf-8")
-    chunks = chunk_by_tokens(content)
+'''Read markdown files and create chunks
+   For each chunk, create metadata and unique ID
+   Store in documents, metadatas, and ids lists
+'''
+def main(source:Union[Path, str]) -> None:
+    for md_file in source.glob("*.md"):
+        name = md_file.name
+        content = md_file.read_text(encoding="utf-8")
+        chunks = chunk_by_tokens(content)
 
-    for i, chunk in enumerate(chunks):
-        documents.append(chunk)
-        metadatas.append({
-            "source": name,
-            "chunk": i
-        })
-        ids.append(str(uuid.uuid4()))
+        for i, chunk in enumerate(chunks):
+            documents.append(chunk)
+            metadatas.append({
+                "source": name,
+                "chunk": i
+            })
+            ids.append(str(uuid.uuid4()))
+
+    build_vector_db()        
 
 
-# Initialize ChromaDB client and get or create collection
-# Add documents to the collection
-client = chromadb.PersistentClient(path="./chroma_db")
+'''Initialize ChromaDB client and get or create collection
+   Add documents to the collection
+'''
+def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Docs") -> None:
+    client = chromadb.PersistentClient(path=source)
 
-collection = client.get_or_create_collection(
-    name="pdf_markdown",
-    embedding_function=embedding_functions.DefaultEmbeddingFunction()
-)
+    collection = client.get_or_create_collection(
+        name=namedb,
+        embedding_function=embedding_functions.DefaultEmbeddingFunction()
+    )
 
-collection.add(
-    documents=documents,
-    metadatas=metadatas,
-    ids=ids
-)
+    collection.add(
+        documents=documents,
+        metadatas=metadatas,
+        ids=ids
+    )
+
+if __name__ == "__main__":
+    folder = Path("markdown")
+    main(folder)
