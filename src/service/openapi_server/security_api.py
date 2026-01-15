@@ -19,7 +19,7 @@ from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # 
 from src.core.dtos.extra_models import TokenModel
 
 
-def get_token_JWT(
+def get_token_jwt(
     token_api_key_header: str = Security(
         APIKeyHeader(name="access_token", auto_error=False)
     ),

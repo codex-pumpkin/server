@@ -1,13 +1,12 @@
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
-import importlib
-import pkgutil
 
-from src.business.api_interfaces.IUserInfoMange import IUserInfoMange
-from src.business.api_interfaces.ISystemManger import ISystemManger
+from src.business.interfaces import (
+    IUserInfoManager,
+    ISystemManager
+)
 
-import business
 
 from src.service.openapi_server.dependencies import get_user_info_manager, get_system_manager
 
@@ -36,14 +35,9 @@ from src.core.dtos.account_response import AccountResponse
 from src.core.dtos.llm_configuration_request import LLMConfigurationRequest
 from src.core.dtos.llm_configuration_response import LLMConfigurationResponse
 from src.core.dtos.update_account_request import UpdateAccountRequest
-from src.service.openapi_server.security_api import get_token_JWT
+from src.service.openapi_server.security_api import get_token_jwt
 
 router = APIRouter()
-
-#TODO: import will be reduced to necessary files
-ns_pkg = business
-for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
-    importlib.import_module(name)
 
 
 @router.get(
@@ -57,8 +51,8 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     response_model_by_alias=True,
 )
 async def account_get(
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> AccountResponse:
     """Returns the account information for the currently authenticated user."""
@@ -79,19 +73,19 @@ async def account_get(
 )
 async def account_put(
     update_account_request: UpdateAccountRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> None:
     """Updates the authenticated user&#39;s email and username.  - **Both fields must be provided**.   - If the email is changed:   - User will be logged out from all sessions.   - Account will be set to unverified.   - A new email-verification email will be sent. """
-    user_info: IUserInfoMange = Depends(get_user_info_manager())
-    return await user_info.update_user_name_email(token_JWT,update_account_request)
+    user_info: IUserInfoManager = Depends(get_user_info_manager())
+    return await user_info.update_user_name_email(token_jwt,update_account_request)
 
 #TODO: set file type for image
 @router.get(
     "/account/profile-picture",
     responses={
-        200: {"model": file, "description": "Profile picture returned successfully."},
+        200: {"model": File, "description": "Profile picture returned successfully."},
         401: {"description": "User not authenticated"},
     },
     tags=["Account"],
@@ -99,13 +93,13 @@ async def account_put(
     response_model_by_alias=True,
 )
 async def account_profile_picture_get(
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
-) -> file:
+) -> File:
     """Returns the profile picture for the authenticated user. The response is a binary image."""
-    user_info: IUserInfoMange = Depends(get_user_info_manager())
-    return await user_info.get_profile_picture(token_JWT)
+    user_info: IUserInfoManager = Depends(get_user_info_manager())
+    return await user_info.get_profile_picture(token_jwt)
 
 
 @router.put(
@@ -121,13 +115,13 @@ async def account_profile_picture_get(
 )
 async def account_profile_picture_put(
     file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = Form(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> None:
     """Updates the profile picture of the user that is authenticated"""
-    user_info: IUserInfoMange = Depends(get_user_info_manager())
-    return await user_info.updateProfilePicture(file)
+    user_info: IUserInfoManager = Depends(get_user_info_manager())
+    return await user_info.update_profile_picture(file)
 
 
 @router.post(
@@ -143,13 +137,13 @@ async def account_profile_picture_put(
 )
 async def account_llm_configurations_post(
     llm_configuration_request: LLMConfigurationRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> None:
     """Adds a new LLM configuration for the authenticated user."""
-    system_manager: ISystemManger = Depends(get_user_info_manager())
-    return await system_manager.validateAndPersistLLMConfig(token_JWT,llm_configuration_request)
+    system_manager: ISystemManager = Depends(get_user_info_manager())
+    return await system_manager.validate_and_persist_llm_config(token_jwt, llm_configuration_request)
 
 
 @router.put(
@@ -167,13 +161,13 @@ async def account_llm_configurations_post(
 async def account_llm_configurations_id_put(
     id: Annotated[StrictStr, Field(description="ID of the LLM configuration to update")] = Path(..., description="ID of the LLM configuration to update"),
     llm_configuration_request: LLMConfigurationRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> LLMConfigurationResponse:
     """Updates an existing LLM configuration of the authenticated user by its id."""
-    system_manager: ISystemManger = Depends(get_user_info_manager())
-    return await system_manager.updateLLMConfig(token_JWT,id, llm_configuration_request)
+    system_manager: ISystemManager = Depends(get_user_info_manager())
+    return await system_manager.update_llm_config(token_jwt,id, llm_configuration_request)
 
 
 @router.delete(
@@ -189,10 +183,10 @@ async def account_llm_configurations_id_put(
 )
 async def account_llm_configurations_id_delete(
     id: Annotated[StrictStr, Field(description="ID of the LLM configuration to delete")] = Path(..., description="ID of the LLM configuration to delete"),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> None:
     """Deletes an LLM configuration of the authenticated user by its id."""
-    system_manager: ISystemManger = Depends(get_user_info_manager())
-    return await system_manager.processLLMRemoval(token_JWT,id)
+    system_manager: ISystemManager = Depends(get_user_info_manager())
+    return await system_manager.process_llm_removal(token_jwt,id)
