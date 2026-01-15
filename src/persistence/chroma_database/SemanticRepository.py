@@ -2,10 +2,11 @@ from pathlib import Path
 import chromadb
 from chromadb.utils import embedding_functions
 from typing import Optional, Union
+from src.persistence.interfaces import ISemanticRepository
 
 _chroma_client: Optional[chromadb.PersistentClient] | None = None
 
-class SemanticRepository():
+class SemanticRepository(ISemanticRepository):
     
     def __init__(self, namedb: str="SPICE_Docs") -> None:
         self.collection = self.get_chroma_client().get_collection(
