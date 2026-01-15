@@ -4,8 +4,7 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-#TODO: businesslogic needs to implement IInterface Manager
-from src.business.logic_interfaces.IInferenceManger import IInferenceManger
+from src.business.interfaces import IInferenceManager
 
 from src.service.openapi_server.dependencies import get_inference_manager
 
@@ -29,13 +28,15 @@ from openapi_server.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictInt, StrictStr
 from typing import Any, List
 from typing_extensions import Annotated
-from service.openapi_server.models.conversation_request import ConversationRequest
-from service.openapi_server.models.conversation_response import ConversationResponse
-from service.openapi_server.models.message_request import MessageRequest
-from service.openapi_server.models.message_response import MessageResponse
-from service.openapi_server.models.update_conversation_request import UpdateConversationRequest
-from service.openapi_server.security_api import get_token_JWT
+from src.service.openapi_server.security_api import get_token_jwt
 
+from src.core.dtos import (
+    ConversationRequest,
+    ConversationResponse,
+    MessageRequest,
+    MessageResponse,
+    UpdateConversationRequest
+)
 router = APIRouter()
 
 
@@ -51,13 +52,13 @@ router = APIRouter()
     response_model_by_alias=True,
 )
 async def conversations_get(
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> List[ConversationResponse]:
     """Returns a list of all conversations for the current user. """
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.getConversationsByUser(token_JWT)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.get_conversations_by_user(token_jwt)
 
 
 @router.post(
@@ -74,13 +75,13 @@ async def conversations_get(
 )
 async def conversations_post(
     conversation_request: ConversationRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> ConversationResponse:
     """Starts a new conversation with the given message, LLM configuration, and target language. """
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.startConversation(token_JWT, conversation_request)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.start_conversation(token_jwt, conversation_request)
 
 
 @router.put(
@@ -98,13 +99,13 @@ async def conversations_post(
 async def conversations_id_put(
     id: Annotated[StrictStr, Field(description="ID of the conversation to update")] = Path(..., description="ID of the conversation to update"),
     update_conversation_request: UpdateConversationRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> ConversationResponse:
     """Alters metadata of a conversation, such as its name or pinned state."""
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.update_conversation(token_JWT.user_id, id, update_conversation_request)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.update_conversation(id, UpdateConversationRequest, token_jwt)
 
 
 @router.delete(
@@ -120,13 +121,13 @@ async def conversations_id_put(
 )
 async def conversations_id_delete(
     id: Annotated[StrictStr, Field(description="Id of the conversation to delete")] = Path(..., description="Id of the conversation to delete"),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> None:
     """Deletes the conversation with the given Id. """
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.removeConversation(token_JWT, id)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.removeConversation(token_jwt, id)
 
 @router.put(
     "/conversations/{id}/messages",
@@ -140,13 +141,13 @@ async def conversations_id_delete(
 async def conversations_id_messages_put(
     id: Annotated[StrictInt, Field(description="Id of the target conversation")] = Path(..., description="Id of the target conversation"),
     message_request: MessageRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> MessageResponse:
     """Resend a message by providing a new prompt."""
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.message_regeneration(token_JWT, id, message_request)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.message_regeneration(token_jwt, id, message_request)
 
 
 @router.post(
@@ -165,11 +166,11 @@ async def conversations_id_messages_put(
 async def conversations_id_messages_post(
     id: Annotated[StrictInt, Field(description="Id of the target conversation")] = Path(..., description="Id of the target conversation"),
     message_request: MessageRequest = Body(None, description=""),
-    token_JWT: TokenModel = Security(
-        get_token_JWT
+    token_jwt: TokenModel = Security(
+        get_token_jwt
     ),
 ) -> MessageResponse:
     """Adds a new message to an existing conversation. """
-    inference_manger : IInferenceManger = Depends(get_inference_manager())
-    return await inference_manger.post_message_to_conversation(token_JWT, id, message_request)
+    inference_manger : IInferenceManager = Depends(get_inference_manager())
+    return await inference_manger.post_message_to_conversation(token_jwt, id, message_request)
 

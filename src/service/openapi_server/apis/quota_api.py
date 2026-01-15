@@ -6,7 +6,7 @@ import pkgutil
 
 
 #TODO: implement business logic interface
-from src.business.logic_interfaces.ISystemManger import ISystemManger
+from src.business.interfaces.ISystemManager import ISystemManger
 
 from src.service.openapi_server.dependencies import get_system_manager
 
