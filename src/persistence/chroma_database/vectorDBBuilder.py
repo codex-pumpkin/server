@@ -2,19 +2,20 @@ from pathlib import Path
 import uuid
 import tiktoken
 import chromadb
+from typing import Union
 from chromadb.utils import embedding_functions
 
 enc = tiktoken.get_encoding("cl100k_base")
-folder = Path("markdown")
 
 documents = []
 metadatas = []
 ids = []
 
-# Function to chunk text by tokens
-# max_tokens: maximum tokens per chunk
-# overlap: number of overlapping tokens between chunks
-# Returns a list of text chunks
+''' Function to chunk text by tokens
+    max_tokens: maximum tokens per chunk  
+    overlap: number of overlapping tokens between chunks
+    Returns a list of text chunks
+'''
 def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
     tokens = enc.encode(text)
     chunks = []
@@ -28,11 +29,12 @@ def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
 
     return chunks
 
-# Read markdown files and create chunks
-# For each chunk, create metadata and unique ID
-# Store in documents, metadatas, and ids lists
-def main() -> None:
-    for md_file in folder.glob("*.md"):
+'''Read markdown files and create chunks
+   For each chunk, create metadata and unique ID
+   Store in documents, metadatas, and ids lists
+'''
+def main(source:Union[Path, str]) -> None:
+    for md_file in source.glob("*.md"):
         name = md_file.name
         content = md_file.read_text(encoding="utf-8")
         chunks = chunk_by_tokens(content)
@@ -48,8 +50,9 @@ def main() -> None:
     build_vector_db()        
 
 
-# Initialize ChromaDB client and get or create collection
-# Add documents to the collection
+'''Initialize ChromaDB client and get or create collection
+   Add documents to the collection
+'''
 def build_vector_db() -> None:
     client = chromadb.PersistentClient(path="./chroma_db")
 
@@ -65,4 +68,5 @@ def build_vector_db() -> None:
     )
 
 if __name__ == "__main__":
-    main()
+    folder = Path("markdown")
+    main(folder)
