@@ -4,8 +4,9 @@ import aiosmtplib
 from email.message import EmailMessage
 from src.core import settings as default_settings
 from src.core import MailSettings
+from src.persistence.interfaces import IMailSender
 
-class MailSender:
+class MailSender(IMailSender):
     def __init__(self, settings:MailSettings):
         self.context:ssl.SSLContext = ssl.create_default_context()
         self.settings:MailSettings = settings

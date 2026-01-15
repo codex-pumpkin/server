@@ -1,5 +1,5 @@
-from .IEntityRepository import IEntityRepository
-from .ISemanticRepository import ISemanticRepository
+from src.persistence.interfaces import IEntityRepository
+from src.persistence.interfaces import ISemanticRepository
 
 __all__ = [
     "IEntityRepository",
