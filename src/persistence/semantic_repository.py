@@ -7,9 +7,9 @@ _chroma_client: Optional[chromadb.PersistentClient] | None = None
 
 class SemanticRepository():
     
-    def __init__(self):
+    def __init__(self, namedb: str="SPICE_Docs") -> None:
         self.collection = self.get_chroma_client().get_collection(
-            name="SPICE_Docs",
+            name=namedb,
             embedding_function=embedding_functions.DefaultEmbeddingFunction()
         )   
     

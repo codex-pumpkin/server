@@ -53,11 +53,11 @@ def main(source:Union[Path, str]) -> None:
 '''Initialize ChromaDB client and get or create collection
    Add documents to the collection
 '''
-def build_vector_db() -> None:
-    client = chromadb.PersistentClient(path="./chroma_db")
+def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Docs") -> None:
+    client = chromadb.PersistentClient(path=source)
 
     collection = client.get_or_create_collection(
-        name="SPICE_Docs",
+        name=namedb,
         embedding_function=embedding_functions.DefaultEmbeddingFunction()
     )
 
