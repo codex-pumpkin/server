@@ -4,9 +4,9 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from business.logic_interfaces.ISystemManger import ISystemManger
+from src.business.logic_interfaces.ISystemManger import ISystemManger
 
-from service.openapi_server.dependencies import get_system_manager
+from src.service.openapi_server.dependencies import get_system_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -23,10 +23,10 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
+from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from typing import Any
-from service.openapi_server.models.analytics_response import AnalyticsResponse
-from service.openapi_server.security_api import get_token_JWT
+from src.core.dtos.analytics_response import AnalyticsResponse
+from src.service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 

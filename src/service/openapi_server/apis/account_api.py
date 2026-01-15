@@ -4,12 +4,13 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from business.api_interfaces.IUserInfoMange import IUserInfoMange
-from business.api_interfaces.ISystemManger import ISystemManger
-
-from service.openapi_server.dependencies import get_user_info_manager, get_system_manager
+from src.business.api_interfaces.IUserInfoMange import IUserInfoMange
+from src.business.api_interfaces.ISystemManger import ISystemManger
 
 import business
+
+from src.service.openapi_server.dependencies import get_user_info_manager, get_system_manager
+
 from fastapi import (  # noqa: F401
     APIRouter,
     Body,
@@ -27,15 +28,15 @@ from fastapi import (  # noqa: F401
     File
 )
 
-from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
+from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictBytes, StrictStr
 from typing import Any, Optional, Tuple, Union
 from typing_extensions import Annotated
-from service.openapi_server.models.account_response import AccountResponse
-from service.openapi_server.models.llm_configuration_request import LLMConfigurationRequest
-from service.openapi_server.models.llm_configuration_response import LLMConfigurationResponse
-from service.openapi_server.models.update_account_request import UpdateAccountRequest
-from service.openapi_server.security_api import get_token_JWT
+from src.core.dtos.account_response import AccountResponse
+from src.core.dtos.llm_configuration_request import LLMConfigurationRequest
+from src.core.dtos.llm_configuration_response import LLMConfigurationResponse
+from src.core.dtos.update_account_request import UpdateAccountRequest
+from src.service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 

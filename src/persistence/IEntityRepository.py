@@ -3,7 +3,7 @@ from datetime import date
 from typing_extensions import runtime_checkable
 
 
-# --- Domain models (placeholders) ---
+# --- Domain dtos (placeholders) ---
 
 class User: ...
 class ChatMetaData: ...

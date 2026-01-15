@@ -5,9 +5,9 @@ import importlib
 import pkgutil
 
 #TODO: businesslogic needs to implement IInterface Manager
-from business.logic_interfaces.IInferenceManger import IInferenceManger
+from src.business.logic_interfaces.IInferenceManger import IInferenceManger
 
-from service.openapi_server.dependencies import get_inference_manager
+from src.service.openapi_server.dependencies import get_inference_manager
 
 
 from fastapi import (  # noqa: F401

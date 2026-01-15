@@ -23,9 +23,9 @@ invalidateRefreshToken(refreshToken: String): void
 checkAccountExists(email: String): boolean
 '''
 #TODO: replace impl with business package
-from business.logic_interfaces.IBasicAuthMang import IBasicAuthMang
+from src.business.logic_interfaces.IBasicAuthMang import IBasicAuthMang
 
-from service.openapi_server.dependencies import get_auth_manager
+from src.service.openapi_server.dependencies import get_auth_manager
 
 
 from fastapi import (  # noqa: F401

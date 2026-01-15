@@ -6,9 +6,9 @@ import pkgutil
 
 
 #TODO: implement business logic interface
-from business.logic_interfaces.ISystemManger import ISystemManger
+from src.business.logic_interfaces.ISystemManger import ISystemManger
 
-from service.openapi_server.dependencies import get_system_manager
+from src.service.openapi_server.dependencies import get_system_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -25,10 +25,10 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
+from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from typing import Any
-from service.openapi_server.models.quota_config import QuotaConfig
-from service.openapi_server.security_api import get_token_JWT
+from src.core.dtos.quota_config import QuotaConfig
+from src.service.openapi_server.security_api import get_token_JWT
 
 router = APIRouter()
 
