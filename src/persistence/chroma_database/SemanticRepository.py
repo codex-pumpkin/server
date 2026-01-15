@@ -16,7 +16,7 @@ class SemanticRepository(ISemanticRepository):
     
     """ Get a singleton ChromaDB client instance """
     @staticmethod
-    def get_chroma_client(source:Union[Path, str]="./chroma_database/chroma_db") -> chromadb.PersistentClient:
+    def get_chroma_client(source:Union[Path, str]="../chroma_database/chroma_db") -> chromadb.PersistentClient:
         global _chroma_client
         if _chroma_client is None:
             _chroma_client = chromadb.PersistentClient(path=source)
