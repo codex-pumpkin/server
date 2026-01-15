@@ -2,22 +2,18 @@ import asyncio
 import ssl
 import aiosmtplib
 from email.message import EmailMessage
-
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 465
-SENDER_EMAIL = "codex.mail.kit@gmail.com"
-PASSWORD = "qmgp zach rxny otbs"
-LOGO_URL = "https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4"
-
+from src.core import settings as default_settings
+from src.core import MailSettings
 
 class MailSender:
-    def __init__(self):
-        self.context = ssl.create_default_context()
+    def __init__(self, settings:MailSettings):
+        self.context:ssl.SSLContext = ssl.create_default_context()
+        self.settings:MailSettings = settings
 
-    async def send_email(self, to_email: str, subject: str, html_content: str):
+    async def _send_email(self, to_email: str, subject: str, html_content: str) -> None:
         """Generic async HTML email sender"""
         message = EmailMessage()
-        message["From"] = SENDER_EMAIL
+        message["From"] = self.settings.app_mail
         message["To"] = to_email
         message["Subject"] = subject
         message.set_content("This email requires an HTML-capable client.")
@@ -25,21 +21,22 @@ class MailSender:
 
         await aiosmtplib.send(
             message,
-            hostname=SMTP_SERVER,
-            port=SMTP_PORT,
-            username=SENDER_EMAIL,
-            password=PASSWORD,
+            hostname=self.settings.smtp_server,
+            port=self.settings.port,
+            username=self.settings.app_mail,
+            password=self.settings.password,
             use_tls=True,
             timeout=20,
         )
 
-    async def send_confirmation_email(self, to_email: str, confirmation_code: str):
+    async def send_confirmation_email(self, to_email: str, confirmation_code: str) -> None:
+        """async Email confirmation sender"""
         subject = f"Your CodeX confirmation code is {confirmation_code}"
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #222; text-align: center; background-color: #fafafa; padding: 20px;">
                 <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-                    <img src="{LOGO_URL}" alt="CodeX Logo" style="width: 120px; margin-bottom: 15px; border-radius: 10%;">
+                    <img src="{self.settings.logo}" alt="CodeX Logo" style="width: 120px; margin-bottom: 15px; border-radius: 10%;">
                     <h2 style="color: #ff6600;">Welcome to <b>CodeX</b></h2>
                     <p>Dear Innovator,</p>
                     <p>
@@ -61,15 +58,15 @@ class MailSender:
             </body>
         </html>
         """
-        await self.send_email(to_email, subject, html_content)
+        await self._send_email(to_email, subject, html_content)
 
-    async def send_password_reset_email(self, to_email: str, reset_link: str):
+    async def send_password_reset_email(self, to_email: str, reset_link: str) -> None:
         subject = "CodeX Password Reset Request"
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #222; text-align: center; background-color: #fafafa; padding: 20px;">
                 <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-                    <img src="{LOGO_URL}" alt="CodeX Logo" style="width: 120px; margin-bottom: 15px; border-radius: 10%;">
+                    <img src="{self.settings.logo}" alt="CodeX Logo" style="width: 120px; margin-bottom: 15px; border-radius: 10%;">
                     <h2 style="color: #ff6600;">Password Reset Request</h2>
                     <p>Dear Innovator,</p>
                     <p>
@@ -93,14 +90,15 @@ class MailSender:
             </body>
         </html>
         """
-        await self.send_email(to_email, subject, html_content)
+        await self._send_email(to_email, subject, html_content)
 
 
 
 async def main():
-    mailer = MailSender()
-    await mailer.send_confirmation_email("dayanakaradzhova.uni@gmail.com", "123456")
-    await mailer.send_password_reset_email("dayanakaradzhova.uni@gmail.com", "https://codex.com/reset-password")
+    mailer = MailSender(default_settings.mail_settings)
+    await mailer.send_confirmation_email("lublusosku@gmail.com", "123456")
+    await asyncio.sleep(1)
+    await mailer.send_password_reset_email("lublusosku@gmail.com", "https://codex.com/reset-password")
 
 
 if __name__ == "__main__":
