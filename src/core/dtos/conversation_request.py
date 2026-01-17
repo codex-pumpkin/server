@@ -22,7 +22,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
-from service.openapi_server.models.target_language import TargetLanguage
+from src.core.dtos.target_language import TargetLanguage
 try:
     from typing import Self
 except ImportError:

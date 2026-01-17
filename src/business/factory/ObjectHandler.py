@@ -1,3 +1,6 @@
+from src.business.auth.BasicAuthMananger import BasicAuthManager
+
+
 class ObjectHandler:
     _singletons = {}
 
@@ -12,7 +15,7 @@ class ObjectHandler:
 
     @classmethod
     def get_basic_auth_manager(cls):
-        pass
+        return BasicAuthManager()
 
     @classmethod
     def get_user_info_manager(cls):

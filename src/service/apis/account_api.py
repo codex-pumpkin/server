@@ -8,7 +8,7 @@ from src.business.interfaces import (
 )
 
 
-from src.service.openapi_server.dependencies import get_user_info_manager, get_system_manager
+from src.service.dependencies import get_user_info_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -24,18 +24,20 @@ from fastapi import (  # noqa: F401
     Security,
     status,
     UploadFile,
-    File
+    File,
 )
+
+from fastapi.responses import FileResponse
 
 from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictBytes, StrictStr
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 from typing_extensions import Annotated
 from src.core.dtos.account_response import AccountResponse
 from src.core.dtos.llm_configuration_request import LLMConfigurationRequest
 from src.core.dtos.llm_configuration_response import LLMConfigurationResponse
 from src.core.dtos.update_account_request import UpdateAccountRequest
-from src.service.openapi_server.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt
 
 router = APIRouter()
 
@@ -96,7 +98,7 @@ async def account_profile_picture_get(
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
-) -> File:
+) -> FileResponse:
     """Returns the profile picture for the authenticated user. The response is a binary image."""
     user_info: IUserInfoManager = Depends(get_user_info_manager())
     return await user_info.get_profile_picture(token_jwt)

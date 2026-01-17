@@ -1,12 +1,10 @@
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
-import importlib
-import pkgutil
 
 from src.business.interfaces import ISystemManager
 
-from src.service.openapi_server.dependencies import get_system_manager
+from src.service.dependencies import get_system_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -24,9 +22,8 @@ from fastapi import (  # noqa: F401
 )
 
 from src.core.dtos.extra_models import TokenModel  # noqa: F401
-from typing import Any
 from src.core.dtos.analytics_response import AnalyticsResponse
-from src.service.openapi_server.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt
 
 router = APIRouter()
 

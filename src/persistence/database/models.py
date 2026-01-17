@@ -1,4 +1,6 @@
 import datetime
+
+from src.core.dtos import AccountResponse
 from src.persistence.database.database import Base
 from src.persistence.database.model_types import uuid_pk, created_at_type
 from sqlalchemy import ForeignKey, Table, Integer, String, func
@@ -30,6 +32,17 @@ class UsersOrm(Base):
             ")"
         ),
     )
+
+    def to_dto(self) -> AccountResponse:
+        return AccountResponse(
+            id=self.id,
+            email=self.email,
+            username=self.username,
+            is_admin=self.is_admin,
+            is_verified=self.is_verified,
+            created_at=self.created_at.timestamp(),
+            auth_via_google=True if self.google_id else False
+        )
 
 
 class LlmModelsOrm(Base):
@@ -80,7 +93,7 @@ class AuthTokensOrm(Base):
     __tablename__ = "auth_tokens"
 
     id: Mapped[uuid_pk]
-    type: Mapped[bool] = mapped_column(default=True)
+    """type: Mapped[bool] = mapped_column(default=True)"""
     valid: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[created_at_type]
     expires_at: Mapped[datetime.datetime] = mapped_column()

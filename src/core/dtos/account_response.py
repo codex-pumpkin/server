@@ -20,10 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, EmailStr
+from typing import Any, ClassVar, Dict, List, Optional, Annotated
 from uuid import UUID
-from service.openapi_server.models.llm_configuration_response import LLMConfigurationResponse
+from src.core.dtos.llm_configuration_response import LLMConfigurationResponse
 try:
     from typing import Self
 except ImportError:
@@ -33,19 +33,20 @@ class AccountResponse(BaseModel):
     """
     AccountResponse
     """ # noqa: E501
-    id: UUID = Field(description="The id of the user")
+    id: StrictStr = Field(description="The id of the user")
     email: StrictStr
     username: StrictStr
     is_admin: StrictBool = Field(description="Whether the user has admin privileges")
-    is_verified: Optional[StrictBool] = Field(default=None, description="Whether the email of the user as been verified")
+    is_verified: StrictBool = Field(description="Whether the email of the user as been verified")
     auth_via_google: StrictBool = Field(description="Whether the account was created via the google-oauth provider")
-    created_at: StrictStr = Field(description="The instant when the object was created")
-    llm_configurations: List[LLMConfigurationResponse] = Field(description="List of user's LLM configurations")
+    created_at: float = Field(description="The instant when the object was created")
+    #llm_configurations: Optional[List[LLMConfigurationResponse]] = Field(description="List of user's LLM configurations")
     __properties: ClassVar[List[str]] = ["id", "email", "username", "is_admin", "is_verified", "auth_via_google", "created_at", "llm_configurations"]
 
     model_config = {
         "populate_by_name": True,
         "validate_assignment": True,
+        "from_attributes": True,
         "protected_namespaces": (),
     }
 

@@ -7,14 +7,15 @@ from src.core.dtos import (
     PasswordResetRequestRequest,
     RefreshRequest,
     SignupRequest,
-    LoginRequest
+    LoginRequest,
+    TokenResponse
 )
 
 from typing import Annotated, Optional
 from uuid import UUID
 from pydantic import Field
 
-class IBasicAuthManger(ABC):
+class IBasicAuthManager(ABC):
 
     @abstractmethod
     async def authenticate_with_google(self, token_jwt: TokenModel):
@@ -54,5 +55,5 @@ class IBasicAuthManger(ABC):
         pass
 
     @abstractmethod
-    async def authenticate(self, request: LoginRequest):
+    async def authenticate(self, request: LoginRequest) -> TokenResponse:
         pass

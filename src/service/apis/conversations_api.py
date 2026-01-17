@@ -1,12 +1,10 @@
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
-import importlib
-import pkgutil
 
 from src.business.interfaces import IInferenceManager
 
-from src.service.openapi_server.dependencies import get_inference_manager
+from src.service.dependencies import get_inference_manager
 
 
 from fastapi import (  # noqa: F401
@@ -26,9 +24,9 @@ from fastapi import (  # noqa: F401
 
 from openapi_server.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictInt, StrictStr
-from typing import Any, List
+from typing import List
 from typing_extensions import Annotated
-from src.service.openapi_server.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt
 
 from src.core.dtos import (
     ConversationRequest,
