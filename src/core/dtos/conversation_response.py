@@ -22,8 +22,8 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from service.openapi_server.models.message_response import MessageResponse
-from service.openapi_server.models.target_language import TargetLanguage
+from src.core.dtos.message_response import MessageResponse
+from src.core.dtos.target_language import TargetLanguage
 try:
     from typing import Self
 except ImportError:

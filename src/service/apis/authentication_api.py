@@ -1,31 +1,11 @@
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
-import importlib
-import pkgutil
 
-'''
-authenticate(request: LoginRequest): Tokens
-register(request: SignupRequestRequest): AccountResponse
-authenticateWithGoogle(request: GoogleLoginRequest): Tokens
-terminateSession(): void
-refreshAccessToken(request: RefreshRequest): Tokens
-validateAccessToken(sessionToken: String): ValidationResult
-verifyEmailToken(request: EmailVerificationSubmitRequest): boolean
-initiatePasswordRecovery(request: PasswordResetRequestRequest): void
-completePasswordRecovery(request: PasswordResetSubmitRequest): boolean
-retrieveAccount(userId: UUID): AccountResponse
-modifyAccount(accountUpdate: UpdateAccountRequest): AccountResponse
-generateEmailVerification(userId: UUID): void
-checkEmailVerificationStatus(userId: UUID): boolean
-getCurrentAccountFromToken(token: String): AccountResponse
-invalidateRefreshToken(refreshToken: String): void
-checkAccountExists(email: String): boolean
-'''
 #TODO: replace impl with business package
-from src.business.interfaces import IBasicAuthManger
+from src.business.interfaces import IBasicAuthManager
 
-from src.service.openapi_server.dependencies import get_auth_manager
+from src.service.dependencies import get_auth_manager
 
 
 from fastapi import (  # noqa: F401
@@ -43,13 +23,12 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from service.openapi_server.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field
-from typing import Any, Optional
+from typing import Optional
 from typing_extensions import Annotated
 from uuid import UUID
 
-from src.service.openapi_server.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt
 
 from src.core.dtos import (
     EmailVerificationSubmitRequest,
@@ -58,7 +37,8 @@ from src.core.dtos import (
     PasswordResetSubmitRequest,
     RefreshRequest,
     SignupRequest,
-    TokenResponse
+    TokenResponse,
+    TokenModel
 )
 
 router = APIRouter()
@@ -79,9 +59,9 @@ async def auth_google_login_get(
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    auth_manager: IBasicAuthMang = Depends(get_auth_manager())
-    return await auth_manager.authenticateWithGoogle(token_jwt)
+    return await auth_manager.authenticate_with_google(token_jwt)
 
 
 @router.get(
@@ -98,8 +78,8 @@ async def auth_google_callback_get(
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    auth_manager: IBasicAuthMang = Depends(get_auth_manager())
     return await auth_manager.google_callback(token_jwt)
 
 
@@ -116,15 +96,16 @@ async def auth_google_callback_get(
 )
 async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    auth_manager = Depends(get_auth_manager())
     return await auth_manager.authenticate(login_request)
 
 
 @router.post(
     "/auth/signup",
+    status_code=201,
     responses={
-        201: {"model": TokenResponse, "description": "User created successfully"},
+        201: {"description": "User created successfully"},
         400: {"description": "Invalid request input"},
         409: {"description": "Email or username already exists"},
     },
@@ -134,9 +115,9 @@ async def auth_login_post(
 )
 async def auth_signup_post(
     signup_request: SignupRequest = Body(None, description=""),
-) -> TokenResponse:
-    auth_manger = Depends(get_auth_manager())
-    return await auth_manger.register(signup_request)
+    auth_manger: IBasicAuthManager = Depends(get_auth_manager)
+) -> None:
+    await auth_manger.register(signup_request)
 
 
 @router.post(
@@ -152,9 +133,9 @@ async def auth_signup_post(
 )
 async def auth_refresh_post(
     refresh_request: RefreshRequest = Body(None, description=""),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    auth_manager = Depends(get_auth_manager())
-    return await auth_manager.refreshAccessToken(refresh_request)
+    return await auth_manager.refresh_access_token(refresh_request)
 
 
 @router.post(
@@ -173,9 +154,9 @@ async def auth_logout_post(
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """If a refresh token is provided as a query parameter, only that session is logged out. If none is provided, **all** sessions for the user are logged out. """
-    auth_manager = Depends(get_auth_manager())
     return await auth_manager.user_logout(token_jwt,refresh_token)
 
 
@@ -190,11 +171,11 @@ async def auth_logout_post(
 )
 async def auth_request_password_reset_post(
     password_reset_request_request: PasswordResetRequestRequest = Body(None, description=""),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """Sends a password-reset token to the specified email-address, if an account exists for that email address. """
-    auth_manager = Depends(get_auth_manager())
 
-    return await auth_manager.initiatePasswordRecovery(password_reset_request_request)
+    return await auth_manager.initiate_password_recovery(password_reset_request_request)
 
 
 @router.post(
@@ -210,11 +191,11 @@ async def auth_request_password_reset_post(
 )
 async def auth_submit_password_reset_post(
     password_reset_submit_request: PasswordResetSubmitRequest = Body(None, description=""),
+    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """Accepts the password-reset token sent via email and a new password. Does not require the user to be logged in. """
-    auth_manager = Depends(get_auth_manager())
 
-    return await auth_manager.completePasswordRecovery(password_reset_submit_request)
+    return await auth_manager.complete_password_recovery(password_reset_submit_request)
 
 
 @router.post(
@@ -232,11 +213,11 @@ async def auth_request_email_verification_post(
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
+    auth_manager:IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """Sends an email-verification token to the authenticated user&#39;s email. """
-    auth_manager = Depends(get_auth_manager())
 
-    return await auth_manager.generateEmailVerification(token_jwt)
+    return await auth_manager.generate_email_verification(token_jwt)
 
 
 @router.post(
@@ -251,9 +232,9 @@ async def auth_request_email_verification_post(
     response_model_by_alias=True,
 )
 async def auth_submit_email_verification_post(
-    email_verification_submit_request: EmailVerificationSubmitRequest = Body(None, description=""),
+    email_verification_submit_request: EmailVerificationSubmitRequest = Body(None),
+    auth_manager:IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """Accepts the email-verification token sent to the user&#39;s email. """
-    auth_manager = Depends(get_auth_manager())
 
-    return await auth_manager.verifyEmailToken(email_verification_submit_request)
+    return await auth_manager.verify_email_token(email_verification_submit_request)

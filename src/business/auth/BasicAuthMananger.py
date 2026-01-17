@@ -1,0 +1,81 @@
+
+
+from src.business.interfaces import IBasicAuthManager
+
+from src.core.dtos import (
+    TokenModel,
+    EmailVerificationSubmitRequest,
+    PasswordResetSubmitRequest,
+    PasswordResetRequestRequest,
+    RefreshRequest,
+    SignupRequest,
+    LoginRequest,
+    TokenResponse
+)
+
+from src.core.exceptions import (
+    AuthError,
+)
+
+from typing import Annotated, Optional
+from uuid import UUID
+from pydantic import Field
+from src.persistence import IEntityRepository
+
+from src.persistence.database.EntityRepository import EntityRepository
+
+from src.business.auth.tokens import encode_jwt
+
+class BasicAuthManager(IBasicAuthManager):
+
+    async def authenticate_with_google(self, token_jwt: TokenModel):
+        pass
+
+    async def google_callback(self, token_jwt: TokenModel):
+        pass
+
+    async def verify_email_token(self, request: EmailVerificationSubmitRequest):
+        pass
+
+    async def generate_email_verification(self, token_jwt: TokenModel):
+        pass
+
+    async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
+        pass
+
+    async def initiate_password_recovery(self, request: PasswordResetRequestRequest):
+        pass
+
+    async def user_logout(self, token_jwt: TokenModel, refresh_token: Annotated[Optional[UUID], Field(
+        description="The refresh token to invalidate. If omitted, all sessions will be terminated.")]):
+        pass
+
+    async def refresh_access_token(self, request: RefreshRequest):
+        pass
+
+    async def register(self, request: SignupRequest):
+        repo = EntityRepository()
+        await repo.create_user(request)
+
+    async def authenticate(self, request: LoginRequest) -> TokenResponse:
+        repo:IEntityRepository = EntityRepository()
+        user = await repo.authenticate(
+            username=request.username,
+            email=request.email,
+            password=request.password
+        )
+        if user is None:
+            raise AuthError()
+        refresh_token = await repo.create_token(user.id)
+        access_token = encode_jwt(
+            payload=
+                {
+                    "sub":user.id,
+                    "refresh":refresh_token
+                }
+        )
+        token_response = TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token
+        )
+        return token_response

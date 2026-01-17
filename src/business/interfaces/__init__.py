@@ -1,10 +1,10 @@
 from .ISystemManager import ISystemManager
 from .IUserInfoManager import IUserInfoManager
 from .IInferenceManager import IInferenceManager
-from .IBasicAuthManager import IBasicAuthManger
+from .IBasicAuthManager import IBasicAuthManager
 
 __all__ = [
-    "IBasicAuthManger",
+    "IBasicAuthManager",
     "IUserInfoManager",
     "IInferenceManager",
     "ISystemManager"

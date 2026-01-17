@@ -20,9 +20,10 @@ from src.core.dtos.extra_models import TokenModel
 
 
 def get_token_jwt(
-    token_api_key_header: str = Security(
+    access_token: str = Security(
         APIKeyHeader(name="access_token", auto_error=False)
     ),
+
 ) -> TokenModel:
     """
     Check and retrieve authentication information from api_key.

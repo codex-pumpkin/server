@@ -1,7 +1,6 @@
 from src.persistence.database.database import Base, sync_engine, session_factory, async_engine
 from src.persistence.database.models import UsersOrm
 from sqlalchemy.orm import Session
-from src.persistence.database.queries import AsyncOrm
 import asyncio
 
 def create_tables():
@@ -21,8 +20,6 @@ def create_user():
         session.commit()
 
 async def test():
-    print(await AsyncOrm.get_user_by_email("asd"))
-    print(await AsyncOrm.get_user_by_email("sad@gmail.com"))
     await async_engine.dispose()
 
 

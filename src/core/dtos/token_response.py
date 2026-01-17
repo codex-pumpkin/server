@@ -33,7 +33,7 @@ class TokenResponse(BaseModel):
     TokenResponse
     """ # noqa: E501
     access_token: StrictStr
-    refresh_token: UUID
+    refresh_token: StrictStr
     __properties: ClassVar[List[str]] = ["access_token", "refresh_token"]
 
     model_config = {
