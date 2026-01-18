@@ -64,7 +64,7 @@ class EntityRepository(IEntityRepository):
             if email is not None:
                 user = await get_user_by_email(session, email)
             if user is None and username is not None:
-                user = await get_user_by_username(session, email)
+                user = await get_user_by_username(session, username)
             if user is None:
                 return None
             if not validate_password(str(user.hashed_password), password=password):
