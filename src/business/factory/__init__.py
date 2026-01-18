@@ -1,5 +1,5 @@
-from .ObjectHandler import ObjectHandler
+from .BusinessFactory import BusinessFactory
 
 __all__ = [
-    "ObjectHandler"
+    "BusinessFactory"
 ]

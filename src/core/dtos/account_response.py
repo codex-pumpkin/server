@@ -40,6 +40,7 @@ class AccountResponse(BaseModel):
     is_verified: StrictBool = Field(description="Whether the email of the user as been verified")
     auth_via_google: StrictBool = Field(description="Whether the account was created via the google-oauth provider")
     created_at: float = Field(description="The instant when the object was created")
+    verification_code:StrictStr = Field(description="Verification code")
     #llm_configurations: Optional[List[LLMConfigurationResponse]] = Field(description="List of user's LLM configurations")
     __properties: ClassVar[List[str]] = ["id", "email", "username", "is_admin", "is_verified", "auth_via_google", "created_at", "llm_configurations"]
 

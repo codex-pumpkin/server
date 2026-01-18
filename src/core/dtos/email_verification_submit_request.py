@@ -32,7 +32,7 @@ class EmailVerificationSubmitRequest(BaseModel):
     """
     EmailVerificationSubmitRequest
     """ # noqa: E501
-    verification_token: UUID = Field(description="Email verification token sent to the user")
+    verification_token: str = Field(description="Email verification token sent to the user")
     __properties: ClassVar[List[str]] = ["verification_token"]
 
     model_config = {
