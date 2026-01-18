@@ -1,20 +1,17 @@
-from src.core.dtos import SignupRequest, AccountResponse
 from src.core.exceptions import UserConflictError
-from src.persistence.database.models import UsersOrm
-from src.persistence.interfaces import IEntityRepository
+from src.persistence.impl.database.models import UsersOrm
 from src.persistence.interfaces.IEntityRepository import *
-from src.persistence.database.database import async_session_factory
+from src.persistence.impl.database.database import async_session_factory
 from sqlalchemy.exc import IntegrityError
-from typing import Dict, Optional
-from sqlalchemy import select, or_
-from src.persistence.database.hash_util import hash_password, validate_password
-from src.persistence.database.queries.user import (
+from typing import Optional
+from src.persistence.impl.database.hash_util import hash_password, validate_password
+from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
     get_user_by_email,
     get_user_by_username,
 )
 
-from src.persistence.database.queries.tokens import (
+from src.persistence.impl.database.queries.tokens import (
     create_token
 )
 
@@ -67,7 +64,7 @@ class EntityRepository(IEntityRepository):
             if email is not None:
                 user = await get_user_by_email(session, email)
             if user is None and username is not None:
-                user = await get_user_by_username(session, email)
+                user = await get_user_by_username(session, username)
             if user is None:
                 return None
             if not validate_password(str(user.hashed_password), password=password):

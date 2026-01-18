@@ -1,8 +1,8 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_
 
-from src.persistence.database.models import UsersOrm
+from src.persistence.impl.database.models import UsersOrm
 from typing import  Optional
 
 

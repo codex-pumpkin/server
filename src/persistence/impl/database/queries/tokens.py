@@ -1,10 +1,8 @@
 import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_
 
-from src.persistence.database.models import AuthTokensOrm
-from typing import  Optional
+from src.persistence.impl.database.models import AuthTokensOrm
 from src.core.settings import settings
 
 async def create_token(session:AsyncSession, user_id:str) -> AuthTokensOrm:

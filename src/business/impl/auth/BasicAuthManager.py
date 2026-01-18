@@ -20,11 +20,9 @@ from src.core.exceptions import (
 from typing import Annotated, Optional
 from uuid import UUID
 from pydantic import Field
-from src.persistence import IEntityRepository
+from src.persistence.factory import PersistenceFactory
 
-from src.persistence.database.EntityRepository import EntityRepository
-
-from src.business.auth.tokens import encode_jwt
+from src.business.impl.auth.tokens import encode_jwt
 
 class BasicAuthManager(IBasicAuthManager):
 
@@ -54,11 +52,12 @@ class BasicAuthManager(IBasicAuthManager):
         pass
 
     async def register(self, request: SignupRequest):
-        repo = EntityRepository()
-        await repo.create_user(request)
+        repo = await PersistenceFactory.get_entity_repository()
+        user = await repo.create_user(request)
+
 
     async def authenticate(self, request: LoginRequest) -> TokenResponse:
-        repo:IEntityRepository = EntityRepository()
+        repo = await PersistenceFactory.get_entity_repository()
         user = await repo.authenticate(
             username=request.username,
             email=request.email,

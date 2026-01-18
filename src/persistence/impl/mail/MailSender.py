@@ -7,7 +7,7 @@ from src.core import MailSettings
 from src.persistence.interfaces import IMailSender
 
 class MailSender(IMailSender):
-    def __init__(self, settings:MailSettings):
+    def __init__(self, settings:MailSettings = default_settings.mail_settings):
         self.context:ssl.SSLContext = ssl.create_default_context()
         self.settings:MailSettings = settings
 

@@ -1,1 +1,2 @@
 taskkill /F /IM python.exe
+Get-Process *python*,*pyw* | Stop-Process -Force

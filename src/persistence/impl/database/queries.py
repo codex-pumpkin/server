@@ -1,8 +1,7 @@
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload
-from src.persistence.database.database import async_session_factory
-from src.persistence.database.models import (
-    UsersOrm, QuotaOrm, MessagesOrm, ConversationsOrm, LlmModelsOrm, AuthTokensOrm
+from src.persistence.impl.database.database import async_session_factory
+from src.persistence.impl.database.models import (
+    UsersOrm
 )
 from typing import Optional
 

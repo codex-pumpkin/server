@@ -1,9 +1,13 @@
 import datetime
 
 from src.core.dtos import AccountResponse
-from src.persistence.database.database import Base
-from src.persistence.database.model_types import uuid_pk, created_at_type
-from sqlalchemy import ForeignKey, Table, Integer, String, func
+from src.persistence.impl.database.database import Base
+from src.persistence.impl.database.model_types import (
+    uuid_pk,
+    created_at_type,
+    verification_code,
+)
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 
@@ -17,6 +21,7 @@ class UsersOrm(Base):
     hashed_password: Mapped[str] = mapped_column()
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_verified: Mapped[bool] = mapped_column(default=False)
+    verification_code: Mapped[verification_code]
     google_id: Mapped[Optional[str]] = mapped_column()
 
     conversations: Mapped[list["ConversationsOrm"]] = relationship(
@@ -41,7 +46,8 @@ class UsersOrm(Base):
             is_admin=self.is_admin,
             is_verified=self.is_verified,
             created_at=self.created_at.timestamp(),
-            auth_via_google=True if self.google_id else False
+            auth_via_google=True if self.google_id else False,
+            verification_code=self.verification_code,
         )
 
 

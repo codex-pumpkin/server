@@ -1,6 +1,5 @@
-from src.persistence.database.database import Base, sync_engine, session_factory, async_engine
-from src.persistence.database.models import UsersOrm
-from sqlalchemy.orm import Session
+from src.persistence.impl.database.database import Base, sync_engine, session_factory, async_engine
+from src.persistence.impl.database.models import UsersOrm
 import asyncio
 
 def create_tables():
