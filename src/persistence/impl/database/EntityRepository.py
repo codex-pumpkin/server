@@ -9,6 +9,7 @@ from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
     get_user_by_email,
     get_user_by_username,
+    get_user_by_id
 )
 
 from src.persistence.impl.database.queries.tokens import (
@@ -17,7 +18,8 @@ from src.persistence.impl.database.queries.tokens import (
 )
 
 from src.core.dtos import (
-    AccountInfo
+    AccountInfo,
+    AccountResponse,
 )
 
 class EntityRepository(IEntityRepository):
@@ -25,9 +27,19 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # User-related
     # --------------------
-    async def get_user(self, user_id: str) -> User: ...
-    async def get_user_by_email(self, email: str) -> User: ...
+    async def get_user_by_id(self, user_id: str) -> Optional[AccountInfo]:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session, user_id)
+            if user is None:
+                return None
+            return user.to_dto()
 
+    async def get_user_by_email(self, email: str) -> Optional[AccountInfo]:
+        async with async_session_factory() as session:
+            user = await get_user_by_email(session, email)
+            if user is None:
+                return None
+            return user.to_dto()
 
     async def create_user(self, user: SignupRequest) -> AccountInfo:
         user_orm = UsersOrm(
@@ -63,7 +75,6 @@ class EntityRepository(IEntityRepository):
     # Authentication & validation
     # --------------------
     async def authenticate(self, username:Optional[str], email: Optional[str], password: str) -> Optional[AccountResponse]:
-
         async with async_session_factory() as session:
             user = None
             if email is not None:
@@ -77,20 +88,39 @@ class EntityRepository(IEntityRepository):
             return user.to_dto()
 
 
-    async def is_user_verified(self, user_id: str) -> bool: ...
+    async def is_user_verified(self, user_id: str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session, user_id)
+            if user is None:
+                return False
+            return user.is_verified
 
-    async def is_user_admin(self, user_id: str) -> bool: ...
+    async def verify_user(self, user_id: str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            if not user:
+                return False
+            user.is_verified = True
+            await session.commit()
+            return True
+
+    async def is_user_admin(self, user_id: str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session, user_id)
+            if user is None:
+                return False
+            return user.is_admin
 
     async def is_email_taken(self, email: str) -> bool:
         async with async_session_factory() as session:
-            user = get_user_by_email(session, email)
+            user = await get_user_by_email(session, email)
             if user is None:
                 return False
             return True
 
     async def is_username_taken(self, username: str) -> bool:
         async with async_session_factory() as session:
-            user = get_user_by_username(session, username)
+            user = await get_user_by_username(session, username)
             if user is None:
                 return False
             return True

@@ -16,6 +16,7 @@ from src.core.dtos import (
 
 from src.core.exceptions import (
     AuthError,
+    VerificationError,
 )
 
 from typing import Annotated, Optional
@@ -34,7 +35,17 @@ class BasicAuthManager(IBasicAuthManager):
         pass
 
     async def verify_email_token(self, request: EmailVerificationSubmitRequest):
-        pass
+        mail = request.email
+        token = request.verification_token
+        repo = await PersistenceFactory.get_entity_repository()
+        user = await repo.get_user_by_email(mail)
+        if user is None:
+            raise VerificationError("User with such email was not found!")
+        if user.is_verified:
+            raise VerificationError("User is already verified!")
+        if user.verification_code != token:
+            raise VerificationError("Code is not correct!")
+        return await repo.verify_user(user.id)
 
     async def generate_email_verification(self, user: AccountInfo):
         mail_sender = await PersistenceFactory.get_mail_sender()
@@ -68,10 +79,10 @@ class BasicAuthManager(IBasicAuthManager):
             password=request.password
         )
         if user is None:
-            raise AuthError()
+            raise AuthError("User is not found!")
 
         if not user.is_verified:
-            raise AuthError()
+            raise AuthError("Users email is not verified!")
 
         refresh_token = await repo.create_token(user.id)
         access_token = encode_jwt(

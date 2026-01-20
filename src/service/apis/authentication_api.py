@@ -98,6 +98,7 @@ async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
+    print(auth_manager.__class__)
     return await auth_manager.authenticate(login_request)
 
 
@@ -225,7 +226,7 @@ async def auth_request_email_verification_post(
     responses={
         204: {"description": "Email successfully verified"},
         400: {"description": "Invalid request"},
-        401: {"description": "Verification token invalid or expired"},
+        401: {"description": "Verification token invalid"},
     },
     tags=["Authentication"],
     summary="Submit an email-verification token",

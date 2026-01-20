@@ -31,3 +31,11 @@ async def get_user_by_username(session:AsyncSession, username:str) -> Optional[U
     result = await session.execute(query)
     user = result.scalar_one_or_none()
     return user
+
+async def get_user_by_id(session:AsyncSession, user_id:str) -> Optional[UsersOrm]:
+    query = select(UsersOrm).where(
+        UsersOrm.id == user_id,
+    )
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+    return user
