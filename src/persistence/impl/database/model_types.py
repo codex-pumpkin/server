@@ -27,7 +27,7 @@ created_at_type = Annotated[
 def generate_code() -> str:
     out = ""
     for _ in range(6):
-        out += random.randint(0, 9)
+        out += str(random.randint(0, 9))
     return out
 
 verification_code = Annotated[

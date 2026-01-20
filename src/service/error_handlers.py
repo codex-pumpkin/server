@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.core.exceptions import (
     UserConflictError,
-    AuthError
+    AuthError,
+    VerificationError,
 )
 
 
@@ -18,5 +19,12 @@ def register_error_handlers(app: FastAPI):
     async def auth_handler(request: Request, exc: AuthError) -> JSONResponse:
         return JSONResponse(
             status_code=401,
-            content={"detail": exc.message}
+            content={"detail": "Authentication failed.", "issue": exc.message}
+        )
+
+    @app.exception_handler(VerificationError)
+    async def verification_handler(request: Request, exc: VerificationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Verification failed", "issue":exc.message}
         )

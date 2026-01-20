@@ -13,22 +13,25 @@ class MailSender(IMailSender):
 
     async def _send_email(self, to_email: str, subject: str, html_content: str) -> None:
         """Generic async HTML email sender"""
-        message = EmailMessage()
-        message["From"] = self.settings.app_mail
-        message["To"] = to_email
-        message["Subject"] = subject
-        message.set_content("This email requires an HTML-capable client.")
-        message.add_alternative(html_content, subtype="html")
+        try:
+            message = EmailMessage()
+            message["From"] = self.settings.app_mail
+            message["To"] = to_email
+            message["Subject"] = subject
+            message.set_content("This email requires an HTML-capable client.")
+            message.add_alternative(html_content, subtype="html")
 
-        await aiosmtplib.send(
-            message,
-            hostname=self.settings.smtp_server,
-            port=self.settings.port,
-            username=self.settings.app_mail,
-            password=self.settings.password,
-            use_tls=True,
-            timeout=20,
-        )
+            await aiosmtplib.send(
+                message,
+                hostname=self.settings.smtp_server,
+                port=self.settings.port,
+                username=self.settings.app_mail,
+                password=self.settings.password,
+                use_tls=True,
+                timeout=20,
+            )
+        except Exception as e:
+            pass
 
     async def send_confirmation_email(self, to_email: str, confirmation_code: str) -> None:
         """async Email confirmation sender"""
