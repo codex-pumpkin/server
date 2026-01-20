@@ -3,6 +3,7 @@
 from src.business.interfaces import IBasicAuthManager
 
 from src.core.dtos import (
+    AccountInfo,
     TokenModel,
     EmailVerificationSubmitRequest,
     PasswordResetSubmitRequest,
@@ -20,9 +21,9 @@ from src.core.exceptions import (
 from typing import Annotated, Optional
 from uuid import UUID
 from pydantic import Field
-from src.persistence.factory import PersistenceFactory
 
 from src.business.impl.auth.tokens import encode_jwt
+from src.persistence import PersistenceFactory
 
 class BasicAuthManager(IBasicAuthManager):
 
@@ -35,8 +36,10 @@ class BasicAuthManager(IBasicAuthManager):
     async def verify_email_token(self, request: EmailVerificationSubmitRequest):
         pass
 
-    async def generate_email_verification(self, token_jwt: TokenModel):
-        pass
+    async def generate_email_verification(self, user: AccountInfo):
+        mail_sender = await PersistenceFactory.get_mail_sender()
+        print(f"{user.verification_code=}")
+        await mail_sender.send_confirmation_email(user.email, user.verification_code)
 
     async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
         pass
@@ -54,6 +57,7 @@ class BasicAuthManager(IBasicAuthManager):
     async def register(self, request: SignupRequest):
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.create_user(request)
+        await self.generate_email_verification(user)
 
 
     async def authenticate(self, request: LoginRequest) -> TokenResponse:
@@ -65,6 +69,10 @@ class BasicAuthManager(IBasicAuthManager):
         )
         if user is None:
             raise AuthError()
+
+        if not user.is_verified:
+            raise AuthError()
+
         refresh_token = await repo.create_token(user.id)
         access_token = encode_jwt(
             payload=

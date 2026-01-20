@@ -1,3 +1,5 @@
+
+from .account_info import AccountInfo
 from .account_response import AccountResponse
 from .analytics_response import AnalyticsResponse
 from .conversation_request import ConversationRequest
@@ -20,6 +22,7 @@ from .update_account_request import UpdateAccountRequest
 from .update_conversation_request import UpdateConversationRequest
 
 __all__ = [
+    "AccountInfo",
     "AccountResponse",
     "AnalyticsResponse",
     "ConversationRequest",
