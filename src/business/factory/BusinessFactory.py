@@ -6,6 +6,7 @@ from src.business.interfaces import (
     IInferenceManager,
     IUserInfoManager,
     ISystemManager,
+    IPromptManager
 )
 
 from src.business.impl import (
@@ -13,6 +14,7 @@ from src.business.impl import (
     InferenceManager,
     UserInfoManager,
     SystemManager,
+    PromptManager
 )
 
 T = TypeVar("T")
@@ -49,3 +51,7 @@ class BusinessFactory:
     @classmethod
     async def get_user_info_manager(cls) -> IUserInfoManager:
         return await cls._get_singleton(IUserInfoManager, UserInfoManager)
+
+    @classmethod
+    async def get_prompt_manager(cls) -> IPromptManager:
+        return await cls._get_singleton(IPromptManager, PromptManager)
