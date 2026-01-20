@@ -13,6 +13,11 @@ from src.persistence.impl.database.queries.user import (
 
 from src.persistence.impl.database.queries.tokens import (
     create_token
+
+)
+
+from src.core.dtos import (
+    AccountInfo
 )
 
 class EntityRepository(IEntityRepository):
@@ -24,7 +29,7 @@ class EntityRepository(IEntityRepository):
     async def get_user_by_email(self, email: str) -> User: ...
 
 
-    async def create_user(self, user: SignupRequest) -> AccountResponse:
+    async def create_user(self, user: SignupRequest) -> AccountInfo:
         user_orm = UsersOrm(
             email=user.email,
             hashed_password=hash_password(user.password),

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from src.core.dtos import (
     SignupRequest,
-    AccountResponse,
+    AccountResponse, AccountInfo,
 )
 
 
@@ -27,7 +27,7 @@ class IEntityRepository(ABC):
     @abstractmethod
     async def get_user_by_email(self, email: str) -> User: ...
     @abstractmethod
-    async def create_user(self, user: SignupRequest) -> AccountResponse: ...
+    async def create_user(self, user: SignupRequest) -> AccountInfo: ...
     @abstractmethod
     async def update_user(self, user_id: str, email: str, username: str) -> None: ...
 
@@ -35,7 +35,7 @@ class IEntityRepository(ABC):
     # Authentication & validation
     # --------------------
     @abstractmethod
-    async def authenticate(self, username:Optional[str], email: Optional[str], password: str) -> Optional[AccountResponse]: ...
+    async def authenticate(self, username:Optional[str], email: Optional[str], password: str) -> Optional[AccountInfo]: ...
     @abstractmethod
     async def is_user_verified(self, user_id: str) -> bool: ...
     @abstractmethod

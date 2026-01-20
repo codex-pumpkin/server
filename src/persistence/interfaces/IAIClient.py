@@ -5,5 +5,5 @@ from abc import abstractmethod, ABC
 
 class IAIClient(ABC):
     @abstractmethod
-    async def get_response(self, code:str) -> bool:
+    async def get_response(self, user_question: str, api_key: str, model: str) -> str:
         ...

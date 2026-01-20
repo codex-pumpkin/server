@@ -1,6 +1,6 @@
 import datetime
 
-from src.core.dtos import AccountResponse
+from src.core.dtos import AccountInfo
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
     uuid_pk,
@@ -38,8 +38,8 @@ class UsersOrm(Base):
         ),
     )
 
-    def to_dto(self) -> AccountResponse:
-        return AccountResponse(
+    def to_dto(self) -> AccountInfo:
+        return AccountInfo(
             id=self.id,
             email=self.email,
             username=self.username,

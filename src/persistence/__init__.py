@@ -1,7 +1,21 @@
-from src.persistence.interfaces import IEntityRepository
-from src.persistence.interfaces import ISemanticRepository
+
+from src.persistence.interfaces import (
+    IAIClient,
+    IGraphGenerator,
+    ICodeValidator,
+    IMailSender,
+    IEntityRepository,
+    ISemanticRepository,
+)
+
+from src.persistence.factory import PersistenceFactory
 
 __all__ = [
     "IEntityRepository",
-    "ISemanticRepository"
+    "ISemanticRepository",
+    "IMailSender",
+    "IGraphGenerator",
+    "ICodeValidator",
+    "IAIClient",
+    "PersistenceFactory"
 ]
