@@ -9,6 +9,8 @@ from src.core.dtos import (
 )
 
 from src.business.interfaces import IInferenceManager
+from src.persistence.factory.PersistenceFactory import PersistenceFactory
+from src.business.factory.BusinessFactory import BusinessFactory
 
 
 class InferenceManager(IInferenceManager):
@@ -34,3 +36,33 @@ class InferenceManager(IInferenceManager):
     async def update_conversation(self, id: Annotated[StrictStr, Field(
         description="ID of the conversation to update")], update_conversation_request: UpdateConversationRequest, token_jwt: TokenModel):
         pass
+
+
+    @staticmethod
+    async def _get_llm_response_and_validate(user_input: str) -> str:
+        """
+        Generate code based on user input, validate it, and regenerate if necessary.
+        user_input: The user's input prompt.
+        Returns the valid generated code as a string.
+        """
+        prompt_manager = BusinessFactory.get_prompt_manager()
+        validator = PersistenceFactory.get_code_validator()
+        aiclient = PersistenceFactory.get_ai_client()
+
+        doc_context = await prompt_manager.retrieve_context(user_input)
+
+        code = await aiclient.generate_code(user_input, doc_context)
+
+        validation_result = await validator.validate_code(code)
+
+        if not validation_result.is_valid:
+            for i in range(5):
+                context = prompt_manager.make_regeneration_context(
+                    validation_result.exit_code, validation_result.raw_output)
+                
+                code = await aiclient.regenerate(user_input, context, code)
+                validation_result = await validator.validate_code(code)
+                if validation_result.is_valid:
+                    return code
+
+        return "Failed to generate valid code after multiple attempts."

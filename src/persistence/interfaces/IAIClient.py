@@ -7,3 +7,7 @@ class IAIClient(ABC):
     @abstractmethod
     async def get_response(self, user_question: str, retrieved_context: str, api_key: str, model: str) -> str:
         ...
+
+    @abstractmethod
+    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str) -> str:
+        ...    

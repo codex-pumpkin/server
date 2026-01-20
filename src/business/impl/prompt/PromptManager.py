@@ -9,3 +9,7 @@ class PromptManager(IPromptManager):
         repo = await PersistenceFactory.get_semantic_repository()
         chunks = await repo.get_similar_chunks(user_input, top_k)
         return "\n".join(chunks)
+
+    def make_regeneration_context(self, exit_code: int, raw_output: str) -> str:
+        context = "Ngspice exited with code: {} .Ngspice output is: {}".format(exit_code, raw_output)
+        return context
