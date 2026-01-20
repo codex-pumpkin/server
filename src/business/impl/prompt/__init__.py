@@ -1,5 +1,5 @@
-from .InferenceManager import InferenceManager
+from .PromptManager import PromptManager
 
 __all__ = [
-    "InferenceManager"
+    "PromptManager"
 ]
