@@ -42,12 +42,12 @@ class IBasicAuthManager(ABC):
         pass
 
     @abstractmethod
-    async def user_logout(self, token_jwt: TokenModel, refresh_token: Annotated[Optional[UUID], Field(
+    async def user_logout(self, refresh_token: Annotated[UUID, Field(
         description="The refresh token to invalidate. If omitted, all sessions will be terminated.")]):
         pass
 
     @abstractmethod
-    async def refresh_access_token(self, request: RefreshRequest):
+    async def refresh_access_token(self, request: RefreshRequest) -> TokenResponse:
         pass
 
     @abstractmethod

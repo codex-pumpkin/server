@@ -53,24 +53,60 @@ class BasicAuthManager(IBasicAuthManager):
 
     async def generate_email_verification(self, user: AccountResponse):
         repo = await PersistenceFactory.get_entity_repository()
-        token = await repo.create_token(user.id, "email")
+        token = await repo.create_token(str(user.id), "email")
         mail_sender = await PersistenceFactory.get_mail_sender()
         print(f"token={str(token.id)}")
         await mail_sender.send_confirmation_email(user.email, str(token.id))
 
     async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
-        pass
+        repo = await PersistenceFactory.get_entity_repository()
+        token = await repo.get_token(request.reset_token)
+        if token is None:
+            raise AuthError("Token doesn't exist!")
+        if token.token_type != "password":
+            raise AuthError("Token isn't of type recover password!")
+        if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+            raise AuthError("Token isn't valid!")
+        await repo.invalidate_token(str(token.id))
+        await repo.change_password(str(token.user_id), request.new_password)
 
     async def initiate_password_recovery(self, request: PasswordResetRequestRequest):
-        pass
+        repo = await PersistenceFactory.get_entity_repository()
+        user = await repo.get_user_by_email(request.email)
+        if user is None:
+            raise AuthError("Such email is not used!")
+        token = await repo.create_token(str(user.id), "password")
+        mail_sender = await PersistenceFactory.get_mail_sender()
+        print(f"token={str(token.id)}")
+        await mail_sender.send_password_reset_email(user.email, str(token.id))
 
-    async def user_logout(self, token_jwt: TokenModel, refresh_token: Annotated[Optional[UUID], Field(
-        description="The refresh token to invalidate. If omitted, all sessions will be terminated.")]):
-        pass
+    async def user_logout(self, refresh_token: UUID):
+        repo = await PersistenceFactory.get_entity_repository()
+        success = await repo.invalidate_token(str(refresh_token))
+        if not success:
+            raise AuthError()
 
-    async def refresh_access_token(self, request: RefreshRequest):
+    async def refresh_access_token(self, request: RefreshRequest) -> TokenResponse:
         token = str(request.refresh_token)
+        repo = await PersistenceFactory.get_entity_repository()
+        refresh_token = await repo.get_token(token)
+        if refresh_token is None:
+            raise AuthError("Token doesn't exist!")
+        if refresh_token.token_type != "refresh":
+            raise AuthError("Token isn't of type refresh!")
+        if not refresh_token.valid or refresh_token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+            raise AuthError("Token isn't valid!")
 
+        refresh_token = await repo.change_token(token)
+        access_token = encode_jwt(
+            payload={
+                "sub": str(refresh_token.user_id),
+            }
+        )
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=token
+        )
 
     async def register(self, request: SignupRequest):
         repo = await PersistenceFactory.get_entity_repository()
@@ -91,12 +127,13 @@ class BasicAuthManager(IBasicAuthManager):
         if not user.is_verified:
             raise AuthError("Users email is not verified!")
 
-        refresh_token = await repo.create_token(user.id, "refresh")
+        await repo.invalidate_all_refresh_tokens(str(user.id))
+        refresh_token = await repo.create_token(str(user.id), "refresh")
         refresh_token = str(refresh_token.id)
         access_token = encode_jwt(
             payload=
                 {
-                    "sub":user.id,
+                    "sub":str(user.id),
                 }
         )
         token_response = TokenResponse(

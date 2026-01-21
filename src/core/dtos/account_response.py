@@ -33,7 +33,7 @@ class AccountResponse(BaseModel):
     """
     AccountResponse
     """ # noqa: E501
-    id: StrictStr = Field(description="The id of the user")
+    id: UUID = Field(description="The id of the user")
     email: StrictStr
     username: StrictStr
     is_admin: StrictBool = Field(description="Whether the user has admin privileges")

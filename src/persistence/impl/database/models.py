@@ -120,7 +120,7 @@ class TokensOrm(Base):
 
     def to_dto(self) -> TokenInfo:
         return TokenInfo(
-            id=uuid.UUID(hex=self.id),
+            id=uuid.UUID(self.id),
             created_at=self.created_at,
             expires_at=self.expires_at,
             valid=self.valid,
