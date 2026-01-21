@@ -65,3 +65,22 @@ class CodeValidator(ICodeValidator):
                 pass
 
 
+async def _main():
+    code = """
+    * RC circuit test
+    V1 1 0 DC 5
+    R1 1 2 10k
+    C1 2 0 1uF
+    .op
+    .end
+    """
+    validator = CodeValidator()
+    result = await validator.validate_code(code)
+
+    print(f"Valid: {result.isValid}")
+    print(f"Exit code: {result.exitCode}")
+    print("Output:\n", result.rawOutput)
+
+
+if __name__ == "__main__":
+    asyncio.run(_main())
