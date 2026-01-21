@@ -8,14 +8,14 @@ from src.persistence.impl.database.models import (
     TokenType
 )
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from src.core.settings import settings
 from typing import Optional
 
 
 async def create_token(session:AsyncSession, user_id:str, token_type:str) -> TokensOrm:
     now = datetime.datetime.now(datetime.UTC)
-    exp = now + datetime.timedelta(settings.refresh_settings.expire_time)
+    exp = now + datetime.timedelta(minutes=settings.refresh_settings.expire_time)
     token = TokensOrm(
         expires_at=exp,
         user_id=user_id,
@@ -31,3 +31,13 @@ async def get_token_by_id(session:AsyncSession, token_id:str) -> Optional[Tokens
     result = await session.execute(query)
     token = result.scalar_one_or_none()
     return token
+
+
+async def invalidate_all_refresh(session:AsyncSession, user_id:str) -> None:
+    stmt = (
+        update(TokensOrm)
+        .where(TokensOrm.user_id == user_id and TokensOrm.type == TokenType.REFRESH)
+        .values(valid=False)
+    )
+    await session.execute(stmt)
+    await session.commit()
