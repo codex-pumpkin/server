@@ -17,9 +17,6 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-
-
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from uuid import UUID
@@ -32,8 +29,7 @@ class EmailVerificationSubmitRequest(BaseModel):
     """
     EmailVerificationSubmitRequest
     """ # noqa: E501
-    email: StrictStr
-    verification_token: str = Field(description="Email verification token sent to the user")
+    verification_token: UUID = Field(description="Email verification token sent to the user")
     __properties: ClassVar[List[str]] = ["verification_token"]
 
     model_config = {

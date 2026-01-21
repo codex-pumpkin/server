@@ -1,9 +1,9 @@
-
+import datetime
 
 from src.business.interfaces import IBasicAuthManager
 
 from src.core.dtos import (
-    AccountInfo,
+    AccountResponse,
     TokenModel,
     EmailVerificationSubmitRequest,
     PasswordResetSubmitRequest,
@@ -35,22 +35,28 @@ class BasicAuthManager(IBasicAuthManager):
         pass
 
     async def verify_email_token(self, request: EmailVerificationSubmitRequest):
-        mail = request.email
         token = request.verification_token
         repo = await PersistenceFactory.get_entity_repository()
-        user = await repo.get_user_by_email(mail)
-        if user is None:
-            raise VerificationError("User with such email was not found!")
-        if user.is_verified:
-            raise VerificationError("User is already verified!")
-        if user.verification_code != token:
-            raise VerificationError("Code is not correct!")
-        return await repo.verify_user(user.id)
 
-    async def generate_email_verification(self, user: AccountInfo):
+        token_info = await repo.get_token(str(token))
+        if token_info is None:
+            raise VerificationError("Token doesn't exist!")
+        if token_info.token_type != "email":
+            raise VerificationError("Token isn't email token!")
+        if token_info.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+            raise VerificationError("Token is already expired!")
+        if not token_info.valid:
+            raise VerificationError("Token is invalidated!")
+
+        await repo.invalidate_token(str(token_info.id))
+        await repo.verify_user(str(token_info.user_id))
+
+    async def generate_email_verification(self, user: AccountResponse):
+        repo = await PersistenceFactory.get_entity_repository()
+        token = await repo.create_token(user.id, "email")
         mail_sender = await PersistenceFactory.get_mail_sender()
-        print(f"{user.verification_code=}")
-        await mail_sender.send_confirmation_email(user.email, user.verification_code)
+        print(f"token={str(token.id)}")
+        await mail_sender.send_confirmation_email(user.email, str(token.id))
 
     async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
         pass
@@ -63,7 +69,8 @@ class BasicAuthManager(IBasicAuthManager):
         pass
 
     async def refresh_access_token(self, request: RefreshRequest):
-        pass
+        token = str(request.refresh_token)
+
 
     async def register(self, request: SignupRequest):
         repo = await PersistenceFactory.get_entity_repository()
@@ -84,12 +91,12 @@ class BasicAuthManager(IBasicAuthManager):
         if not user.is_verified:
             raise AuthError("Users email is not verified!")
 
-        refresh_token = await repo.create_token(user.id)
+        refresh_token = await repo.create_token(user.id, "refresh")
+        refresh_token = str(refresh_token.id)
         access_token = encode_jwt(
             payload=
                 {
                     "sub":user.id,
-                    "refresh":refresh_token
                 }
         )
         token_response = TokenResponse(

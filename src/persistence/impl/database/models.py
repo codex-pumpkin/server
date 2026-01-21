@@ -1,15 +1,20 @@
 import datetime
 
-from src.core.dtos import AccountInfo
+from src.core.dtos import (
+    AccountResponse,
+    TokenInfo
+)
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
     uuid_pk,
     created_at_type,
     verification_code,
 )
-from sqlalchemy import ForeignKey
+import enum
+from sqlalchemy import ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
+import uuid
 
 class UsersOrm(Base):
     __tablename__ = "users"
@@ -21,25 +26,24 @@ class UsersOrm(Base):
     hashed_password: Mapped[str] = mapped_column()
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_verified: Mapped[bool] = mapped_column(default=False)
-    verification_code: Mapped[verification_code]
-    google_id: Mapped[Optional[str]] = mapped_column()
+    google_id: Mapped[Optional[str]] = mapped_column(default=None)
 
     conversations: Mapped[list["ConversationsOrm"]] = relationship(
         back_populates="user"
     )
-    valid_token: Mapped["AuthTokensOrm"] = relationship(
+    valid_token: Mapped["TokensOrm"] = relationship(
         back_populates="user",
         primaryjoin=(
             "and_("
-            "UsersOrm.id == AuthTokensOrm.user_id, "
-            "AuthTokensOrm.valid == True, "
-            "AuthTokensOrm.expires_at > func.now()"
+            "UsersOrm.id == TokensOrm.user_id, "
+            "TokensOrm.valid == True, "
+            "TokensOrm.expires_at > func.now()"
             ")"
         ),
     )
 
-    def to_dto(self) -> AccountInfo:
-        return AccountInfo(
+    def to_dto(self) -> AccountResponse:
+        return AccountResponse(
             id=self.id,
             email=self.email,
             username=self.username,
@@ -47,7 +51,6 @@ class UsersOrm(Base):
             is_verified=self.is_verified,
             created_at=self.created_at.timestamp(),
             auth_via_google=True if self.google_id else False,
-            verification_code=self.verification_code,
         )
 
 
@@ -94,12 +97,18 @@ class MessagesOrm(Base):
         back_populates="messages"
     )
 
-#to do fix type
-class AuthTokensOrm(Base):
-    __tablename__ = "auth_tokens"
+
+class TokenType(enum.Enum):
+    REFRESH="refresh"
+    EMAIL="email"
+    PASSWORD="password"
+
+
+class TokensOrm(Base):
+    __tablename__ = "tokens"
 
     id: Mapped[uuid_pk]
-    """type: Mapped[bool] = mapped_column(default=True)"""
+    type: Mapped[TokenType] = mapped_column(Enum(TokenType), nullable=False)
     valid: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[created_at_type]
     expires_at: Mapped[datetime.datetime] = mapped_column()
@@ -109,6 +118,15 @@ class AuthTokensOrm(Base):
         back_populates="valid_token"
     )
 
+    def to_dto(self) -> TokenInfo:
+        return TokenInfo(
+            id=uuid.UUID(hex=self.id),
+            created_at=self.created_at,
+            expires_at=self.expires_at,
+            valid=self.valid,
+            user_id=uuid.UUID(self.user_id),
+            token_type=self.type.value
+        )
 
 class QuotaOrm(Base):
     __tablename__ = "quota_config"
