@@ -1,9 +1,11 @@
+import datetime
+
 from src.core.exceptions import UserConflictError
 from src.persistence.impl.database.models import UsersOrm
 from src.persistence.interfaces.IEntityRepository import *
 from src.persistence.impl.database.database import async_session_factory
 from sqlalchemy.exc import IntegrityError
-from typing import Optional
+from typing import Optional, Literal, Union
 from src.persistence.impl.database.hash_util import hash_password, validate_password
 from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
@@ -13,13 +15,13 @@ from src.persistence.impl.database.queries.user import (
 )
 
 from src.persistence.impl.database.queries.tokens import (
-    create_token
-
+    create_token,
+    get_token_by_id
 )
 
 from src.core.dtos import (
-    AccountInfo,
     AccountResponse,
+    AccountResponse, TokenInfo,
 )
 
 class EntityRepository(IEntityRepository):
@@ -27,21 +29,21 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # User-related
     # --------------------
-    async def get_user_by_id(self, user_id: str) -> Optional[AccountInfo]:
+    async def get_user_by_id(self, user_id: str) -> Optional[AccountResponse]:
         async with async_session_factory() as session:
             user = await get_user_by_id(session, user_id)
             if user is None:
                 return None
             return user.to_dto()
 
-    async def get_user_by_email(self, email: str) -> Optional[AccountInfo]:
+    async def get_user_by_email(self, email: str) -> Optional[AccountResponse]:
         async with async_session_factory() as session:
             user = await get_user_by_email(session, email)
             if user is None:
                 return None
             return user.to_dto()
 
-    async def create_user(self, user: SignupRequest) -> AccountInfo:
+    async def create_user(self, user: SignupRequest) -> AccountResponse:
         user_orm = UsersOrm(
             email=user.email,
             hashed_password=hash_password(user.password),
@@ -128,16 +130,37 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Token-related
     # --------------------
-    async def get_token(self, token_id: str) -> str: ...
-
-    async def create_token(self, user_id: str) -> str:
+    async def get_token(self, token_id: str) -> Optional[TokenInfo]:
         async with async_session_factory() as session:
-            token = await create_token(session=session, user_id=user_id)
-            return token.id
+            token = await get_token_by_id(session=session, token_id=token_id)
+            if token is None:
+                return None
+            return token.to_dto()
 
-    async def change_token(self, token_id: str, token: str) -> None: ...
-    async def invalidate_token(self, token_id: str) -> None: ...
-    async def is_token_valid(self, token_id: str) -> bool: ...
+    async def create_token(self, user_id: str, token_type:Union[Literal["refresh"], Literal["email"], Literal["password"]]) -> TokenInfo:
+        async with async_session_factory() as session:
+            token = await create_token(session=session, user_id=user_id, token_type=token_type)
+            return token.to_dto()
+
+    async def change_token(self, token_id: str, token: str) -> bool: ...
+
+    async def invalidate_token(self, token_id: str) -> bool:
+        async with async_session_factory() as session:
+            token = await get_token_by_id(session=session, token_id=token_id)
+            if token is None:
+                return False
+            token.valid = False
+            await session.commit()
+            return True
+
+    async def is_token_valid(self, token_id: str) -> bool:
+        async with async_session_factory() as session:
+            token = await get_token_by_id(session=session, token_id=token_id)
+            if token is None:
+                return False
+            if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+                return False
+            return True
 
     # --------------------
     # Chat / Conversation-related
