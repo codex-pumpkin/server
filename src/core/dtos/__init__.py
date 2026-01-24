@@ -1,5 +1,4 @@
 
-from .account_info import AccountInfo
 from .account_response import AccountResponse
 from .analytics_response import AnalyticsResponse
 from .conversation_request import ConversationRequest
@@ -17,12 +16,13 @@ from .quota_config import QuotaConfig
 from .refresh_request import RefreshRequest
 from .signup_request import SignupRequest
 from .target_language import TargetLanguage
+from .token_info import TokenInfo
 from .token_response import TokenResponse
 from .update_account_request import UpdateAccountRequest
 from .update_conversation_request import UpdateConversationRequest
 
 __all__ = [
-    "AccountInfo",
+    "AccountResponse",
     "AccountResponse",
     "AnalyticsResponse",
     "ConversationRequest",
@@ -40,6 +40,7 @@ __all__ = [
     "RefreshRequest",
     "SignupRequest",
     "TargetLanguage",
+    "TokenInfo",
     "TokenResponse",
     "UpdateAccountRequest",
     "UpdateConversationRequest"

@@ -151,20 +151,21 @@ async def auth_refresh_post(
     response_model_by_alias=True,
 )
 async def auth_logout_post(
-    refresh_token: Annotated[Optional[UUID], Field(description="The refresh token to invalidate. If omitted, all sessions will be terminated.")] = Query(None, description="The refresh token to invalidate. If omitted, all sessions will be terminated.", alias="refresh_token"),
+    refresh_token: Annotated[UUID, Field(description="The refresh token to invalidate. If omitted, all sessions will be terminated.")] = Query(None, description="The refresh token to invalidate. If omitted, all sessions will be terminated.", alias="refresh_token"),
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
     """If a refresh token is provided as a query parameter, only that session is logged out. If none is provided, **all** sessions for the user are logged out. """
-    return await auth_manager.user_logout(token_jwt,refresh_token)
+    return await auth_manager.user_logout(refresh_token)
 
 
 @router.post(
     "/auth/request-password-reset",
     responses={
         204: {"description": "Password-reset token sent"},
+        401: {"description": "No user with such email"}
     },
     tags=["Authentication"],
     summary="Request a password-reset token to a specified email address.",

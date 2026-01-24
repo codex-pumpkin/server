@@ -1,18 +1,43 @@
 import datetime
+from token import tok_name
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.persistence.impl.database.models import AuthTokensOrm
-from src.core.settings import settings
+from src.persistence.impl.database.models import (
+    TokensOrm,
+    TokenType
+)
 
-async def create_token(session:AsyncSession, user_id:str) -> AuthTokensOrm:
+from sqlalchemy import select, update
+from src.core.settings import settings
+from typing import Optional
+
+
+async def create_token(session:AsyncSession, user_id:str, token_type:str) -> TokensOrm:
     now = datetime.datetime.now(datetime.UTC)
-    exp = now + datetime.timedelta(settings.refresh_settings.expire_time)
-    token = AuthTokensOrm(
+    exp = now + datetime.timedelta(minutes=settings.refresh_settings.expire_time)
+    token = TokensOrm(
         expires_at=exp,
-        user_id=user_id
+        user_id=user_id,
+        type=TokenType(token_type)
     )
     session.add(token)
     await session.commit()
     await session.refresh(token)
     return token
+
+async def get_token_by_id(session:AsyncSession, token_id:str) -> Optional[TokensOrm]:
+    query = select(TokensOrm).where(TokensOrm.id == token_id)
+    result = await session.execute(query)
+    token = result.scalar_one_or_none()
+    return token
+
+
+async def invalidate_all_refresh(session:AsyncSession, user_id:str) -> None:
+    stmt = (
+        update(TokensOrm)
+        .where(TokensOrm.user_id == user_id and TokensOrm.type == TokenType.REFRESH)
+        .values(valid=False)
+    )
+    await session.execute(stmt)
+    await session.commit()
