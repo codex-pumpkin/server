@@ -11,10 +11,10 @@ from src.core.dtos import (
 from src.business.interfaces import ISystemManager
 
 class SystemManager(ISystemManager):
-    async def get_quota_settings(self, token_jwt: TokenModel):
+    async def get_quota_settings(self):
         pass
 
-    async def apply_quota_adjustment(self, token_jwt: TokenModel, quota_config: QuotaConfig):
+    async def apply_quota_adjustment(self, quota_config: QuotaConfig):
         pass
 
     async def get_analytics(self, token_jwt: TokenModel):
