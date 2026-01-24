@@ -18,10 +18,14 @@ class JWTSettings(BaseModel):
 class RefreshSettings(BaseModel):
     expire_time:int
 
+class LLMSettings(BaseModel):
+    num_of_regenerations: int      
+
 class Settings(BaseModel):
     mail_settings: MailSettings
     jwt_settings: JWTSettings
     refresh_settings: RefreshSettings
+    llm_settings: LLMSettings
 
 mail_settings = MailSettings(
     smtp_server="smtp.gmail.com",
@@ -41,8 +45,15 @@ refresh_settings = RefreshSettings(
     expire_time= 1 * 30 * 24 * 60
 )
 
+llm_settings = LLMSettings(
+    num_of_regenerations=5
+)
+
 settings = Settings(
     mail_settings=mail_settings,
     jwt_settings=jwt_settings,
-    refresh_settings=refresh_settings
+    refresh_settings=refresh_settings,
+    llm_settings=llm_settings
 )
+
+

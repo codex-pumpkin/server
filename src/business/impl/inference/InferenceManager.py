@@ -11,6 +11,7 @@ from src.core.dtos import (
 from src.business.interfaces import IInferenceManager
 from src.persistence.factory.PersistenceFactory import PersistenceFactory
 from src.business.factory.BusinessFactory import BusinessFactory
+from src.core.settings import settings
 
 
 class InferenceManager(IInferenceManager):
@@ -45,9 +46,9 @@ class InferenceManager(IInferenceManager):
         user_input: The user's input prompt.
         Returns the valid generated code as a string.
         """
-        prompt_manager = BusinessFactory.get_prompt_manager()
-        validator = PersistenceFactory.get_code_validator()
-        aiclient = PersistenceFactory.get_ai_client()
+        prompt_manager = await BusinessFactory.get_prompt_manager()
+        validator = await PersistenceFactory.get_code_validator()
+        aiclient = await PersistenceFactory.get_ai_client()
 
         doc_context = await prompt_manager.retrieve_context(user_input)
 
@@ -56,7 +57,7 @@ class InferenceManager(IInferenceManager):
         validation_result = await validator.validate_code(code)
 
         if not validation_result.is_valid:
-            for i in range(5):
+            for i in range(settings.llm_settings.num_of_regenerations):
                 context = prompt_manager.make_regeneration_context(
                     validation_result.exit_code, validation_result.raw_output)
                 
@@ -64,5 +65,7 @@ class InferenceManager(IInferenceManager):
                 validation_result = await validator.validate_code(code)
                 if validation_result.is_valid:
                     return code
+        else:
+            return code       
 
         return "Failed to generate valid code after multiple attempts."
