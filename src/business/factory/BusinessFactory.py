@@ -9,14 +9,6 @@ from src.business.interfaces import (
     IPromptManager
 )
 
-from src.business.impl import (
-    BasicAuthManager,
-    InferenceManager,
-    UserInfoManager,
-    SystemManager,
-    PromptManager
-)
-
 T = TypeVar("T")
 
 
@@ -38,20 +30,25 @@ class BusinessFactory:
 
     @classmethod
     async def get_inference_manager(cls) -> IInferenceManager:
+        from src.business.impl.inference.InferenceManager import InferenceManager
         return await cls._get_singleton(IInferenceManager, InferenceManager)
 
     @classmethod
     async def get_system_manager(cls) -> ISystemManager:
+        from src.business.impl.system.SystemManager import SystemManager
         return await cls._get_singleton(ISystemManager, SystemManager)
 
     @classmethod
     async def get_basic_auth_manager(cls) -> IBasicAuthManager:
+        from src.business.impl.auth.BasicAuthManager import BasicAuthManager
         return await cls._get_singleton(IBasicAuthManager, BasicAuthManager)
 
     @classmethod
     async def get_user_info_manager(cls) -> IUserInfoManager:
+        from src.business.impl.userinfo.UserInfoManager import UserInfoManager
         return await cls._get_singleton(IUserInfoManager, UserInfoManager)
 
     @classmethod
     async def get_prompt_manager(cls) -> IPromptManager:
+        from src.business.impl.prompt.PromptManager import PromptManager
         return await cls._get_singleton(IPromptManager, PromptManager)

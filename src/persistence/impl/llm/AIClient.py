@@ -10,7 +10,7 @@ _PREPROMPT: Final[str] = textwrap.dedent("""\
     If the context is incomplete or suboptimal, improve it.
     Do NOT copy node naming errors.
     Generate a clean, correct SPICE netlist.
-    Return SPICE code only, without any explanations.
+    Return only code, without any explanations and comments, that can be directly pasted into ngspice.
 """)
 
 _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
@@ -20,7 +20,7 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
     along with exitCode, rawOutput from ngspice 
     and the user question itself.
     Generate a clean, correct SPICE netlist.
-    Return SPICE code only, without any explanations.
+    Return only code, without any explanations and comments, that can be directly pasted into ngspice.
 """)
 
 class AIClient(IAIClient):
@@ -42,7 +42,7 @@ class AIClient(IAIClient):
                 {"role": "user", "content": f"Context:\n{retrieved_context}\n\nQuestion:\n{user_question}"}
                 ],
             temperature=0.7,
-            max_tokens=None,
+            max_tokens=512,
         )
         return resp.choices[0].message.content
     
@@ -65,7 +65,7 @@ class AIClient(IAIClient):
                  \n Code:\n{code} Context:\n{regeneration_context}\n"}
                 ],
             temperature=0.7,
-            max_tokens=None,
+            max_tokens=512,
         )
         return resp.choices[0].message.content
     

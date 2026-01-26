@@ -46,7 +46,7 @@ refresh_settings = RefreshSettings(
 )
 
 llm_settings = LLMSettings(
-    num_of_regenerations=5
+    num_of_regenerations=1
 )
 
 settings = Settings(
