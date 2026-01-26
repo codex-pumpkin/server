@@ -10,7 +10,8 @@ _PREPROMPT: Final[str] = textwrap.dedent("""\
     If the context is incomplete or suboptimal, improve it.
     Do NOT copy node naming errors.
     Generate a clean, correct SPICE netlist.
-    Return only code, without any explanations and comments, that can be directly pasted into ngspice.
+    Return SPICE code only that can be directly pasted into ngspice, 
+    without any explanations.
 """)
 
 _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
@@ -20,7 +21,8 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
     along with exitCode, rawOutput from ngspice 
     and the user question itself.
     Generate a clean, correct SPICE netlist.
-    Return only code, without any explanations and comments, that can be directly pasted into ngspice.
+    Return SPICE code only that can be directly pasted into ngspice, 
+    without any explanations.
 """)
 
 class AIClient(IAIClient):
