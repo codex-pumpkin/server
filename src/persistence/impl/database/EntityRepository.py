@@ -7,6 +7,7 @@ from src.persistence.impl.database.database import async_session_factory
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, Literal, Union
 from src.persistence.impl.database.hash_util import hash_password, validate_password
+
 from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
     get_user_by_email,
@@ -16,12 +17,20 @@ from src.persistence.impl.database.queries.user import (
 
 from src.persistence.impl.database.queries.tokens import (
     create_token,
-    get_token_by_id, invalidate_all_refresh
+    get_token_by_id,
+    invalidate_all_refresh
+)
+
+from src.persistence.impl.database.queries.quota import (
+    get_quota,
+    set_quota
 )
 
 from src.core.dtos import (
     AccountResponse,
-    AccountResponse, TokenInfo,
+    AccountResponse,
+    TokenInfo,
+    QuotaConfig
 )
 
 class EntityRepository(IEntityRepository):
@@ -216,8 +225,19 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Quota-related
     # --------------------
-    async def change_quota(self, quota: QuotaConfig) -> None: ...
-    async def get_quota(self) -> QuotaConfig: ...
+    async def change_quota(self, quota: QuotaConfig) -> None:
+        async with async_session_factory() as session:
+            await set_quota(
+                session=session,
+                admin_limit=quota.admin,
+                member_limit=quota.member
+            )
+
+    async def get_quota(self) -> QuotaConfig:
+        async with async_session_factory() as session:
+            quota_orm = await get_quota(session=session)
+            return quota_orm.to_dto()
+
     async def get_user_quota_remaining(self, user_id: str, period: date) -> int: ...
     async def is_quota_exceeded(self, user_id: str) -> bool: ...
 

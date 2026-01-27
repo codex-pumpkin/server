@@ -6,8 +6,8 @@ from abc import ABC, abstractmethod
 from src.core.dtos import (
     SignupRequest,
     AccountResponse,
-    AccountResponse,
-    TokenInfo
+    TokenInfo,
+    QuotaConfig
 )
 from typing import Literal, Union
 
@@ -17,7 +17,6 @@ from typing import Literal, Union
 class User: ...
 class ChatMetaData: ...
 class ModelData: ...
-class QuotaConfig: ...
 class UsageData: ...
 
 

@@ -57,10 +57,8 @@ async def quota_get(system_manger : ISystemManager = Depends(get_system_manager)
 )
 async def quota_put(
     quota_config: QuotaConfig,
-    token_jwt: TokenModel = Security(get_token_jwt),
+    #token_jwt: TokenModel = Security(get_token_jwt),
     system_manger: ISystemManager = Depends(get_system_manager)
-) -> QuotaConfig:
+) -> None:
     """Updates the quota limits for members and admins. Only for admins."""
-    if token_jwt is None or not token_jwt.is_admin:
-        pass
     return await system_manger.apply_quota_adjustment(quota_config=quota_config)

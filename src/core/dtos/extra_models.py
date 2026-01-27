@@ -9,4 +9,3 @@ class TokenModel(BaseModel):
 
     sub: UUID
     is_admin: StrictBool
-    e
