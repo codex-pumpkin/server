@@ -15,26 +15,22 @@ from fastapi.security import (  # noqa: F401
     SecurityScopes,
 )
 from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
-
+from fastapi import HTTPException, status
 from src.core.dtos.extra_models import TokenModel
-
+from src.business.impl.auth import check_if_jwt_valid, decode_jwt
 
 def get_token_jwt(
     access_token: str = Security(
         APIKeyHeader(name="access_token", auto_error=False)
-    ),
-
+    )
 ) -> TokenModel:
-    """
-    Check and retrieve authentication information from api_key.
+    if not check_if_jwt_valid(access_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="access_token isnt valid!",
+        )
 
-    :param token_api_key_header API key provided by Authorization[access_token] header
-    
-    
-    :type token_api_key_header: str
-    :return: Information attached to provided api_key or None if api_key is invalid or does not allow access to called API
-    :rtype: TokenModel | None
-    """
-
-    ...
+    payload = decode_jwt(access_token)
+    token_data = TokenModel(**payload)
+    return token_data
 

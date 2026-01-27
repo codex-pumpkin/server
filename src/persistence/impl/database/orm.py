@@ -1,5 +1,5 @@
 from src.persistence.impl.database.database import Base, sync_engine, session_factory, async_engine
-from src.persistence.impl.database.models import UsersOrm
+from src.persistence.impl.database.models import UsersOrm, QuotaOrm
 import asyncio
 
 def create_tables():
@@ -7,6 +7,16 @@ def create_tables():
     Base.metadata.drop_all(sync_engine)
     Base.metadata.create_all(sync_engine)
     sync_engine.echo = True
+    create_quota()
+
+def create_quota():
+    quota = QuotaOrm(
+        admin_limit=100,
+        member_limit=20
+    )
+    with session_factory() as session:
+        session.add(quota)
+        session.commit()
 
 def create_user():
     user = UsersOrm(

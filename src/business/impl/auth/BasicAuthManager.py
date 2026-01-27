@@ -98,9 +98,11 @@ class BasicAuthManager(IBasicAuthManager):
             raise AuthError("Token isn't valid!")
 
         refresh_token = await repo.change_token(token)
+        user = await repo.get_user_by_id(str(refresh_token.user_id))
         access_token = encode_jwt(
             payload={
                 "sub": str(refresh_token.user_id),
+                "is_admin": user.is_admin
             }
         )
         return TokenResponse(

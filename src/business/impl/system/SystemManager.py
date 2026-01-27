@@ -9,13 +9,17 @@ from src.core.dtos import (
 )
 
 from src.business.interfaces import ISystemManager
+from src.persistence import PersistenceFactory
+
 
 class SystemManager(ISystemManager):
-    async def get_quota_settings(self, token_jwt: TokenModel):
-        pass
+    async def get_quota_settings(self):
+        repo = await PersistenceFactory.get_entity_repository()
+        return await repo.get_quota()
 
-    async def apply_quota_adjustment(self, token_jwt: TokenModel, quota_config: QuotaConfig):
-        pass
+    async def apply_quota_adjustment(self, quota_config: QuotaConfig) -> None:
+        repo = await PersistenceFactory.get_entity_repository()
+        await repo.change_quota(quota_config)
 
     async def get_analytics(self, token_jwt: TokenModel):
         pass

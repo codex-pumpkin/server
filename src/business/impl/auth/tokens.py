@@ -37,7 +37,7 @@ def decode_jwt(
         algorithms=algorithm
     )
 
-def check_if_valid(jwt_token:str) -> bool:
+def check_if_jwt_valid(jwt_token:str) -> bool:
     try:
         data:Dict = decode_jwt(jwt_token)
     except Exception as e:
@@ -50,7 +50,7 @@ def _main():
     print(encoded)
     decoded = decode_jwt(encoded)
     print(decoded)
-    print(check_if_valid(encoded))
+    print(check_if_jwt_valid(encoded))
 
 if __name__ == "__main__":
     _main()

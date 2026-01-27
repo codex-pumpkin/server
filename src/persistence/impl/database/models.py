@@ -2,7 +2,8 @@ import datetime
 
 from src.core.dtos import (
     AccountResponse,
-    TokenInfo
+    TokenInfo,
+    QuotaConfig
 )
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
@@ -134,3 +135,9 @@ class QuotaOrm(Base):
     id: Mapped[uuid_pk]
     admin_limit: Mapped[int]
     member_limit: Mapped[int]
+
+    def to_dto(self) -> QuotaConfig:
+        return QuotaConfig(
+            admin=self.admin_limit,
+            member=self.member_limit
+        )
