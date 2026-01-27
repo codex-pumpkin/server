@@ -39,8 +39,7 @@ class InferenceManager(IInferenceManager):
         pass
 
 
-    @staticmethod
-    async def _get_llm_response_and_validate(user_input: str) -> str:
+    async def _get_llm_response_and_validate(self, user_input: str) -> str:
         """
         Generate code based on user input, validate it, and regenerate if necessary.
         user_input: The user's input prompt.
@@ -49,23 +48,35 @@ class InferenceManager(IInferenceManager):
         prompt_manager = await BusinessFactory.get_prompt_manager()
         validator = await PersistenceFactory.get_code_validator()
         aiclient = await PersistenceFactory.get_ai_client()
+        api_key = settings.llm_settings.api_key
 
         doc_context = await prompt_manager.retrieve_context(user_input)
 
-        code = await aiclient.generate_code(user_input, doc_context)
+        code = await aiclient.get_response(user_input, doc_context, api_key)
+        code = await self._clean_markdown(code)
 
         validation_result = await validator.validate_code(code)
+        print(validation_result.rawOutput)
 
         if not validation_result.is_valid:
             for i in range(settings.llm_settings.num_of_regenerations):
                 context = prompt_manager.make_regeneration_context(
-                    validation_result.exit_code, validation_result.raw_output)
+                    validation_result.exitCode, validation_result.rawOutput)
                 
-                code = await aiclient.regenerate(user_input, context, code)
+                code = await aiclient.regenerate(user_input, context, code, api_key)
+                code = await self._clean_markdown(code)
+                
                 validation_result = await validator.validate_code(code)
-                if validation_result.is_valid:
+                if validation_result.isValid:
                     return code
         else:
             return code       
 
         return "Failed to generate valid code after multiple attempts."
+    
+    
+    async def _clean_markdown(self, code: str) -> str:
+        """Remove markdown formatting from the generated code."""
+        if code.startswith("```") and code.endswith("```"):
+            code = "\n".join(code.split("\n")[1:-1])
+        return code

@@ -46,7 +46,9 @@ refresh_settings = RefreshSettings(
 )
 
 llm_settings = LLMSettings(
-    num_of_regenerations=1
+    num_of_regenerations=1,
+    model="gpt-4o-mini",
+    api_key="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 )
 
 settings = Settings(
