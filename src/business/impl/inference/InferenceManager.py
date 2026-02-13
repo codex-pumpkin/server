@@ -5,8 +5,11 @@ from src.core.dtos import (
     TokenModel,
     MessageRequest,
     ConversationRequest,
+    ConversationResponse,
     UpdateConversationRequest
 )
+
+from typing import List
 
 from src.business.interfaces import IInferenceManager
 from src.persistence.factory.PersistenceFactory import PersistenceFactory
@@ -16,8 +19,9 @@ from src.core.settings import settings
 
 class InferenceManager(IInferenceManager):
 
-    async def get_conversations_by_user(self, token_jwt: TokenModel):
-        pass
+    async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
+        repo = await PersistenceFactory.get_entity_repository()
+        return await repo.get_chats(str(token_jwt.sub))
 
     async def post_message_to_conversation(self, id: Annotated[StrictInt, Field(
         description="Id of the target conversation")], message_request: MessageRequest, token_jwt: TokenModel):
@@ -31,8 +35,9 @@ class InferenceManager(IInferenceManager):
         StrictStr, Field(description="Id of the conversation to delete")], token_jwt: TokenModel):
         pass
 
-    async def start_conversation(self, token_jwt: TokenModel, conversation_request: ConversationRequest):
-        pass
+    async def start_conversation(self, token_jwt: TokenModel, conversation_request: ConversationRequest) -> ConversationResponse:
+        repo = await PersistenceFactory.get_entity_repository()
+        return await repo.create_chat(token_jwt.sub, conversation_request.target_language, )
 
     async def update_conversation(self, id: Annotated[StrictStr, Field(
         description="ID of the conversation to update")], update_conversation_request: UpdateConversationRequest, token_jwt: TokenModel):

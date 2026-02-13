@@ -39,7 +39,10 @@ router = APIRouter()
     summary="Get current quota configuration",
     response_model_by_alias=True,
 )
-async def quota_get(system_manger : ISystemManager = Depends(get_system_manager)) -> QuotaConfig:
+async def quota_get(
+    system_manger : ISystemManager = Depends(get_system_manager),
+    token_jwt: TokenModel = Security(get_token_jwt)
+) -> QuotaConfig:
     """Returns the current quota configuration."""
     return await system_manger.get_quota_settings()
 
@@ -57,7 +60,7 @@ async def quota_get(system_manger : ISystemManager = Depends(get_system_manager)
 )
 async def quota_put(
     quota_config: QuotaConfig,
-    #token_jwt: TokenModel = Security(get_token_jwt),
+    token_jwt: TokenModel = Security(get_token_jwt),
     system_manger: ISystemManager = Depends(get_system_manager)
 ) -> None:
     """Updates the quota limits for members and admins. Only for admins."""

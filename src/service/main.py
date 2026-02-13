@@ -19,7 +19,7 @@ from src.service.error_handlers import register_error_handlers
 #from src.service.openapi_server.apis.account_api import router as AccountApiRouter
 #from src.service.openapi_server.apis.analytics_api import router as AnalyticsApiRouter
 from src.service.apis.authentication_api import router as AuthenticationApiRouter
-#from src.service.openapi_server.apis.conversations_api import router as ConversationsApiRouter
+from src.service.apis.conversations_api import  router as ConversationsApiRouter
 from src.service.apis.quota_api import router as QuotaApiRouter
 
 app = FastAPI(
@@ -32,7 +32,7 @@ app = FastAPI(
 #app.include_router(AccountApiRouter)
 #app.include_router(AnalyticsApiRouter)
 app.include_router(AuthenticationApiRouter)
-#app.include_router(ConversationsApiRouter)
+app.include_router(ConversationsApiRouter)
 app.include_router(QuotaApiRouter)
 
 
