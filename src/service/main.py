@@ -21,6 +21,7 @@ from src.service.error_handlers import register_error_handlers
 from src.service.apis.authentication_api import router as AuthenticationApiRouter
 from src.service.apis.conversations_api import  router as ConversationsApiRouter
 from src.service.apis.quota_api import router as QuotaApiRouter
+from src.service.apis.llm_api import router as LlmApiRouter
 
 app = FastAPI(
     title="CodeX - REST API",
@@ -34,6 +35,7 @@ app = FastAPI(
 app.include_router(AuthenticationApiRouter)
 app.include_router(ConversationsApiRouter)
 app.include_router(QuotaApiRouter)
+app.include_router(LlmApiRouter)
 
 
 register_error_handlers(app)
