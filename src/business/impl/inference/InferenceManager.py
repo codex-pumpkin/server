@@ -1,4 +1,5 @@
 from typing import Annotated
+from typing import Tuple, List
 from pydantic import Field, StrictInt, StrictStr
 
 from src.core.dtos import (
@@ -44,10 +45,11 @@ class InferenceManager(IInferenceManager):
         pass
 
 
-    async def _get_llm_response_and_validate(self, user_input: str) -> str:
+    async def _get_llm_response_and_validate(self, user_input: str, conversation_history: List[Tuple[str, str]]) -> str:
         """
         Generate code based on user input, validate it, and regenerate if necessary.
         user_input: The user's input prompt.
+        conversation_history: chat of user with LLM.
         Returns the valid generated code as a string.
         """
         prompt_manager = await BusinessFactory.get_prompt_manager()
@@ -56,12 +58,12 @@ class InferenceManager(IInferenceManager):
         api_key = settings.llm_settings.api_key
 
         doc_context = await prompt_manager.retrieve_context(user_input)
+        conversation_history = prompt_manager.get_conversation_context(conversation_history)
 
-        code = await aiclient.get_response(user_input, doc_context, api_key)
+        code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key)
         code = await self._clean_markdown(code)
 
         validation_result = await validator.validate_code(code)
-        print(validation_result.rawOutput)
 
         if not validation_result.is_valid:
             for i in range(settings.llm_settings.num_of_regenerations):
