@@ -5,7 +5,8 @@ from src.persistence.impl.database.models import (
     UsersOrm,
     TokensOrm,
     MessagesOrm,
-    LlmModelsOrm
+    LlmModelsOrm,
+    ConversationsOrm
 )
 from src.persistence.interfaces.IEntityRepository import *
 from src.persistence.impl.database.database import async_session_factory
@@ -256,10 +257,17 @@ class EntityRepository(IEntityRepository):
                 return None
             return await conversation_to_dto(session=session, conversation=chat)
 
-    async def create_chat(self, user_id: str ):
-        async with async_session_factory() as session:
-            pass
 
+    async def create_chat(self, user_id: str, request: ConversationRequest):
+        async with async_session_factory() as session:
+            chat_orm = ConversationsOrm(
+                name=request.name,
+                llm_id=request.llm_model_config_id,
+                target_language=request.target_language,
+                user_id=user_id
+            )
+            session.add(chat_orm)
+            await session.commit()
 
     async def update_chat(self, chat_id: str, name: str, is_pinned: bool) -> bool:
         async with async_session_factory() as session:
@@ -276,6 +284,18 @@ class EntityRepository(IEntityRepository):
                 name=name,
                 is_pinned=is_pinned
             )
+            return True
+
+    async def delete_chat(self, chat_id:str) -> bool:
+        async with async_session_factory() as session:
+            chat = await get_chat_by_id(
+                session=session,
+                conversation_id=chat_id
+            )
+            if chat is None:
+                return False
+
+            await session.delete(chat)
             return True
 
     # --------------------
@@ -305,14 +325,14 @@ class EntityRepository(IEntityRepository):
             messages_dto = [message.to_dto() for message in messages_orm]
             return messages_dto
 
-    async def change_last_message(self, chat_id: str, message: Message) -> bool:
+
+    async def delete_last_message(self, chat_id: str) -> bool:
         async with async_session_factory() as session:
             messages = await get_chat_messages(session=session, conversation_id=chat_id)
             last = messages[-1]
             last.conversation_id = None
             session.commit()
-
-        return await self.add_message(chat_id=chat_id, message=message)
+            return True
 
     # --------------------
     # LLM Model-related

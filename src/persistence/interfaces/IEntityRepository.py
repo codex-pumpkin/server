@@ -11,7 +11,8 @@ from src.core.dtos import (
     ConversationResponse,
     MessageResponse,
     Message,
-    LLMConfigurationResponse
+    LLMConfigurationResponse,
+    ConversationRequest
 )
 from typing import Literal, Union
 
@@ -73,9 +74,11 @@ class IEntityRepository(ABC):
     @abstractmethod
     async def get_chat_by_id(self, chat_id: str) -> Optional[ConversationResponse]: ...
     @abstractmethod
-    async def create_chat(self, user_id: str) -> ConversationResponse: ...
+    async def create_chat(self, user_id: str, request: ConversationRequest) -> ConversationResponse: ...
     @abstractmethod
     async def update_chat(self, chat_id: str, name: str, is_pinned: bool) -> bool: ...
+    @abstractmethod
+    async def delete_chat(self, chat_id:str) -> bool: ...
 
     # --------------------
     # Message-related
@@ -85,7 +88,7 @@ class IEntityRepository(ABC):
     @abstractmethod
     async def get_messages(self, chat_id: str) -> List[MessageResponse]: ...
     @abstractmethod
-    async def change_last_message(self, chat_id: str, message:MessageResponse) -> bool: ...
+    async def delete_last_message(self, chat_id: str) -> bool: ...
 
     # --------------------
     # LLM Model-related

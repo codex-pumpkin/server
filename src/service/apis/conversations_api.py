@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from typing import Dict, List  # noqa: F401
+from typing import Dict, List, Optional  # noqa: F401
 
 from src.business.interfaces import IInferenceManager
 
@@ -77,8 +77,8 @@ async def conversations_get(
 )
 async def conversations_post(
     conversation_request: ConversationRequest = Body(None, description=""),
-    token_jwt: TokenModel = Security(
-        get_token_jwt_mandatory
+    token_jwt: Optional[TokenModel] = Security(
+        get_token_jwt
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> ConversationResponse:
