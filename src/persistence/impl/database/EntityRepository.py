@@ -26,12 +26,20 @@ from src.persistence.impl.database.queries.quota import (
     set_quota
 )
 
+from src.persistence.impl.database.queries.conversations import (
+    get_chats,
+
+)
+
 from src.core.dtos import (
     AccountResponse,
     AccountResponse,
     TokenInfo,
-    QuotaConfig
+    QuotaConfig,
+    ConversationResponse
 )
+
+from src.persistence.impl.database.conversation_utils import conversation_to_dto
 
 class EntityRepository(IEntityRepository):
 
@@ -60,14 +68,26 @@ class EntityRepository(IEntityRepository):
         )
         async with async_session_factory() as session:
             try:
-                user = await get_user_by_email_or_username(
+                existing_user = await get_user_by_email_or_username(
                     session=session,
                     email=user_orm.email,
-                    username=user_orm.username
+                    username=user_orm.username,
                 )
-                if user is not None:
-                    field = "email" if user.email == user_orm.email else "username"
-                    raise UserConflictError(field=field)
+
+                if existing_user:
+                    if existing_user.is_verified:
+                        if existing_user.email == user.email:
+                            raise UserConflictError(field="email")
+                        if existing_user.username == user.username:
+                            raise UserConflictError(field="username")
+
+                    existing_user.email = user.email
+                    existing_user.username = user.username
+                    existing_user.hashed_password = hash_password(user.password)
+
+                    await session.commit()
+                    await session.refresh(existing_user)
+                    return existing_user.to_dto()
 
                 session.add(user_orm)
                 await session.commit()
@@ -202,9 +222,22 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Chat / Conversation-related
     # --------------------
-    async def get_chats(self, user_id: str) -> List[ChatMetaData]: ...
+    async def get_chats(self, user_id: str) -> List[ConversationResponse]:
+        async with async_session_factory() as session:
+            chat_list = await get_chats(
+                session=session,
+                user_id=user_id
+            )
+            return [await conversation_to_dto(
+                session=session, conversation=orm
+            ) for orm in chat_list]
+
+
     async def get_chat(self, chat_id: str) -> ChatMetaData: ...
-    async def create_chat(self, chat: ChatMetaData) -> str: ...
+    async def create_chat(self, user_id: str, ) -> ConversationResponse:
+        async with async_session_factory() as session:
+
+
     async def update_chat(self, chat_id: str, chat: ChatMetaData) -> None: ...
 
     # --------------------

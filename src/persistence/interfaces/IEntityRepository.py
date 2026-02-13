@@ -7,7 +7,7 @@ from src.core.dtos import (
     SignupRequest,
     AccountResponse,
     TokenInfo,
-    QuotaConfig
+    QuotaConfig, ConversationResponse
 )
 from typing import Literal, Union
 
@@ -71,11 +71,11 @@ class IEntityRepository(ABC):
     # Chat / Conversation-related
     # --------------------
     @abstractmethod
-    async def get_chats(self, user_id: str) -> List[ChatMetaData]: ...
+    async def get_chats(self, user_id: str) -> List[ConversationResponse]: ...
     @abstractmethod
-    async def get_chat(self, chat_id: str) -> ChatMetaData: ...
+    async def get_chat(self, chat_id: str) -> ConversationResponse: ...
     @abstractmethod
-    async def create_chat(self, chat: ChatMetaData) -> str: ...
+    async def create_chat(self, user_id: str) -> ConversationResponse: ...
     @abstractmethod
     async def update_chat(self, chat_id: str, chat: ChatMetaData) -> None: ...
 

@@ -3,7 +3,9 @@ import datetime
 from src.core.dtos import (
     AccountResponse,
     TokenInfo,
-    QuotaConfig
+    QuotaConfig,
+    ConversationResponse,
+    TargetLanguage, MessageResponse,
 )
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
@@ -74,7 +76,7 @@ class ConversationsOrm(Base):
     name: Mapped[str] = mapped_column()
     is_pined: Mapped[bool] = mapped_column(default=False)
     llm_id: Mapped[str] = mapped_column(ForeignKey("llm_models.id"))
-    target_language: Mapped[str] = mapped_column(default="SPICE")
+    target_language: Mapped[TargetLanguage] = mapped_column(default=TargetLanguage.SPICE_NETLIST)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
 
     user: Mapped["UsersOrm"] = relationship(
@@ -84,13 +86,15 @@ class ConversationsOrm(Base):
         back_populates="conversation"
     )
 
+
+
 class MessagesOrm(Base):
     __tablename__ = "messages"
 
     id: Mapped[uuid_pk]
     created_at: Mapped[created_at_type]
-    updated_at: Mapped[created_at_type]
     prompt: Mapped[str] = mapped_column()
+    response: Mapped[str] = mapped_column()
     generation_ms: Mapped[int] = mapped_column()
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"))
 
@@ -98,6 +102,15 @@ class MessagesOrm(Base):
         back_populates="messages"
     )
 
+    def to_dto(self) -> MessageResponse:
+        return MessageResponse(
+            id=self.id,
+            created_at=self.created_at,
+            message=self.prompt,
+            response=self.response,
+            response_secondary=self.response,
+            generation_millis=self.generation_ms
+        )
 
 class TokenType(enum.Enum):
     REFRESH="refresh"

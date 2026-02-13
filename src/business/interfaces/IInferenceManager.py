@@ -6,14 +6,16 @@ from src.core.dtos import (
     TokenModel,
     MessageRequest,
     ConversationRequest,
+    ConversationResponse,
     UpdateConversationRequest
 )
 
+from typing import List
 
 class IInferenceManager(ABC):
 
     @abstractmethod
-    async def get_conversations_by_user(self, token_jwt: TokenModel):
+    async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
         pass
 
     @abstractmethod
@@ -32,7 +34,7 @@ class IInferenceManager(ABC):
         pass
 
     @abstractmethod
-    async def start_conversation(self, token_jwt: TokenModel, conversation_request: ConversationRequest):
+    async def start_conversation(self, token_jwt: TokenModel, conversation_request: ConversationRequest) -> ConversationResponse:
         pass
 
     @abstractmethod
