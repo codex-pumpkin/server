@@ -42,6 +42,7 @@ class ConversationResponse(BaseModel):
     created_at: StrictStr = Field(description="The instant when the object was created")
     updated_at: StrictStr
     target_language: TargetLanguage
+    user_id: UUID
     messages: List[MessageResponse] = Field(description="List of messages in the conversation")
     __properties: ClassVar[List[str]] = ["id", "name", "pinned", "llm_model_config_id", "created_at", "target_language", "messages"]
 

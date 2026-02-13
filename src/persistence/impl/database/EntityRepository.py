@@ -1,7 +1,12 @@
 import datetime
 
 from src.core.exceptions import UserConflictError
-from src.persistence.impl.database.models import UsersOrm, TokensOrm
+from src.persistence.impl.database.models import (
+    UsersOrm,
+    TokensOrm,
+    MessagesOrm,
+    LlmModelsOrm
+)
 from src.persistence.interfaces.IEntityRepository import *
 from src.persistence.impl.database.database import async_session_factory
 from sqlalchemy.exc import IntegrityError
@@ -28,7 +33,17 @@ from src.persistence.impl.database.queries.quota import (
 
 from src.persistence.impl.database.queries.conversations import (
     get_chats,
+    get_chat_messages,
+    get_chat_by_id,
+    update_conversation,
+    update_conversation_update_time,
+    get_messages_sent_today_by_user
+)
 
+from src.persistence.impl.database.queries.llm import (
+    get_model_by_id,
+    change_llm,
+    delete_llm
 )
 
 from src.core.dtos import (
@@ -36,7 +51,8 @@ from src.core.dtos import (
     AccountResponse,
     TokenInfo,
     QuotaConfig,
-    ConversationResponse
+    ConversationResponse,
+    MessageResponse
 )
 
 from src.persistence.impl.database.conversation_utils import conversation_to_dto
@@ -233,27 +249,107 @@ class EntityRepository(IEntityRepository):
             ) for orm in chat_list]
 
 
-    async def get_chat(self, chat_id: str) -> ChatMetaData: ...
-    async def create_chat(self, user_id: str, ) -> ConversationResponse:
+    async def get_chat_by_id(self, chat_id: str) -> Optional[ConversationResponse]:
         async with async_session_factory() as session:
+            chat = await get_chat_by_id(session=session, conversation_id=chat_id)
+            if chat is None:
+                return None
+            return await conversation_to_dto(session=session, conversation=chat)
+
+    async def create_chat(self, user_id: str ):
+        async with async_session_factory() as session:
+            pass
 
 
-    async def update_chat(self, chat_id: str, chat: ChatMetaData) -> None: ...
+    async def update_chat(self, chat_id: str, name: str, is_pinned: bool) -> bool:
+        async with async_session_factory() as session:
+            chat = await get_chat_by_id(
+                session=session,
+                conversation_id=chat_id
+            )
+            if chat is None:
+                return False
+
+            await update_conversation(
+                session=session,
+                conversation_id=chat_id,
+                name=name,
+                is_pinned=is_pinned
+            )
+            return True
 
     # --------------------
     # Message-related
     # --------------------
-    async def add_message(self, chat_id: str, message: str) -> str: ...
-    async def get_messages(self, chat_id: str) -> List[str]: ...
-    async def change_last_message(self, chat_id: str, message: str) -> None: ...
+    async def add_message(self, chat_id: str, message: Message) -> bool:
+        async with async_session_factory() as session:
+            orm = MessagesOrm(
+                prompt=message.conversation_id,
+                response=message.response,
+                response_secondary=message.response_secondary,
+                generation_ms=message.generation_millis,
+                conversation_id=message.conversation_id
+            )
+            await session.add(orm)
+            await session.commit()
+
+            await update_conversation_update_time(
+                session=session,
+                conversation_id=chat_id
+            )
+            return True
+
+    async def get_messages(self, chat_id: str) -> List[MessageResponse]:
+        async with async_session_factory() as session:
+            messages_orm = await get_chat_messages(session=session, conversation_id=chat_id)
+            messages_dto = [message.to_dto() for message in messages_orm]
+            return messages_dto
+
+    async def change_last_message(self, chat_id: str, message: Message) -> bool:
+        async with async_session_factory() as session:
+            messages = await get_chat_messages(session=session, conversation_id=chat_id)
+            last = messages[-1]
+            last.conversation_id = None
+            session.commit()
+
+        return await self.add_message(chat_id=chat_id, message=message)
 
     # --------------------
     # LLM Model-related
     # --------------------
-    async def add_model(self, model_data: ModelData) -> str: ...
-    async def remove_model(self, model_id: str) -> None: ...
-    async def change_model(self, model_id: str, model_data: ModelData) -> None: ...
-    async def get_model(self, model_id: str) -> ModelData: ...
+    async def add_model(self, name:str, url:str, key:str) -> str:
+        async with async_session_factory() as session:
+            orm = LlmModelsOrm(
+                name=name,
+                url=url,
+                api_key=key
+            )
+            session.add(orm)
+            session.commit()
+            session.refresh(orm)
+            return orm.id
+
+    async def remove_model(self, model_id: str) -> None:
+        async with async_session_factory() as session:
+            await delete_llm(session=session, llm_id=model_id)
+
+    async def change_model(self, model_id: str, name:str, url:str, key:Optional[str]) -> None:
+        async with async_session_factory() as session:
+            await change_llm(
+                session=session,
+                llm_id=model_id,
+                name=name,
+                url=url,
+                key=key
+            )
+
+    async def get_model(self, model_id: str) -> Optional[LLMConfigurationResponse]:
+        async with async_session_factory() as session:
+            llm_config = await get_model_by_id(session=session, llm_id=model_id)
+            if llm_config is None:
+                return llm_config
+            return llm_config.to_dto()
+
 
     # --------------------
     # Quota-related
@@ -271,8 +367,16 @@ class EntityRepository(IEntityRepository):
             quota_orm = await get_quota(session=session)
             return quota_orm.to_dto()
 
-    async def get_user_quota_remaining(self, user_id: str, period: date) -> int: ...
-    async def is_quota_exceeded(self, user_id: str) -> bool: ...
+    async def get_user_quota_remaining(self, user_id: str) -> int:
+        async with async_session_factory() as session:
+            res = await get_messages_sent_today_by_user(session=session, user_id=user_id)
+            user = await self.get_user_by_id(user_id=user_id)
+            quota = await self.get_quota()
+            daily_quota = quota.admin if user.is_admin else quota.member
+            return daily_quota - res
+
+    async def is_quota_exceeded(self, user_id: str) -> bool:
+        return await self.get_user_quota_remaining(user_id=user_id) == 0
 
     # --------------------
     # Analytics / Usage-related

@@ -4,8 +4,9 @@ from src.core.dtos import (
     AccountResponse,
     TokenInfo,
     QuotaConfig,
-    ConversationResponse,
-    TargetLanguage, MessageResponse,
+    LLMConfigurationResponse,
+    TargetLanguage,
+    MessageResponse,
 )
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
@@ -64,8 +65,14 @@ class LlmModelsOrm(Base):
     name: Mapped[str] = mapped_column()
     url: Mapped[str] = mapped_column()
     api_key: Mapped[str] = mapped_column()
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
 
+    def to_dto(self) -> LLMConfigurationResponse:
+        return LLMConfigurationResponse(
+            id=self.id,
+            name=self.name,
+            api_url=self.url,
+            api_key_set=True
+        )
 
 class ConversationsOrm(Base):
     __tablename__ = "conversations"
@@ -96,7 +103,10 @@ class MessagesOrm(Base):
     prompt: Mapped[str] = mapped_column()
     response: Mapped[str] = mapped_column()
     generation_ms: Mapped[int] = mapped_column()
-    conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"))
+    conversation_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("conversations.id", ondelete="SET NULL"),
+        nullable=True
+    )
 
     conversation: Mapped[list["ConversationsOrm"]] = relationship(
         back_populates="messages"
