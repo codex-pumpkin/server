@@ -56,7 +56,6 @@ class InferenceManager(IInferenceManager):
         code = await self._clean_markdown(code)
 
         validation_result = await validator.validate_code(code)
-        print(validation_result.rawOutput)
 
         if not validation_result.is_valid:
             for i in range(settings.llm_settings.num_of_regenerations):
