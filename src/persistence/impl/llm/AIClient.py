@@ -27,7 +27,7 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
 
 class AIClient(IAIClient):
 
-    async def get_response(self, user_question: str, retrieved_context: str, api_key: str, model: str="gpt-4o-mini") -> str:
+    async def get_response(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-4o-mini") -> str:
         """
         Client for interacting with OpenAI API to get chat completions
         prompt: the input text prompt for the AI model
@@ -41,7 +41,7 @@ class AIClient(IAIClient):
             model=model,
             messages=[
                 {"role": "system",  "content": _PREPROMPT},
-                {"role": "user", "content": f"Context:\n{retrieved_context}\n\nQuestion:\n{user_question}"}
+                {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
                 ],
             temperature=0.7,
             max_tokens=512,
