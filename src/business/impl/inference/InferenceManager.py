@@ -262,9 +262,9 @@ class InferenceManager(IInferenceManager):
         )
         return message
 
-    async def _get_graph_representation(self, llm_response: str) -> dict:
-        repo = await PersistenceFactory.get_graph_generator()
-        graph = await repo.gen_graph(llm_response)    
+    async def _get_graph_representation(self, llm_response: str) -> str:
+        graph_generator = await PersistenceFactory.get_graph_generator()
+        graph = await graph_generator.gen_graph(llm_response)
         return graph
 
     async def _get_llm_response_and_validate(
