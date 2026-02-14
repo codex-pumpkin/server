@@ -300,6 +300,7 @@ class EntityRepository(IEntityRepository):
                 return False
 
             await session.delete(chat)
+            await session.commit()
             return True
 
     # --------------------
@@ -308,7 +309,7 @@ class EntityRepository(IEntityRepository):
     async def add_message(self, chat_id: str, message: Message) -> bool:
         async with async_session_factory() as session:
             orm = MessagesOrm(
-                prompt=message.conversation_id,
+                prompt=message.message,
                 response=message.response,
                 response_secondary=message.response_secondary,
                 generation_ms=message.generation_millis,
@@ -335,7 +336,7 @@ class EntityRepository(IEntityRepository):
             messages = await get_chat_messages(session=session, conversation_id=chat_id)
             last = messages[-1]
             last.conversation_id = None
-            session.commit()
+            await session.commit()
             return True
 
     # --------------------

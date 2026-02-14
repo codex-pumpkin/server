@@ -16,7 +16,7 @@ async def get_chats(session:AsyncSession, user_id:str) -> List[ConversationsOrm]
     query = (
         select(ConversationsOrm)
         .where(ConversationsOrm.user_id == user_id)
-        .order_by(ConversationsOrm.is_pined.desc(), ConversationsOrm.updated_at.desc())
+        .order_by(ConversationsOrm.is_pinned.desc(), ConversationsOrm.updated_at.desc())
     )
     result = await session.execute(query)
     return list(result.scalars().all())
@@ -47,6 +47,7 @@ async def update_conversation(session:AsyncSession, conversation_id:str, name:st
         .values(name=name, is_pinned=is_pinned)
     )
     await session.execute(stmt)
+    await session.commit()
 
 async def update_conversation_update_time(session:AsyncSession, conversation_id:str) -> None:
     stmt = (
@@ -55,6 +56,7 @@ async def update_conversation_update_time(session:AsyncSession, conversation_id:
         .values(updated_at=datetime.datetime.now(datetime.UTC))
     )
     await session.execute(stmt)
+    await session.commit()
 
 
 async def get_messages_sent_today_by_user(session:AsyncSession, user_id:str) -> int:
