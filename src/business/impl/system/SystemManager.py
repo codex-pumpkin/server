@@ -1,11 +1,12 @@
 
-from typing import Annotated
+from typing import Annotated, List
 from pydantic import StrictStr, Field
 
 from src.core.dtos import (
     TokenModel,
     QuotaConfig,
-    LLMConfigurationRequest
+    LLMConfigurationRequest,
+    LLMConfigurationResponse
 )
 
 from src.business.interfaces import ISystemManager
@@ -13,6 +14,11 @@ from src.persistence import PersistenceFactory
 from uuid import UUID
 
 class SystemManager(ISystemManager):
+
+    async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
+        repo = await PersistenceFactory.get_entity_repository()
+        return await repo.get_llm_configs()
+
     async def get_quota_settings(self):
         repo = await PersistenceFactory.get_entity_repository()
         return await repo.get_quota()
@@ -46,9 +52,9 @@ class SystemManager(ISystemManager):
             raise Exception("No model with such ID!")
         await repo.change_model(
             model_id=str(llm_id),
-            name=LLMConfigurationRequest.name,
-            url=LLMConfigurationRequest.api_url,
-            key=LLMConfigurationRequest.api_key
+            name=llm_configuration_request.name,
+            url=llm_configuration_request.api_url,
+            key=llm_configuration_request.api_key
         )
 
     async def process_llm_removal(

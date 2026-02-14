@@ -34,8 +34,17 @@ async def change_llm(session:AsyncSession, llm_id:str, name:str, url:str, key:Op
             .values(name=name, url=url, api_key=key)
         )
     await session.execute(stmt)
+    await session.commit()
 
 async def delete_llm(session:AsyncSession, llm_id:str):
-    orm = get_model_by_id(session=session, llm_id=llm_id)
+    orm = await get_model_by_id(session=session, llm_id=llm_id)
     if orm is not None:
         await session.delete(orm)
+        await session.commit()
+
+async def get_all_llm_configs(session:AsyncSession) -> List[LlmModelsOrm]:
+    query = (
+        select(LlmModelsOrm)
+    )
+    result = await session.execute(query)
+    return result.scalars().all()

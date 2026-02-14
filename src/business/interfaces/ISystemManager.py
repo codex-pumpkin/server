@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-from typing import Annotated
+from typing import Annotated, List
 from pydantic import Field
 from uuid import UUID
 
 from src.core.dtos import (
     TokenModel,
     QuotaConfig,
-    LLMConfigurationRequest
+    LLMConfigurationRequest, LLMConfigurationResponse
 )
 
 class ISystemManager(ABC):
@@ -21,6 +21,10 @@ class ISystemManager(ABC):
 
     @abstractmethod
     async def get_analytics(self):
+        pass
+
+    @abstractmethod
+    async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
         pass
 
     @abstractmethod

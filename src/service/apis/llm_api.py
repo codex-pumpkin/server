@@ -9,7 +9,7 @@ from src.business.interfaces import (
 )
 
 
-from src.service.dependencies import get_user_info_manager
+from src.service.dependencies import get_system_manager
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -41,42 +41,62 @@ from src.core.dtos.update_account_request import UpdateAccountRequest
 from src.service.security_api import get_token_jwt, get_token_jwt_mandatory_admin
 
 router = APIRouter()
-
-@router.post(
-    "/account/llm-configurations",
+@router.get(
+    "/llm-configurations",
     responses={
         201: {"description": "LLM configuration added successfully"},
         400: {"description": "Invalid request"},
         401: {"description": "User not authenticated"},
     },
-    tags=["Account"],
+    tags=["LLM"],
+    summary="Gets all LLM configurations",
+    response_model_by_alias=True,
+)
+async def llm_configurations_get(
+    token_jwt: TokenModel = Security(
+        get_token_jwt
+    ),
+    system_manager: ISystemManager = Depends(get_system_manager)
+) -> List[LLMConfigurationResponse]:
+    """Adds a new LLM configuration for the authenticated user."""
+    return await system_manager.get_llm_configs()
+
+
+@router.post(
+    "/llm-configurations",
+    responses={
+        201: {"description": "LLM configuration added successfully"},
+        400: {"description": "Invalid request"},
+        401: {"description": "User not authenticated"},
+    },
+    tags=["LLM"],
     summary="Add a new LLM configuration to the account",
     response_model_by_alias=True,
 )
-async def account_llm_configurations_post(
+async def llm_configurations_post(
     llm_configuration_request: LLMConfigurationRequest = Body(None, description=""),
     token_jwt: TokenModel = Security(
         get_token_jwt_mandatory_admin
     ),
-    system_manager: ISystemManager = Depends(get_user_info_manager)
+    system_manager: ISystemManager = Depends(get_system_manager)
 ) -> None:
     """Adds a new LLM configuration for the authenticated user."""
     return await system_manager.validate_and_persist_llm_config(llm_configuration_request)
 
 
 @router.put(
-    "/account/llm-configurations/{id}",
+    "/llm-configurations/{llm_id}",
     responses={
         200: {"model": LLMConfigurationResponse, "description": "LLM configuration updated successfully"},
         400: {"description": "Invalid request"},
         401: {"description": "User not authenticated"},
         404: {"description": "LLM configuration not found"},
     },
-    tags=["Account"],
+    tags=["LLM"],
     summary="Update a specific LLM configuration",
     response_model_by_alias=True,
 )
-async def account_llm_configurations_id_put(
+async def llm_configurations_id_put(
     llm_id: Annotated[
         UUID,
         Field(description="ID of the LLM configuration to update")
@@ -85,25 +105,28 @@ async def account_llm_configurations_id_put(
     token_jwt: TokenModel = Security(
         get_token_jwt_mandatory_admin
     ),
-    system_manager: ISystemManager = Depends(get_user_info_manager)
+    system_manager: ISystemManager = Depends(get_system_manager)
 
-) -> LLMConfigurationResponse:
+) -> None:
     """Updates an existing LLM configuration of the authenticated user by its id."""
-    return await system_manager.update_llm_config(llm_configuration_request)
+    return await system_manager.update_llm_config(
+        llm_id=llm_id,
+        llm_configuration_request=llm_configuration_request
+    )
 
 
 @router.delete(
-    "/account/llm-configurations/{id}",
+    "/llm-configurations/{llm_id}",
     responses={
         204: {"description": "LLM configuration deleted successfully"},
         401: {"description": "User not authenticated"},
         404: {"description": "LLM configuration not found"},
     },
-    tags=["Account"],
+    tags=["LLM"],
     summary="Delete a specific LLM configuration",
     response_model_by_alias=True,
 )
-async def account_llm_configurations_id_delete(
+async def llm_configurations_id_delete(
     llm_id: Annotated[
         UUID,
         Field(description="ID of the LLM configuration to delete")
@@ -111,7 +134,7 @@ async def account_llm_configurations_id_delete(
     token_jwt: TokenModel = Security(
         get_token_jwt_mandatory_admin
     ),
-    system_manager: ISystemManager = Depends(get_user_info_manager)
+    system_manager: ISystemManager = Depends(get_system_manager)
 
 ) -> None:
     """Deletes an LLM configuration of the authenticated user by its id."""

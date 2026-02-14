@@ -24,7 +24,7 @@ from fastapi import (  # noqa: F401
 
 from uuid import UUID
 
-from openapi_server.models.extra_models import TokenModel  # noqa: F401
+from src.core.dtos import TokenModel  # noqa: F401
 from pydantic import Field, StrictInt, StrictStr
 from typing import List
 from typing_extensions import Annotated
@@ -90,7 +90,7 @@ async def conversations_post(
 
 
 @router.put(
-    "/conversations/{id}",
+    "/conversations/{conversation_id}",
     responses={
         200: {"model": ConversationResponse, "description": "Conversation updated successfully"},
         400: {"description": "Invalid request"},
@@ -124,7 +124,7 @@ async def conversations_id_put(
 
 
 @router.delete(
-    "/conversations/{id}",
+    "/conversations/{conversation_id}",
     responses={
         204: {"description": "Conversation deleted successfully"},
         401: {"description": "User not authenticated"},
@@ -154,7 +154,7 @@ async def conversations_id_delete(
     )
 
 @router.put(
-    "/conversations/{id}/messages",
+    "/conversations/{conversation_id}/messages",
     responses={
         200: {"model": MessageResponse, "description": "Message changed successfully"},
     },
@@ -186,7 +186,7 @@ async def conversations_id_messages_put(
 
 
 @router.post(
-    "/conversations/{id}/messages",
+    "/conversations/{conversation_id}/messages",
     responses={
         200: {"model": MessageResponse, "description": "Message added successfully"},
         400: {"description": "Invalid request"},
@@ -199,10 +199,7 @@ async def conversations_id_messages_put(
     response_model_by_alias=True,
 )
 async def conversations_id_messages_post(
-    conversation_id: Annotated[
-        UUID,
-        Field(description="Id of the target conversation")
-    ] = Path(
+    conversation_id: UUID = Path(
         ...,
         description="Id of the target conversation"
     ),

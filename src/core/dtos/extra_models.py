@@ -9,6 +9,6 @@ class TokenModel(BaseModel):
     """Defines a token model."""
 
     sub: UUID
-    is_admin: StrictBool
+    is_admin: bool
     exp: datetime.datetime
     toc: datetime.datetime

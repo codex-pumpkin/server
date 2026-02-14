@@ -136,6 +136,7 @@ class BasicAuthManager(IBasicAuthManager):
             payload=
                 {
                     "sub":str(user.id),
+                    "is_admin": user.is_admin
                 }
         )
         token_response = TokenResponse(

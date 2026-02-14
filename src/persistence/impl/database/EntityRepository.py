@@ -44,7 +44,8 @@ from src.persistence.impl.database.queries.conversations import (
 from src.persistence.impl.database.queries.llm import (
     get_model_by_id,
     change_llm,
-    delete_llm
+    delete_llm,
+    get_all_llm_configs
 )
 
 from src.core.dtos import (
@@ -345,8 +346,8 @@ class EntityRepository(IEntityRepository):
                 api_key=key
             )
             session.add(orm)
-            session.commit()
-            session.refresh(orm)
+            await session.commit()
+            await session.refresh(orm)
             return orm.id
 
     async def remove_model(self, model_id: str) -> None:
@@ -370,6 +371,11 @@ class EntityRepository(IEntityRepository):
                 return llm_config
             return llm_config.to_dto()
 
+    async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
+        async with async_session_factory() as session:
+            orm_configs = await get_all_llm_configs(session)
+            dto_configs = [config.to_dto() for config in orm_configs]
+            return dto_configs
 
     # --------------------
     # Quota-related
