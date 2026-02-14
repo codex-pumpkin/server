@@ -184,6 +184,14 @@ class EntityRepository(IEntityRepository):
             await session.commit()
             return True
 
+    async def change_mail_username(self, user_id:str, email:str, username:str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            user.email = email
+            user.username = username
+            await session.commit()
+            return True
+
     # --------------------
     # Token-related
     # --------------------

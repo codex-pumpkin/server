@@ -1,5 +1,5 @@
 # coding: utf-8
-
+from idlelib.window import add_windows_to_menu
 from typing import Dict, List  # noqa: F401
 
 from src.business.interfaces import (
@@ -32,12 +32,9 @@ from fastapi.responses import FileResponse
 from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictBytes, StrictStr
 from typing import Optional, Tuple, Union
-from typing_extensions import Annotated
 from src.core.dtos.account_response import AccountResponse
-from src.core.dtos.llm_configuration_request import LLMConfigurationRequest
-from src.core.dtos.llm_configuration_response import LLMConfigurationResponse
 from src.core.dtos.update_account_request import UpdateAccountRequest
-from src.service.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt, get_token_jwt_mandatory
 
 router = APIRouter()
 
@@ -54,11 +51,12 @@ router = APIRouter()
 )
 async def account_get(
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> AccountResponse:
     """Returns the account information for the currently authenticated user."""
-    #TODO: call business logic
+    return await user_info.get_account_info()
 
 
 @router.put(
@@ -76,14 +74,13 @@ async def account_get(
 async def account_put(
     update_account_request: UpdateAccountRequest = Body(None, description=""),
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> None:
     """Updates the authenticated user&#39;s email and username.  - **Both fields must be provided**.   - If the email is changed:   - User will be logged out from all sessions.   - Account will be set to unverified.   - A new email-verification email will be sent. """
-    user_info: IUserInfoManager = Depends(get_user_info_manager())
     return await user_info.update_user_name_email(token_jwt,update_account_request)
 
-#TODO: set file type for image
 @router.get(
     "/account/profile-picture",
     responses={
@@ -96,11 +93,11 @@ async def account_put(
 )
 async def account_profile_picture_get(
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> FileResponse:
     """Returns the profile picture for the authenticated user. The response is a binary image."""
-    user_info: IUserInfoManager = Depends(get_user_info_manager())
     return await user_info.get_profile_picture(token_jwt)
 
 
@@ -118,11 +115,11 @@ async def account_profile_picture_get(
 async def account_profile_picture_put(
     file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = Form(None, description=""),
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> None:
     """Updates the profile picture of the user that is authenticated"""
-    user_info: IUserInfoManager = Depends(get_user_info_manager())
     return await user_info.update_profile_picture(file)
 
 
