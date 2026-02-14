@@ -24,7 +24,7 @@ from fastapi import (  # noqa: F401
 
 from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from src.core.dtos.quota_config import QuotaConfig
-from src.service.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt, get_token_jwt_mandatory_admin
 
 router = APIRouter()
 
@@ -60,7 +60,7 @@ async def quota_get(
 )
 async def quota_put(
     quota_config: QuotaConfig,
-    token_jwt: TokenModel = Security(get_token_jwt),
+    token_jwt: TokenModel = Security(get_token_jwt_mandatory_admin),
     system_manger: ISystemManager = Depends(get_system_manager)
 ) -> None:
     """Updates the quota limits for members and admins. Only for admins."""

@@ -422,7 +422,7 @@ class EntityRepository(IEntityRepository):
             return daily_quota - res
 
     async def is_quota_exceeded(self, user_id: str) -> bool:
-        return await self.get_user_quota_remaining(user_id=user_id) == 0
+        return (await self.get_user_quota_remaining(user_id=user_id)) == 0
 
     # --------------------
     # Analytics / Usage-related

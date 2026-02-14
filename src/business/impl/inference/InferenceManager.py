@@ -45,7 +45,8 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ):
         repo = await PersistenceFactory.get_entity_repository()
-        if repo.is_quota_exceeded(str(token_jwt.sub)):
+        is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
+        if is_quota_exceeded:
             raise QuotaExceededError()
 
         message = await self._get_message(
@@ -72,7 +73,8 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ) -> MessageResponse:
         repo = await PersistenceFactory.get_entity_repository()
-        if repo.is_quota_exceeded(str(token_jwt.sub)):
+        is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
+        if is_quota_exceeded:
             raise QuotaExceededError()
 
         message = await self._get_message(
@@ -161,7 +163,8 @@ class InferenceManager(IInferenceManager):
         request:ConversationRequest
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
-        if repo.is_quota_exceeded(str(token_jwt.sub)):
+        is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
+        if is_quota_exceeded:
             raise QuotaExceededError()
 
         result = await repo.create_chat(str(token_jwt.sub), request)
