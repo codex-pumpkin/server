@@ -45,7 +45,8 @@ from src.persistence.impl.database.queries.llm import (
     get_model_by_id,
     change_llm,
     delete_llm,
-    get_all_llm_configs
+    get_all_llm_configs,
+    get_api_key_by_conversation_id
 )
 
 from src.core.dtos import (
@@ -376,6 +377,15 @@ class EntityRepository(IEntityRepository):
             orm_configs = await get_all_llm_configs(session)
             dto_configs = [config.to_dto() for config in orm_configs]
             return dto_configs
+
+    async def get_llm_key_by_chat_id(self, chat_id:str) -> str:
+        async with async_session_factory() as session:
+            api_key = await get_api_key_by_conversation_id(
+                session=session,
+                conversation_id=chat_id
+            )
+            return api_key
+
 
     # --------------------
     # Quota-related

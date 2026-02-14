@@ -188,13 +188,15 @@ class InferenceManager(IInferenceManager):
         if chat.user_id != token_jwt.sub:
             raise Exception("Conversation doesnt belong to the user!")
 
+        api_key = await repo.get_llm_key_by_chat_id(chat_id=str(conversation_id))
         messages = [(message.message, message.response) for message in chat.messages]
         if remove_last:
             messages = messages[:-1]
         start = time.monotonic()
         result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
-            conversation_history=messages
+            conversation_history=messages,
+            api_key=api_key
         )
         end = time.monotonic()
         message = Message(
@@ -206,7 +208,12 @@ class InferenceManager(IInferenceManager):
         )
         return message
 
-    async def _get_llm_response_and_validate(self, user_input: str, conversation_history: List[Tuple[str, str]]) -> str:
+    async def _get_llm_response_and_validate(
+        self,
+        user_input: str,
+        conversation_history: List[Tuple[str, str]],
+        api_key: str,
+    ) -> str:
         """
         Generate code based on user input, validate it, and regenerate if necessary.
         user_input: The user's input prompt.
@@ -216,7 +223,6 @@ class InferenceManager(IInferenceManager):
         prompt_manager = await BusinessFactory.get_prompt_manager()
         validator = await PersistenceFactory.get_code_validator()
         aiclient = await PersistenceFactory.get_ai_client()
-        api_key = settings.llm_settings.api_key
 
         doc_context = await prompt_manager.retrieve_context(user_input)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)

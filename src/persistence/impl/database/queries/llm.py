@@ -3,7 +3,8 @@ import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.persistence.impl.database.models import (
-    LlmModelsOrm
+    LlmModelsOrm,
+    ConversationsOrm
 )
 
 from sqlalchemy import select, update
@@ -48,3 +49,18 @@ async def get_all_llm_configs(session:AsyncSession) -> List[LlmModelsOrm]:
     )
     result = await session.execute(query)
     return result.scalars().all()
+
+async def get_api_key_by_conversation_id(
+    session: AsyncSession,
+    conversation_id: str
+) -> Optional[str]:
+    query = (
+        select(LlmModelsOrm.api_key)
+        .join(
+            ConversationsOrm,
+            ConversationsOrm.llm_id == LlmModelsOrm.id
+        )
+        .where(ConversationsOrm.id == conversation_id)
+    )
+    result = await session.execute(query)
+    return result.scalar_one_or_none()

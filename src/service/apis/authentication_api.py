@@ -2,7 +2,6 @@
 
 from typing import Dict, List  # noqa: F401
 
-#TODO: replace impl with business package
 from src.business.interfaces import IBasicAuthManager
 
 from src.service.dependencies import get_auth_manager
@@ -24,7 +23,6 @@ from fastapi import (  # noqa: F401
 )
 
 from pydantic import Field
-from typing import Optional
 from typing_extensions import Annotated
 from uuid import UUID
 
@@ -42,7 +40,6 @@ from src.core.dtos import (
 )
 
 router = APIRouter()
-
 
 
 @router.get(
@@ -198,28 +195,6 @@ async def auth_submit_password_reset_post(
     """Accepts the password-reset token sent via email and a new password. Does not require the user to be logged in. """
 
     return await auth_manager.complete_password_recovery(password_reset_submit_request)
-
-
-@router.post(
-    "/auth/request-email-verification",
-    responses={
-        204: {"description": "Verification email sent"},
-        401: {"description": "User not authenticated"},
-        409: {"description": "Email is already verified"},
-    },
-    tags=["Authentication"],
-    summary="Request an email-verification token",
-    response_model_by_alias=True,
-)
-async def auth_request_email_verification_post(
-    token_jwt: TokenModel = Security(
-        get_token_jwt
-    ),
-    auth_manager:IBasicAuthManager = Depends(get_auth_manager)
-) -> None:
-    """Sends an email-verification token to the authenticated user&#39;s email. """
-
-    return await auth_manager.generate_email_verification(token_jwt)
 
 
 @router.post(

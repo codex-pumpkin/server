@@ -23,10 +23,9 @@ from fastapi import (  # noqa: F401
 
 from src.core.dtos.extra_models import TokenModel  # noqa: F401
 from src.core.dtos.analytics_response import AnalyticsResponse
-from src.service.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt, get_token_jwt_mandatory_admin
 
 router = APIRouter()
-
 
 
 @router.get(
@@ -41,9 +40,9 @@ router = APIRouter()
 )
 async def analytics_get(
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory_admin
     ),
+    system_manger: ISystemManager = Depends(get_system_manager)
 ) -> AnalyticsResponse:
     """Returns the analytics. Only for Admins."""
-    system_manger : ISystemManager = Depends(get_system_manager())
-    return await system_manger.get_analytics(token_jwt)
+    return await system_manger.get_analytics()
