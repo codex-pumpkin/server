@@ -239,7 +239,7 @@ class InferenceManager(IInferenceManager):
 
         doc_context = await prompt_manager.retrieve_context(user_input)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)
-
+    
         code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key)
         code = await self._clean_markdown(code)
 
@@ -253,7 +253,7 @@ class InferenceManager(IInferenceManager):
                 code = await aiclient.regenerate(user_input, context, code, api_key)
                 code = await self._clean_markdown(code)
                 
-                validation_result = await validator.validate_code(code)
+                validation_result = await validator.validate_code(code) 
                 if validation_result.isValid:
                     return code
         else:
