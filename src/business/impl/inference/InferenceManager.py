@@ -113,7 +113,7 @@ class InferenceManager(IInferenceManager):
 
         message = MessageResponse(
             id=uuid.uuid4(),
-            created_at=datetime.datetime.now(datetime.UTC),
+            created_at=datetime.datetime.now(datetime.UTC).timestamp(),
             message=request.message,
             response=result,
             response_secondary=result,
@@ -124,8 +124,8 @@ class InferenceManager(IInferenceManager):
             name=request.name,
             target_language=request.target_language,
             llm_model_config_id=request.llm_model_config_id,
-            created_at=datetime.datetime.now(datetime.UTC),
-            updated_at=datetime.datetime.now(datetime.UTC),
+            created_at=datetime.datetime.now(datetime.UTC).timestamp(),
+            updated_at=datetime.datetime.now(datetime.UTC).timestamp(),
             user_id=uuid.uuid4(),
             messages=[message]
         )
@@ -141,11 +141,11 @@ class InferenceManager(IInferenceManager):
         result = await repo.create_chat(str(token_jwt.sub), request)
 
         await self.post_message_to_conversation(
-            conversation_id=result.id,
+            conversation_id=uuid.UUID(result),
             message_request=MessageRequest(message=request.message),
             token_jwt=token_jwt
         )
-        return await repo.get_chat_by_id(str(result.id))
+        return await repo.get_chat_by_id(result)
 
     async def start_conversation(
         self,
@@ -209,7 +209,7 @@ class InferenceManager(IInferenceManager):
         )
         end = time.monotonic()
         message = Message(
-            conversation_id=conversation_id,
+            conversation_id=str(conversation_id),
             response=result,
             message=message_request.message,
             response_secondary=result,
@@ -241,7 +241,7 @@ class InferenceManager(IInferenceManager):
 
         validation_result = await validator.validate_code(code)
 
-        if not validation_result.is_valid:
+        if not validation_result.isValid:
             for i in range(settings.llm_settings.num_of_regenerations):
                 context = prompt_manager.make_regeneration_context(
                     validation_result.exitCode, validation_result.rawOutput)

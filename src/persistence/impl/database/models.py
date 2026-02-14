@@ -102,6 +102,7 @@ class MessagesOrm(Base):
     created_at: Mapped[created_at_type]
     prompt: Mapped[str] = mapped_column()
     response: Mapped[str] = mapped_column()
+    response_secondary: Mapped[str] = mapped_column()
     generation_ms: Mapped[int] = mapped_column()
     conversation_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("conversations.id", ondelete="SET NULL"),
@@ -115,7 +116,7 @@ class MessagesOrm(Base):
     def to_dto(self) -> MessageResponse:
         return MessageResponse(
             id=self.id,
-            created_at=self.created_at,
+            created_at=self.created_at.timestamp(),
             message=self.prompt,
             response=self.response,
             response_secondary=self.response,

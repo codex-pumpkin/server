@@ -36,7 +36,7 @@ class MessageResponse(BaseModel):
     generation_millis: StrictInt = Field(description="How long the response took to generate")
     response: StrictStr = Field(description="Raw LLM-generated response")
     response_secondary: Optional[StrictStr] = Field(default=None, description="Preprocesses response from the LLM by the server")
-    created_at: StrictStr = Field(description="The instant when the object was created")
+    created_at: float = Field(description="The instant when the object was created")
     __properties: ClassVar[List[str]] = ["id", "message", "generation_millis", "response", "response_secondary", "created_at"]
 
     model_config = {

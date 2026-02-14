@@ -14,8 +14,9 @@ async def conversation_to_dto(session:AsyncSession, conversation:ConversationsOr
 
     return ConversationResponse(
         id=uuid.UUID(conversation.id),
-        created_at=conversation.created_at,
-        updated_at=conversation.updated_at,
+        name=conversation.name,
+        created_at=conversation.created_at.timestamp(),
+        updated_at=conversation.updated_at.timestamp(),
         pinned=conversation.is_pined,
         user_id=uuid.UUID(conversation.user_id),
         llm_model_config_id=conversation.llm_id,

@@ -260,7 +260,7 @@ class EntityRepository(IEntityRepository):
             return await conversation_to_dto(session=session, conversation=chat)
 
 
-    async def create_chat(self, user_id: str, request: ConversationRequest):
+    async def create_chat(self, user_id: str, request: ConversationRequest) -> str:
         async with async_session_factory() as session:
             chat_orm = ConversationsOrm(
                 name=request.name,
@@ -270,6 +270,8 @@ class EntityRepository(IEntityRepository):
             )
             session.add(chat_orm)
             await session.commit()
+            await session.refresh(chat_orm)
+            return chat_orm.id
 
     async def update_chat(self, chat_id: str, name: str, is_pinned: bool) -> bool:
         async with async_session_factory() as session:
@@ -312,7 +314,7 @@ class EntityRepository(IEntityRepository):
                 generation_ms=message.generation_millis,
                 conversation_id=message.conversation_id
             )
-            await session.add(orm)
+            session.add(orm)
             await session.commit()
 
             await update_conversation_update_time(
