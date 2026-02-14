@@ -4,11 +4,20 @@ from openai import AsyncOpenAI
 from src.persistence.impl.chroma_database import SemanticRepository
 from src.persistence.interfaces import IAIClient
 
-_PREPROMPT: Final[str] = textwrap.dedent("""\
+_PREPROMPT: Final[str] = textwrap.dedent("""
     You are an expert analog circuit designer.
+    Generate SPICE code based on the user question and retrieved context, only 1 circuit, do not generate multiple circuits.
     Use the retrieved context only as reference material.
     If the context is incomplete or suboptimal, improve it.
     Do NOT copy node naming errors.
+
+    CRITICAL SYNTAX RULES:
+    - Subcircuit instantiation: X<name> <node1> <node2> ... <subckt_name> (nodes first, name last)
+    - Subcircuit definition: .SUBCKT <name> <node1> <node2> ... (match node count to instantiation)
+    - ALWAYS include .PRINT or .PLOT statement before .END (required for batch mode)
+    - TSTEP must be greater than 0
+    - Title line must start with * (SPICE requirement, not optional)
+
     Generate a clean, correct SPICE netlist.
     Return SPICE code only that can be directly pasted into ngspice, 
     without any explanations.
@@ -16,13 +25,22 @@ _PREPROMPT: Final[str] = textwrap.dedent("""\
 
 _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
     You are an expert analog circuit designer.
+    Generate SPICE code based on the user question and retrieved context, only 1 circuit, do not generate multiple circuits.
     The previous code you generated had some issues.
     We send you code you generated earlier for reference,
     along with exitCode, rawOutput from ngspice 
     and the user question itself.
+                                                     
+    CRITICAL SYNTAX RULES:
+    - Subcircuit instantiation: X<name> <node1> <node2> ... <subckt_name> (nodes first, name last)
+    - Subcircuit definition: .SUBCKT <name> <node1> <node2> ... (match node count to instantiation)
+    - ALWAYS include .PRINT or .PLOT statement before .END (required for batch mode)
+    - TSTEP must be greater than 0
+    - Title line must start with * (SPICE requirement, not optional)
+                                                     
     Generate a clean, correct SPICE netlist.
     Return SPICE code only that can be directly pasted into ngspice, 
-    without any explanations.
+    without any explanations and any comments.
 """)
 
 class AIClient(IAIClient):
