@@ -7,7 +7,8 @@ from src.core.dtos import (
     MessageRequest,
     ConversationRequest,
     ConversationResponse,
-    UpdateConversationRequest
+    UpdateConversationRequest,
+    MessageResponse
 )
 from uuid import UUID
 
@@ -28,7 +29,7 @@ class IInferenceManager(ABC):
         ],
         message_request: MessageRequest,
         token_jwt: TokenModel
-    ):
+    ) -> MessageResponse:
         pass
 
     @abstractmethod
@@ -40,7 +41,7 @@ class IInferenceManager(ABC):
         ],
         message_request: MessageRequest,
         token_jwt: TokenModel
-    ):
+    ) -> MessageResponse:
         pass
 
     @abstractmethod

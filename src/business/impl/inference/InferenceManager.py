@@ -52,6 +52,7 @@ class InferenceManager(IInferenceManager):
             chat_id=str(conversation_id),
             message=message
         )
+        return (await repo.get_messages(str(conversation_id)))[-1]
 
     async def message_regeneration(
         self,
@@ -61,7 +62,7 @@ class InferenceManager(IInferenceManager):
         ],
         message_request: MessageRequest,
         token_jwt: TokenModel
-    ):
+    ) -> MessageResponse:
         repo = await PersistenceFactory.get_entity_repository()
         message = await self._get_message(
             conversation_id=conversation_id,
@@ -78,6 +79,7 @@ class InferenceManager(IInferenceManager):
             chat_id=str(conversation_id),
             message=message
         )
+        return (await repo.get_messages(str(conversation_id)))[-1]
 
     async def remove_conversation(
         self,
@@ -88,8 +90,12 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ):
         repo = await PersistenceFactory.get_entity_repository()
-        chat = await repo.get_chat_by_id(chat_id=str(token_jwt.sub))
-        if chat.user_id != conversation_id:
+        chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
+
+        if chat is None:
+            return Exception("later")
+
+        if chat.user_id != token_jwt.sub:
             raise Exception("later")
 
         await repo.delete_chat(str(conversation_id))
@@ -177,7 +183,6 @@ class InferenceManager(IInferenceManager):
 
         if chat is None:
             raise Exception("later")
-
         if chat.user_id != token_jwt.sub:
             raise Exception("later")
 

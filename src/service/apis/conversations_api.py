@@ -25,7 +25,7 @@ from fastapi import (  # noqa: F401
 from uuid import UUID
 
 from src.core.dtos import TokenModel  # noqa: F401
-from pydantic import Field, StrictInt, StrictStr
+from pydantic import Field
 from typing import List
 from typing_extensions import Annotated
 from src.service.security_api import (
@@ -92,7 +92,7 @@ async def conversations_post(
 @router.put(
     "/conversations/{conversation_id}",
     responses={
-        200: {"model": ConversationResponse, "description": "Conversation updated successfully"},
+        200: {"description": "Conversation updated successfully"},
         400: {"description": "Invalid request"},
         401: {"description": "User not authenticated"},
         403: {"description": "User does not have permission to update this conversation or conversation now found"},
@@ -114,7 +114,7 @@ async def conversations_id_put(
         get_token_jwt_mandatory
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
-) -> ConversationResponse:
+) -> None:
     """Alters metadata of a conversation, such as its name or pinned state."""
     return await inference_manger.update_conversation(
         conversation_id=conversation_id,
@@ -149,18 +149,19 @@ async def conversations_id_delete(
 ) -> None:
     """Deletes the conversation with the given Id. """
     return await inference_manger.remove_conversation(
-        token_jwt=token_jwt,
-        id=conversation_id
+        conversation_id=conversation_id,
+        token_jwt=token_jwt
     )
 
 @router.put(
     "/conversations/{conversation_id}/messages",
     responses={
         200: {"model": MessageResponse, "description": "Message changed successfully"},
+        401: {"description": "User not authenticated"},
+        403: {"description": "User does not have permission to delete this conversation or conversation not found"},
     },
     tags=["Conversations"],
     summary="Regenerate a message.",
-    response_model_by_alias=True,
 )
 async def conversations_id_messages_put(
     conversation_id: Annotated[
@@ -180,7 +181,7 @@ async def conversations_id_messages_put(
     """Resend a message by providing a new prompt."""
     return await inference_manger.message_regeneration(
         token_jwt=token_jwt,
-        id=conversation_id,
+        conversation_id=conversation_id,
         message_request=message_request
     )
 
@@ -212,7 +213,7 @@ async def conversations_id_messages_post(
     """Adds a new message to an existing conversation. """
     return await inference_manger.post_message_to_conversation(
         token_jwt=token_jwt,
-        id=conversation_id,
+        conversation_id=conversation_id,
         message_request=message_request
     )
 
