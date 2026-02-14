@@ -1,4 +1,4 @@
-from src.persistence.interfaces import IGraphGenerator
+'''from src.persistence.interfaces import IGraphGenerator
 from PySpice.Spice.Parser import SpiceParser
 import tempfile
 import os
@@ -115,4 +115,4 @@ Q1 4 3 5 Q2N2222
         components = await generator.gen_graph(test_circuit)
         print(json.dumps(components, indent=2))
 
-    asyncio.run(main())
+    asyncio.run(main())'''

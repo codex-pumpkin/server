@@ -15,6 +15,8 @@ class PromptManager(IPromptManager):
         return context
     
     def get_conversation_context(self, conversation_history: List[Tuple[str, str]]) -> str:
+        if not conversation_history:
+            return ""
         context = "Conversation history:\n"
         for user_msg, ai_msg in conversation_history:
             context += "User: {}\nAI: {}\n".format(user_msg, ai_msg)
