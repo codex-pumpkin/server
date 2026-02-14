@@ -248,15 +248,22 @@ class InferenceManager(IInferenceManager):
             conversation_history=messages,
             api_key=api_key
         )
+        graph = await self._get_graph_representation(result)
         end = time.monotonic()
         message = Message(
             conversation_id=str(conversation_id),
             response=result,
             message=message_request.message,
             response_secondary=result,
+            graph=graph,
             generation_millis=int((end - start) * 1000)
         )
         return message
+
+    async def _get_graph_representation(self, llm_response: str) -> dict:
+        repo = await PersistenceFactory.get_graph_generator()
+        graph = await repo.gen_graph(llm_response)    
+        return graph
 
     async def _get_llm_response_and_validate(
         self,
@@ -304,3 +311,4 @@ class InferenceManager(IInferenceManager):
         if code.startswith("```") and code.endswith("```"):
             code = "\n".join(code.split("\n")[1:-1])
         return code
+    

@@ -312,6 +312,7 @@ class EntityRepository(IEntityRepository):
                 prompt=message.message,
                 response=message.response,
                 response_secondary=message.response_secondary,
+                graph=message.graph,
                 generation_ms=message.generation_millis,
                 conversation_id=message.conversation_id
             )
