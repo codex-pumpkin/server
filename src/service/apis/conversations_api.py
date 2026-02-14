@@ -117,7 +117,7 @@ async def conversations_id_put(
 ) -> ConversationResponse:
     """Alters metadata of a conversation, such as its name or pinned state."""
     return await inference_manger.update_conversation(
-        id=conversation_id,
+        conversation_id=conversation_id,
         update_conversation_request=update_conversation_request,
         token_jwt=token_jwt
     )
