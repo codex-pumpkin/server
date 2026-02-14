@@ -99,10 +99,14 @@ class InferenceManager(IInferenceManager):
         self,
         request: ConversationRequest
     ) -> ConversationResponse:
+        repo = await PersistenceFactory.get_entity_repository()
+        api_key = await repo.get_key_of_model(request.llm_model_config_id)
+
         start = time.monotonic()
         result = await self._get_llm_response_and_validate(
             user_input=request.message,
-            conversation_history=[]
+            conversation_history=[],
+            api_key=api_key
         )
         end = time.monotonic()
         chat_id = uuid.uuid4()
@@ -148,10 +152,15 @@ class InferenceManager(IInferenceManager):
         token_jwt: Optional[TokenModel],
         conversation_request: ConversationRequest
     ) -> ConversationResponse:
-        if token_jwt is not None:
-            return await self._start_conversation_not_logged_in(request=conversation_request)
+        if token_jwt is None:
+            return await self._start_conversation_not_logged_in(
+                request=conversation_request
+            )
         else:
-            return await self._start_conversation(token_jwt=token_jwt, request=conversation_request)
+            return await self._start_conversation(
+                token_jwt=token_jwt,
+                request=conversation_request
+            )
 
 
     async def update_conversation(
