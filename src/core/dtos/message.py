@@ -35,7 +35,7 @@ class Message(BaseModel):
     message: StrictStr = Field(description="User-entered prompt")
     generation_millis: StrictInt = Field(description="How long the response took to generate")
     response: StrictStr = Field(description="Raw LLM-generated response")
-    graph: Optional[Dict[str, Any]] = Field(default=None, description="Structured graph representation of the circuit, extracted from the LLM response by the server")
+    graph: StrictStr = Field(default=None, description="Structured graph representation of the circuit, extracted from the LLM response by the server")
     __properties: ClassVar[List[str]] = ["conversation_id", "message", "generation_millis", "response", "response_secondary"]
 
     model_config = {
