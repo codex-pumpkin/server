@@ -254,7 +254,6 @@ class InferenceManager(IInferenceManager):
             conversation_id=str(conversation_id),
             response=result,
             message=message_request.message,
-            response_secondary=result,
             graph=graph,
             generation_millis=int((end - start) * 1000)
         )
