@@ -372,6 +372,13 @@ class EntityRepository(IEntityRepository):
                 return llm_config
             return llm_config.to_dto()
 
+    async def get_key_of_model(self, model_id:str) -> Optional[str]:
+        async with async_session_factory() as session:
+            llm_config = await get_model_by_id(session=session, llm_id=model_id)
+            if llm_config is None:
+                return None
+            return llm_config.api_key
+
     async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
         async with async_session_factory() as session:
             orm_configs = await get_all_llm_configs(session)
