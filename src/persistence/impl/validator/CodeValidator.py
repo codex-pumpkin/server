@@ -33,8 +33,15 @@ class CodeValidator(ICodeValidator):
             # Combine and decode output
             output = (stdout + stderr).decode("utf-8", errors="ignore")
 
-            # Evaluate success based on exit code
-            is_valid = process.returncode == 0
+            lower_output = output.lower()
+
+            has_error = (
+                "error" in lower_output
+                or "fatal" in lower_output
+                or "simulation interrupted" in lower_output
+            )
+
+            is_valid = (process.returncode == 0) and not has_error
 
             # Return structured result (camelCase field names!)
             return ValidationResult(
