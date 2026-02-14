@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 
-from typing import Annotated
-from pydantic import StrictStr, Field
+from typing import Annotated, List
+from pydantic import Field
+from uuid import UUID
 
 from src.core.dtos import (
     TokenModel,
     QuotaConfig,
-    LLMConfigurationRequest
+    LLMConfigurationRequest, LLMConfigurationResponse
 )
 
 class ISystemManager(ABC):
@@ -19,19 +20,34 @@ class ISystemManager(ABC):
         pass
 
     @abstractmethod
-    async def get_analytics(self, token_jwt: TokenModel):
+    async def get_analytics(self):
         pass
 
     @abstractmethod
-    async def validate_and_persist_llm_config(self, token_jwt: TokenModel, llm_configuration_request: LLMConfigurationRequest):
+    async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
         pass
 
     @abstractmethod
-    async def update_llm_config(self, token_jwt: TokenModel, id: Annotated[StrictStr, Field(
-        description="ID of the LLM configuration to update")], llm_configuration_request: LLMConfigurationRequest):
+    async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
         pass
 
     @abstractmethod
-    async def process_llm_removal(self, token_jwt: TokenModel, id: Annotated[
-        StrictStr, Field(description="ID of the LLM configuration to delete")]):
+    async def update_llm_config(
+        self,
+        llm_id: Annotated[
+            UUID,
+            Field(description="ID of the LLM configuration to update")
+        ],
+        llm_configuration_request: LLMConfigurationRequest
+    ):
+        pass
+
+    @abstractmethod
+    async def process_llm_removal(
+        self,
+        llm_id: Annotated[
+            UUID,
+            Field(description="ID of the LLM configuration to delete")
+        ]
+    ):
         pass

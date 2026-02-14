@@ -51,8 +51,13 @@ def get_token_jwt_mandatory(
         APIKeyHeader(name="access_token", auto_error=False)
     )
 ) -> TokenModel:
-    return get_token_jwt(access_token=access_token)
-
+    token = get_token_jwt(access_token=access_token)
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="logging in is required"
+        )
+    return token
 
 def get_token_jwt_mandatory_admin(
     access_token: UUID = Security(
