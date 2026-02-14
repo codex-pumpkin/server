@@ -13,6 +13,12 @@ from src.core.dtos import (
     Message
 )
 
+from src.core.exceptions import (
+    QuotaExceededError,
+    NotFoundError,
+    AccessError
+)
+
 from typing import List, Optional, Tuple, Annotated
 
 from src.business.interfaces import IInferenceManager
@@ -39,6 +45,8 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ):
         repo = await PersistenceFactory.get_entity_repository()
+        if repo.is_quota_exceeded(str(token_jwt.sub)):
+            raise QuotaExceededError()
 
         message = await self._get_message(
             conversation_id=conversation_id,
@@ -64,6 +72,9 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ) -> MessageResponse:
         repo = await PersistenceFactory.get_entity_repository()
+        if repo.is_quota_exceeded(str(token_jwt.sub)):
+            raise QuotaExceededError()
+
         message = await self._get_message(
             conversation_id=conversation_id,
             message_request=message_request,
@@ -93,10 +104,16 @@ class InferenceManager(IInferenceManager):
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
         if chat is None:
-            return Exception("later")
+            raise NotFoundError(
+                type_of="conversation",
+                id_of=str(conversation_id)
+            )
 
         if chat.user_id != token_jwt.sub:
-            raise Exception("later")
+            raise AccessError(
+                type_of="conversation",
+                id_of=str(chat.user_id)
+            )
 
         await repo.delete_chat(str(conversation_id))
 
@@ -144,8 +161,10 @@ class InferenceManager(IInferenceManager):
         request:ConversationRequest
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
-        result = await repo.create_chat(str(token_jwt.sub), request)
+        if repo.is_quota_exceeded(str(token_jwt.sub)):
+            raise QuotaExceededError()
 
+        result = await repo.create_chat(str(token_jwt.sub), request)
         await self.post_message_to_conversation(
             conversation_id=uuid.UUID(result),
             message_request=MessageRequest(message=request.message),
@@ -182,9 +201,15 @@ class InferenceManager(IInferenceManager):
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
         if chat is None:
-            raise Exception("later")
+            raise NotFoundError(
+                type_of="conversation",
+                id_of=str(conversation_id)
+            )
         if chat.user_id != token_jwt.sub:
-            raise Exception("later")
+            raise AccessError(
+                type_of="conversation",
+                id_of=str(chat.user_id)
+            )
 
         await repo.update_chat(
             chat_id=str(conversation_id),
@@ -202,9 +227,16 @@ class InferenceManager(IInferenceManager):
     ) -> Message:
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
         if chat is None:
-            raise Exception("Conversation with such Id doesnt exist!")
+            raise NotFoundError(
+                type_of="conversation",
+                id_of=str(conversation_id)
+            )
+
         if chat.user_id != token_jwt.sub:
-            raise Exception("Conversation doesnt belong to the user!")
+            raise AccessError(
+                type_of="conversation",
+                id_of=str(chat.user_id)
+            )
 
         api_key = await repo.get_llm_key_by_chat_id(chat_id=str(conversation_id))
         messages = [(message.message, message.response) for message in chat.messages]

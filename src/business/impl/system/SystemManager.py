@@ -9,6 +9,11 @@ from src.core.dtos import (
     LLMConfigurationResponse
 )
 
+from src.core.exceptions import (
+    NotFoundError
+)
+
+
 from src.business.interfaces import ISystemManager
 from src.persistence import PersistenceFactory
 from uuid import UUID
@@ -49,7 +54,10 @@ class SystemManager(ISystemManager):
         repo = await PersistenceFactory.get_entity_repository()
         model = await repo.get_model(model_id=str(llm_id))
         if model is None:
-            raise Exception("No model with such ID!")
+            raise NotFoundError(
+                type_of="model",
+                id_of=str(llm_id)
+            )
         await repo.change_model(
             model_id=str(llm_id),
             name=llm_configuration_request.name,
@@ -67,6 +75,9 @@ class SystemManager(ISystemManager):
         repo = await PersistenceFactory.get_entity_repository()
         model = await repo.get_model(model_id=str(llm_id))
         if model is None:
-            raise Exception("model with such index doesnt exist")
+            raise NotFoundError(
+                type_of="model",
+                id_of=str(llm_id)
+            )
 
         await repo.remove_model(model_id=str(llm_id))

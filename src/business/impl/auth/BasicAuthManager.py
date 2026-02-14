@@ -17,6 +17,7 @@ from src.core.dtos import (
 from src.core.exceptions import (
     AuthError,
     VerificationError,
+    NotFoundError
 )
 
 from typing import Annotated, Optional
@@ -40,7 +41,10 @@ class BasicAuthManager(IBasicAuthManager):
 
         token_info = await repo.get_token(str(token))
         if token_info is None:
-            raise VerificationError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if token_info.token_type != "email":
             raise VerificationError("Token isn't email token!")
         if token_info.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
@@ -62,7 +66,10 @@ class BasicAuthManager(IBasicAuthManager):
         repo = await PersistenceFactory.get_entity_repository()
         token = await repo.get_token(request.reset_token)
         if token is None:
-            raise AuthError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if token.token_type != "password":
             raise AuthError("Token isn't of type recover password!")
         if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
@@ -91,7 +98,10 @@ class BasicAuthManager(IBasicAuthManager):
         repo = await PersistenceFactory.get_entity_repository()
         refresh_token = await repo.get_token(token)
         if refresh_token is None:
-            raise AuthError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if refresh_token.token_type != "refresh":
             raise AuthError("Token isn't of type refresh!")
         if not refresh_token.valid or refresh_token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
