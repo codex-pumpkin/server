@@ -81,7 +81,7 @@ class ConversationsOrm(Base):
     created_at: Mapped[created_at_type]
     updated_at: Mapped[created_at_type]
     name: Mapped[str] = mapped_column()
-    is_pined: Mapped[bool] = mapped_column(default=False)
+    is_pinned: Mapped[bool] = mapped_column(default=False)
     llm_id: Mapped[str] = mapped_column(ForeignKey("llm_models.id"))
     target_language: Mapped[TargetLanguage] = mapped_column(default=TargetLanguage.SPICE_NETLIST)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))

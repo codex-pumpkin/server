@@ -173,14 +173,18 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel
     ) -> None:
         repo = await PersistenceFactory.get_entity_repository()
-        chat = await repo.get_chat_by_id(chat_id=str(token_jwt.sub))
-        if chat.user_id != conversation_id:
+        chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
+
+        if chat is None:
+            raise Exception("later")
+
+        if chat.user_id != token_jwt.sub:
             raise Exception("later")
 
         await repo.update_chat(
             chat_id=str(conversation_id),
-            is_pinned=UpdateConversationRequest.pinned,
-            name=UpdateConversationRequest.name
+            is_pinned=update_conversation_request.pinned,
+            name=update_conversation_request.name
         )
 
     async def _get_message(
