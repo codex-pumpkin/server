@@ -16,7 +16,7 @@ from __future__ import annotations
 import pprint
 import re  # noqa: F401
 import json
-
+from datetime import datetime
 
 
 
@@ -31,10 +31,26 @@ except ImportError:
 class AnalyticsResponse(BaseModel):
     """
     AnalyticsResponse
-    """ # noqa: E501
-    requests_today: Annotated[int, Field(strict=True, ge=0)] = Field(description="Number of requests made today")
-    requests_this_month: Annotated[int, Field(strict=True, ge=0)] = Field(description="Number of requests made this month")
-    __properties: ClassVar[List[str]] = ["requests_today", "requests_this_month"]
+    """  # noqa: E501
+
+    start_time: Annotated[
+        datetime,
+        Field(description="Start time of the 24-hour analytics window (ISO 8601)")
+    ]
+
+    interval_minutes: Annotated[
+        int,
+        Field(strict=True, ge=1, description="Interval size in minutes (default 15)")
+    ] = 15
+
+    usage: Annotated[
+        List[int],
+        Field(
+            description="Array of usage counts in 15-minute intervals over 24 hours"
+        )
+    ]
+
+    __properties: ClassVar[List[str]] = ["start_time", "interval_minutes", "usage"]
 
     model_config = {
         "populate_by_name": True,
@@ -42,6 +58,13 @@ class AnalyticsResponse(BaseModel):
         "protected_namespaces": (),
     }
 
+    @classmethod
+    def validate_usage_length(cls, v: List[int]) -> List[int]:
+        if len(v) != 96:
+            raise ValueError("usage must contain exactly 96 values (24h / 15min)")
+        if any(x < 0 for x in v):
+            raise ValueError("usage values must be non-negative integers")
+        return v
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
@@ -49,8 +72,7 @@ class AnalyticsResponse(BaseModel):
 
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), default=str)
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
@@ -60,8 +82,7 @@ class AnalyticsResponse(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         """Return the dictionary representation of the model using alias.
 
-        This has the following differences from calling pydantic's
-        `self.model_dump(by_alias=True)`:
+        Differences from calling pydantic's `self.model_dump(by_alias=True)`:
 
         * `None` is only added to the output dict for nullable fields that
           were set at model initialization. Other fields with value `None`
@@ -69,10 +90,14 @@ class AnalyticsResponse(BaseModel):
         """
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude={},
             exclude_none=True,
         )
+
+        # Convert datetime to ISO string
+        if _dict.get("start_time"):
+            _dict["start_time"] = _dict["start_time"].isoformat()
+
         return _dict
 
     @classmethod
@@ -85,8 +110,9 @@ class AnalyticsResponse(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "requests_today": obj.get("requests_today"),
-            "requests_this_month": obj.get("requests_this_month")
+            "start_time": obj.get("start_time"),
+            "interval_minutes": obj.get("interval_minutes", 15),
+            "usage": obj.get("usage")
         })
         return _obj
 

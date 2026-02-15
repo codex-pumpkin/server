@@ -33,7 +33,8 @@ class SystemManager(ISystemManager):
         await repo.change_quota(quota_config)
 
     async def get_analytics(self):
-        pass
+        repo = await PersistenceFactory.get_entity_repository()
+        return await repo.get_usage_data()
 
     async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
         repo = await PersistenceFactory.get_entity_repository()

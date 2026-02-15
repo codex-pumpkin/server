@@ -55,8 +55,10 @@ from src.core.dtos import (
     TokenInfo,
     QuotaConfig,
     ConversationResponse,
-    MessageResponse
+    MessageResponse, AnalyticsResponse
 )
+
+from src.persistence.impl.database.queries.analytics import get_analytics
 
 from src.persistence.impl.database.conversation_utils import conversation_to_dto
 
@@ -145,6 +147,15 @@ class EntityRepository(IEntityRepository):
                 return False
             return user.is_verified
 
+    async def unverify_user(self, user_id:str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            if user is None:
+                return False
+            user.is_verified = False
+            await session.commit()
+            return True
+
     async def verify_user(self, user_id: str) -> bool:
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
@@ -181,6 +192,14 @@ class EntityRepository(IEntityRepository):
             if user is None:
                 return False
             user.hashed_password = hash_password(password=new_password)
+            await session.commit()
+            return True
+
+    async def change_mail_username(self, user_id:str, email:str, username:str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            user.email = email
+            user.username = username
             await session.commit()
             return True
 
@@ -419,7 +438,7 @@ class EntityRepository(IEntityRepository):
             user = await self.get_user_by_id(user_id=user_id)
             quota = await self.get_quota()
             daily_quota = quota.admin if user.is_admin else quota.member
-            return daily_quota - res
+            return max(0, daily_quota - res)
 
     async def is_quota_exceeded(self, user_id: str) -> bool:
         return (await self.get_user_quota_remaining(user_id=user_id)) == 0
@@ -427,7 +446,9 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Analytics / Usage-related
     # --------------------
-    async def get_usage_data(self) -> UsageData: ...
+    async def get_usage_data(self) -> AnalyticsResponse:
+        async with async_session_factory() as session:
+            return await get_analytics(session=session)
 
     # --------------------
     # Profile Picture
