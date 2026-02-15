@@ -1,7 +1,6 @@
 from typing_extensions import Final
 import textwrap
 from openai import AsyncOpenAI
-from src.persistence.impl.chroma_database import SemanticRepository
 from src.persistence.interfaces import IAIClient
 
 _PREPROMPT: Final[str] = textwrap.dedent("""

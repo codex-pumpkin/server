@@ -10,15 +10,6 @@ from src.persistence.interfaces import (
     ISemanticRepository,
 )
 
-from src.persistence.impl import (
-    EntityRepository,
-    SemanticRepository,
-    MailSender,
-    CodeValidator,
-    GraphGenerator,
-    AIClient
-)
-
 T = TypeVar("T")
 
 
@@ -40,24 +31,30 @@ class PersistenceFactory:
 
     @classmethod
     async def get_ai_client(cls) -> IAIClient:
+        from src.persistence.impl.llm import AIClient
         return await cls._get_singleton(IAIClient, AIClient)
 
     @classmethod
     async def get_code_validator(cls) -> ICodeValidator:
+        from src.persistence.impl.validator import CodeValidator
         return await cls._get_singleton(ICodeValidator, CodeValidator)
 
     @classmethod
     async def get_entity_repository(cls) -> IEntityRepository:
+        from src.persistence.impl.database import EntityRepository
         return await cls._get_singleton(IEntityRepository, EntityRepository)
 
     @classmethod
     async def get_graph_generator(cls) -> IGraphGenerator:
+        from src.persistence.impl.generator import GraphGenerator
         return await cls._get_singleton(IGraphGenerator, GraphGenerator)
 
     @classmethod
     async def get_mail_sender(cls) -> IMailSender:
+        from src.persistence.impl.mail import MailSender
         return await cls._get_singleton(IMailSender, MailSender)
 
     @classmethod
     async def get_semantic_repository(cls) -> ISemanticRepository:
+        from src.persistence.impl.chroma_database import SemanticRepository
         return await cls._get_singleton(ISemanticRepository, SemanticRepository)
