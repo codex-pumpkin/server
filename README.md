@@ -32,7 +32,7 @@ pip install -r requeirements.txt
 
 ## Run (Development)
 ```bash
-python src/main.py
+python -m src.main
 ```
 
 Server starts on:
