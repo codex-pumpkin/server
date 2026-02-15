@@ -2,14 +2,28 @@ from src.persistence.impl.database.database import Base, sync_engine, session_fa
 from src.persistence.impl.database.models import UsersOrm, QuotaOrm
 import asyncio
 from src.persistence.impl.database.hash_util import hash_password
+from sqlalchemy import inspect
+import logging
+
+
+def tables_exist() -> bool:
+    inspector = inspect(sync_engine)
+    return inspector.has_table("users")
+
 
 def create_tables():
     sync_engine.echo = False
-    Base.metadata.drop_all(sync_engine)
+    if tables_exist():
+        logging.info("Tables already exist. Skipping creation.")
+        sync_engine.echo = True
+        return
+
+    logging.info("Creating tables...")
     Base.metadata.create_all(sync_engine)
-    sync_engine.echo = True
     create_quota()
     create_user()
+    sync_engine.echo = True
+
 
 def create_quota():
     quota = QuotaOrm(
