@@ -26,7 +26,9 @@ from pydantic import Field
 from typing_extensions import Annotated
 from uuid import UUID
 
-from src.service.security_api import get_token_jwt
+from src.service.security_api import get_token_jwt, get_token_jwt_mandatory
+
+from src.core.settings import settings
 
 from src.core.dtos import (
     EmailVerificationSubmitRequest,
@@ -46,28 +48,27 @@ import urllib.parse
 import httpx
 
 
-
 @router.get(
     "/auth/google/login",
     responses={
-        200: {"description": "Login successful"},
-        401: {"description": "Could not authenticate"},
+        307: {"description": "Redirects the user to Google OAuth 2.0 login page."},
+        401: {"description": "Authentication could not be initiated."},
     },
     tags=["Authentication"],
-    summary="Login via the google identity provider.",
+    summary="Initiate login using Google OAuth 2.0.",
     response_model_by_alias=True,
 )
 async def auth_google_login_get():
     params = {
-        "client_id": "720310987371-5rrnoedva7eq2lva8c0vdqtr2stsdq34.apps.googleusercontent.com",
-        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "client_id": settings.google_settings.client_id,
+        "redirect_uri": settings.google_settings.redirect_uri,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "consent",
     }
 
-    url = "https://accounts.google.com/o/oauth2/auth?" + urllib.parse.urlencode(params)
+    url = settings.google_settings.url + urllib.parse.urlencode(params)
 
     return RedirectResponse(url)
 
@@ -75,26 +76,30 @@ async def auth_google_login_get():
 @router.get(
     "/auth/google/callback",
     responses={
-        200: {"model":TokenResponse, "description": "Login successful"},
-        401: {"description": "Could not authenticate"},
+        200: {
+            "model": TokenResponse,
+            "description": "Successfully authenticated with Google and returned application tokens."
+        },
+        401: {
+            "description": "Authentication failed or the token exchange was unsuccessful."
+        },
     },
     tags=["Authentication"],
-    summary="Callback for the google identity provider.",
+    summary="Handle Google OAuth callback and return application tokens.",
     response_model_by_alias=True,
 )
-@router.get("/auth/google/callback")
 async def google_callback(
     code: str,
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
 
-    token_url = "https://oauth2.googleapis.com/token"
+    token_url = settings.google_settings.token_url
 
     data = {
         "code": code,
-        "client_id": "720310987371-5rrnoedva7eq2lva8c0vdqtr2stsdq34.apps.googleusercontent.com",
-        "client_secret": "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",
-        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "client_id": settings.google_settings.client_id,
+        "client_secret": settings.google_settings.client_secret,
+        "redirect_uri": settings.google_settings.redirect_uri,
         "grant_type": "authorization_code",
     }
 
@@ -108,7 +113,7 @@ async def google_callback(
 
         access_token = tokens["access_token"]
         user_info_response = await client.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
+            settings.google_settings.user_info_url,
             headers={"Authorization": f"Bearer {access_token}"}
         )
 
@@ -120,7 +125,6 @@ async def google_callback(
         picture=user_info["picture"]
     )
     return tokens
-
 
 
 @router.post(
@@ -192,7 +196,7 @@ async def auth_refresh_post(
 async def auth_logout_post(
     refresh_token: Annotated[UUID, Field(description="The refresh token to invalidate. If omitted, all sessions will be terminated.")] = Query(None, description="The refresh token to invalidate. If omitted, all sessions will be terminated.", alias="refresh_token"),
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
