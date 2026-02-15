@@ -66,6 +66,11 @@ class BasicAuthManager(IBasicAuthManager):
             username=username
         )
         user = await repo.create_user(user=request)
+        mail_sender = await PersistenceFactory.get_mail_sender()
+        await mail_sender.send_temporary_password_email(
+            to_email=email,
+            password=password
+        )
         tokens = await self._generate_tokens_pair(
             user=user,
             repo=repo

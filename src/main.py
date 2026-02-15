@@ -8,10 +8,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uvicorn
-from src.persistence.impl.database import create_tables
 
 if __name__ == "__main__":
-    create_tables()
     uvicorn.run(
         "src.service.main:app",
         host="0.0.0.0",

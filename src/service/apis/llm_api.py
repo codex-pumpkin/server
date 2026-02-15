@@ -41,6 +41,8 @@ from src.core.dtos.update_account_request import UpdateAccountRequest
 from src.service.security_api import get_token_jwt, get_token_jwt_mandatory_admin
 
 router = APIRouter()
+
+
 @router.get(
     "/llm-configurations",
     responses={
@@ -53,9 +55,6 @@ router = APIRouter()
     response_model_by_alias=True,
 )
 async def llm_configurations_get(
-    token_jwt: TokenModel = Security(
-        get_token_jwt
-    ),
     system_manager: ISystemManager = Depends(get_system_manager)
 ) -> List[LLMConfigurationResponse]:
     """Adds a new LLM configuration for the authenticated user."""

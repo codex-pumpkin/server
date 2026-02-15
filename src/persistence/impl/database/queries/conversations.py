@@ -16,7 +16,7 @@ async def get_chats(session:AsyncSession, user_id:str) -> List[ConversationsOrm]
     query = (
         select(ConversationsOrm)
         .where(ConversationsOrm.user_id == user_id)
-        .order_by(ConversationsOrm.is_pinned.desc(), ConversationsOrm.updated_at.desc())
+        .order_by(ConversationsOrm.is_pinned.desc(), ConversationsOrm.updated_at.asc())
     )
     result = await session.execute(query)
     return list(result.scalars().all())
@@ -25,7 +25,7 @@ async def get_chat_messages(session:AsyncSession, conversation_id:str) -> List[M
     query = (
         select(MessagesOrm)
         .where(MessagesOrm.conversation_id == conversation_id)
-        .order_by(MessagesOrm.created_at.desc())
+        .order_by(MessagesOrm.created_at.asc())
     )
     result = await session.execute(query)
     return list(result.scalars().all())
