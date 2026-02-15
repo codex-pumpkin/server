@@ -46,7 +46,7 @@ from src.persistence.impl.database.queries.llm import (
     change_llm,
     delete_llm,
     get_all_llm_configs,
-    get_api_key_by_conversation_id
+    get_api_by_conversation_id
 )
 
 from src.core.dtos import (
@@ -55,7 +55,9 @@ from src.core.dtos import (
     TokenInfo,
     QuotaConfig,
     ConversationResponse,
-    MessageResponse, AnalyticsResponse
+    LLMConfigurationRequest,
+    MessageResponse, 
+    AnalyticsResponse
 )
 
 from src.persistence.impl.database.queries.analytics import get_analytics
@@ -405,13 +407,15 @@ class EntityRepository(IEntityRepository):
             dto_configs = [config.to_dto() for config in orm_configs]
             return dto_configs
 
-    async def get_llm_key_by_chat_id(self, chat_id:str) -> str:
+    async def get_llm_by_chat_id(self, chat_id:str) -> Optional[LLMConfigurationRequest]:
         async with async_session_factory() as session:
-            api_key = await get_api_key_by_conversation_id(
+            llm_model = await get_api_by_conversation_id(
                 session=session,
                 conversation_id=chat_id
             )
-            return api_key
+            if llm_model is None:
+                return None
+            return llm_model.to_dto_request()
 
 
     # --------------------
