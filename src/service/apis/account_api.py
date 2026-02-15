@@ -56,7 +56,7 @@ async def account_get(
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> AccountResponse:
     """Returns the account information for the currently authenticated user."""
-    return await user_info.get_account_info()
+    return await user_info.get_account_info(token_jwt=token_jwt)
 
 
 @router.put(
@@ -79,25 +79,26 @@ async def account_put(
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> None:
     """Updates the authenticated user&#39;s email and username.  - **Both fields must be provided**.   - If the email is changed:   - User will be logged out from all sessions.   - Account will be set to unverified.   - A new email-verification email will be sent. """
-    return await user_info.update_user_name_email(token_jwt,update_account_request)
+    await user_info.update_user_name_email(
+        token_jwt=token_jwt,
+        update_account_request=update_account_request
+    )
+
 
 @router.get(
     "/account/profile-picture",
     responses={
-        200: {"model": File, "description": "Profile picture returned successfully."},
+        200: {"description": "Profile picture returned successfully."},
         401: {"description": "User not authenticated"},
     },
     tags=["Account"],
-    summary="Get the authenticated user&#39;s profile picture",
-    response_model_by_alias=True,
+    summary="Get the authenticated user's profile picture",
 )
 async def account_profile_picture_get(
-    token_jwt: TokenModel = Security(
-        get_token_jwt_mandatory
-    ),
+    token_jwt: TokenModel = Security(get_token_jwt_mandatory),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> FileResponse:
-    """Returns the profile picture for the authenticated user. The response is a binary image."""
+    """Returns the profile picture for the authenticated user."""
     return await user_info.get_profile_picture(token_jwt)
 
 
@@ -109,18 +110,14 @@ async def account_profile_picture_get(
         401: {"description": "User not authenticated"},
     },
     tags=["Account"],
-    summary="Updates the profile picture of the user that is authenticated",
-    response_model_by_alias=True,
+    summary="Updates the profile picture of the authenticated user",
 )
 async def account_profile_picture_put(
     file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = Form(None, description=""),
-    token_jwt: TokenModel = Security(
-        get_token_jwt_mandatory
-    ),
+    token_jwt: TokenModel = Security(get_token_jwt_mandatory),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> None:
-    """Updates the profile picture of the user that is authenticated"""
-    return await user_info.update_profile_picture(file)
-
+    """Updates the profile picture of the authenticated user"""
+    return await user_info.update_profile_picture(token_jwt.sub, file)
 
 

@@ -147,6 +147,15 @@ class EntityRepository(IEntityRepository):
                 return False
             return user.is_verified
 
+    async def unverify_user(self, user_id:str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            if user is None:
+                return False
+            user.is_verified = False
+            await session.commit()
+            return True
+
     async def verify_user(self, user_id: str) -> bool:
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)

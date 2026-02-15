@@ -8,7 +8,8 @@ from src.core.dtos import (
     RefreshRequest,
     SignupRequest,
     LoginRequest,
-    TokenResponse
+    TokenResponse,
+    AccountResponse
 )
 
 from typing import Annotated, Optional
@@ -30,7 +31,7 @@ class IBasicAuthManager(ABC):
         pass
 
     @abstractmethod
-    async def generate_email_verification(self, token_jwt: TokenModel):
+    async def generate_email_verification(self, user: AccountResponse):
         pass
 
     @abstractmethod
