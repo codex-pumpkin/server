@@ -12,40 +12,142 @@ class GraphGenerator(IGraphGenerator):
             tmp_path = tmp_file.name
 
         try:
-            circuit = SpiceParser(path=tmp_path).build_circuit()
-            components = []
-            for element in circuit.elements:
-                component_data = await self.extract_component_data(element)
-                components.append(component_data)
-            for i in range(5):
-                print()
-            print(code)
-            print(len(components))
-            print(components)
-            for i in range(5):
-                print()
-            return json.dumps(components)
+            parser = SpiceParser(path=tmp_path)
+            circuit = parser.build_circuit()
+            circute_dict = {}
+            circuit_name = circuit.title if circuit.title.strip() else "main"
+            circute_dict[circuit_name] = await self._parse_circuit(circuit.elements)
+
+            for idx, subckt_stmt in enumerate(parser.subcircuits, start=1):
+                subckt_name = subckt_stmt.name.strip() if subckt_stmt.name else f"{idx}:subckt"
+                subckt_circute = subckt_stmt.build(ground=0)
+                circute_dict[subckt_name] = await self._parse_circuit(subckt_circute.elements)
+
+            return circute_dict
+        except Exception as e:
+            print(f"ERROR parsing circuit: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
         finally:
             try:
                 os.remove(tmp_path)
             except OSError:
                 pass
 
-    async def extract_component_data(self,element):
+    async def _parse_circuit(self, circuit_elements):
+        components = []
+        for element in circuit_elements:
+            try:
+                # Skip only subcircuit definitions, not instances
+                element_class = element.__class__.__name__
+                if 'SubCircuitDefinition' in element_class:
+                    print(f"DEBUG: Skipping SubCircuit definition: {element.name}")
+                    continue
+
+                component_data = await self._extract_component_data(element)
+
+                # Only add if we got nodes or it's a specific type we want
+                if component_data.get("nodes") or element_class in ['Model']:
+                    components.append(component_data)
+                else:
+                    print(f"Skipped (no nodes): {component_data}")
+
+            except Exception as e:
+                print(f"Error extracting element {element}: {e}")
+                import traceback
+                traceback.print_exc()
+                # Continue with other elements even if one fails
+                continue
+        return components
+
+    async def _extract_component_data(self,element):
         """Extract component data as a dictionary"""
+        # Extract nodes with fallback logic for different PySpice element types
+        nodes = []
+        element_class = element.__class__.__name__
+
+
+        # Handle SubCircuit definitions - they have parameters instead of nodes
+        if 'SubCircuit' in element_class:
+            # SubCircuits have parameters which are the interface pins
+            if hasattr(element, 'parameters'):
+                nodes = [str(param) for param in element.parameters]
+            elif hasattr(element, 'interface'):
+                nodes = [str(pin) for pin in element.interface]
+
+        # Try different node attributes based on element type
+        if not nodes:
+            # Try nodes attribute first
+            if hasattr(element, 'nodes'):
+                try:
+                    nodes_attr = element.nodes
+                    if nodes_attr:
+                        nodes = [str(node) for node in nodes_attr]
+                except Exception as e:
+                    print(f"DEBUG: Error extracting nodes attribute: {e}")
+
+            # Try pins attribute
+            if not nodes and hasattr(element, 'pins'):
+                try:
+                    pins_attr = element.pins
+                    if pins_attr:
+                        nodes = [str(pin) for pin in pins_attr]
+                except Exception as e:
+                    print(f"DEBUG: Error extracting pins: {e}")
+
+            # Try individual pin attributes
+            if not nodes:
+                pin_attrs = []
+                for i in range(1, 10):
+                    attr_name = f'pin{i}'
+                    if hasattr(element, attr_name):
+                        try:
+                            pin_val = getattr(element, attr_name)
+                            if pin_val is not None:
+                                pin_attrs.append(str(pin_val))
+                        except:
+                            pass
+                if pin_attrs:
+                    nodes = pin_attrs
+
+            # Try positive/negative node for sources
+            if not nodes:
+                if hasattr(element, 'positive_node') and hasattr(element, 'negative_node'):
+                    try:
+                        pos = element.positive_node
+                        neg = element.negative_node
+                        if pos is not None:
+                            nodes.append(str(pos))
+                        if neg is not None:
+                            nodes.append(str(neg))
+                    except Exception as e:
+                        print(f"DEBUG: Error extracting positive/negative nodes: {e}")
+
+        # Debug: print all attributes if nodes are still empty
+        if not nodes:
+            all_attrs = [attr for attr in dir(element) if not attr.startswith('_')]
+            # Try to print first few non-private attributes
+            for attr in all_attrs[:10]:
+                try:
+                    val = getattr(element, attr)
+                    print(f"  {attr}: {val} (type: {type(val).__name__})")
+                except:
+                    pass
+
         data = {
             "name": element.name,
-            "type": element.__class__.__name__,
-            "nodes": [str(node) for node in element.nodes],
+            "type": element_class,
+            "nodes": nodes,
         }
 
-        values = await self.extract_all_values(element)
+        values = await self._extract_all_values(element)
         if values:
             data["values"] = values
 
         return data
 
-    async def extract_all_values(self, element):
+    async def _extract_all_values(self, element):
         """Extract primary value and parameters, merged without duplicates"""
         values = {}
         comp_type = element.__class__.__name__
