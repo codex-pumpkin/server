@@ -121,7 +121,13 @@ class EntityRepository(IEntityRepository):
                 field = "email" if "email" in error_msg else "username"
                 raise UserConflictError(field=field)
 
-    async def update_user(self, user_id: str, email: str, username: str) -> None: ...
+    async def update_user(self, user_id: str, email: str, username: str) -> bool:
+        async with async_session_factory() as session:
+            user = await get_user_by_id(session=session, user_id=user_id)
+            user.email = email
+            user.username = username
+            await session.commit()
+            return True
 
     # --------------------
     # Authentication & validation
@@ -192,14 +198,6 @@ class EntityRepository(IEntityRepository):
             if user is None:
                 return False
             user.hashed_password = hash_password(password=new_password)
-            await session.commit()
-            return True
-
-    async def change_mail_username(self, user_id:str, email:str, username:str) -> bool:
-        async with async_session_factory() as session:
-            user = await get_user_by_id(session=session, user_id=user_id)
-            user.email = email
-            user.username = username
             await session.commit()
             return True
 

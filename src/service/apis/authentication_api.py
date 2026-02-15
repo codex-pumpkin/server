@@ -41,43 +41,86 @@ from src.core.dtos import (
 
 router = APIRouter()
 
+from fastapi.responses import RedirectResponse
+import urllib.parse
+import httpx
+
+
 
 @router.get(
     "/auth/google/login",
     responses={
-        200: {"model": TokenResponse, "description": "Login successful"},
+        200: {"description": "Login successful"},
         401: {"description": "Could not authenticate"},
     },
     tags=["Authentication"],
     summary="Login via the google identity provider.",
     response_model_by_alias=True,
 )
-async def auth_google_login_get(
-    token_jwt: TokenModel = Security(
-        get_token_jwt
-    ),
-    auth_manager: IBasicAuthManager = Depends(get_auth_manager)
-) -> TokenResponse:
-    return await auth_manager.authenticate_with_google(token_jwt)
+async def auth_google_login_get():
+    params = {
+        "client_id": "720310987371-5rrnoedva7eq2lva8c0vdqtr2stsdq34.apps.googleusercontent.com",
+        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+    }
+
+    url = "https://accounts.google.com/o/oauth2/auth?" + urllib.parse.urlencode(params)
+
+    return RedirectResponse(url)
 
 
 @router.get(
     "/auth/google/callback",
     responses={
-        200: {"model": TokenResponse, "description": "Login successful"},
+        200: {"model":TokenResponse, "description": "Login successful"},
         401: {"description": "Could not authenticate"},
     },
     tags=["Authentication"],
     summary="Callback for the google identity provider.",
     response_model_by_alias=True,
 )
-async def auth_google_callback_get(
-    token_jwt: TokenModel = Security(
-        get_token_jwt
-    ),
+@router.get("/auth/google/callback")
+async def google_callback(
+    code: str,
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    return await auth_manager.google_callback(token_jwt)
+
+    token_url = "https://oauth2.googleapis.com/token"
+
+    data = {
+        "code": code,
+        "client_id": "720310987371-5rrnoedva7eq2lva8c0vdqtr2stsdq34.apps.googleusercontent.com",
+        "client_secret": "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",
+        "redirect_uri": "http://localhost:8000/auth/google/callback",
+        "grant_type": "authorization_code",
+    }
+
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(token_url, data=data)
+
+        if token_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Token exchange failed")
+
+        tokens = token_response.json()
+
+        access_token = tokens["access_token"]
+        user_info_response = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+
+        user_info = user_info_response.json()
+
+    tokens = await auth_manager.google_callback(
+        username=user_info["name"],
+        email=user_info["email"],
+        picture=user_info["picture"]
+    )
+    return tokens
+
 
 
 @router.post(
