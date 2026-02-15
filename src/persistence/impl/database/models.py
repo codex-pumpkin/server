@@ -7,6 +7,7 @@ from src.core.dtos import (
     LLMConfigurationResponse,
     TargetLanguage,
     MessageResponse,
+    LLMConfigurationRequest
 )
 from src.persistence.impl.database.database import Base
 from src.persistence.impl.database.model_types import (
@@ -72,6 +73,13 @@ class LlmModelsOrm(Base):
             name=self.name,
             api_url=self.url,
             api_key_set=True
+        )
+    
+    def to_dto_request(self) -> LLMConfigurationRequest:
+        return LLMConfigurationRequest(
+            name=self.name,
+            api_url=self.url,
+            api_key=self.api_key
         )
 
 class ConversationsOrm(Base):

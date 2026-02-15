@@ -1,3 +1,4 @@
+from typer import prompt
 from typing_extensions import Final
 import textwrap
 from openai import AsyncOpenAI
@@ -122,6 +123,7 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
 
 class AIClient(IAIClient):
 
+
     async def get_response(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-5-mini") -> str:
         """
         Client for interacting with OpenAI API to get chat completions
@@ -142,7 +144,42 @@ class AIClient(IAIClient):
             max_tokens=512,
         )
         return resp.choices[0].message.content'''
+
+        if model.startswith("gpt-5") or model.startswith("gpt-4.1") or model.startswith("o"):
+            return await self._get_response_new(user_question, retrieved_context, conversation_history, api_key, model)
+        else:
+            return await self._get_response_old(user_question, retrieved_context, conversation_history, api_key, model)
         
+    
+
+    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-5-mini") -> str:
+        """
+        Client for interacting with OpenAI API to get chat completions
+        prompt: the input text prompt for the AI model
+        api_key: API key for authentication
+        model: the AI model to use (default: "gpt-4o-mini")
+        Returns the AI-generated response as a string
+        """
+
+        '''client = AsyncOpenAI(api_key=api_key)
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system",  "content": _REGENRATION_PREPROMPT},
+                {"role": "user", "content": f"Question:\n{user_question}\n \
+                 \n Code:\n{code} Context:\n{regeneration_context}\n"}
+                ],
+            temperature=1,
+            max_tokens=512,
+        )
+        return resp.choices[0].message.content'''
+
+        if model.startswith("gpt-5") or model.startswith("gpt-4.1") or model.startswith("o"):
+            return await self._regenerate_new(user_question, regeneration_context, code, api_key, model)
+        else:
+            return await self._regenerate_old(user_question, regeneration_context, code, api_key, model)
+
+    async def _get_response_new(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-5-mini") -> str:
         input=[
             {
                 "role": "system",
@@ -168,29 +205,7 @@ class AIClient(IAIClient):
 
         return resp.output_text
     
-
-    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-5-mini") -> str:
-        """
-        Client for interacting with OpenAI API to get chat completions
-        prompt: the input text prompt for the AI model
-        api_key: API key for authentication
-        model: the AI model to use (default: "gpt-4o-mini")
-        Returns the AI-generated response as a string
-        """
-
-        '''client = AsyncOpenAI(api_key=api_key)
-        resp = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system",  "content": _REGENRATION_PREPROMPT},
-                {"role": "user", "content": f"Question:\n{user_question}\n \
-                 \n Code:\n{code} Context:\n{regeneration_context}\n"}
-                ],
-            temperature=1,
-            max_tokens=512,
-        )
-        return resp.choices[0].message.content'''
-
+    async def _regenerate_new(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-5-mini") -> str:
         client = AsyncOpenAI(api_key=api_key)
 
         input=[
@@ -214,9 +229,33 @@ class AIClient(IAIClient):
         )
 
         return resp.output_text
-
-
     
+    async def _get_response_old(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-5-mini") -> str:
+        client = AsyncOpenAI(api_key=api_key)
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system",  "content": _PREPROMPT},
+                {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
+                ],
+            temperature=0.2,
+            max_tokens=512,
+        )
+        return resp.choices[0].message.content
+    
+    async def _regenerate_old(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-5-mini") -> str:
+        client = AsyncOpenAI(api_key=api_key)
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system",  "content": _REGENRATION_PREPROMPT},
+                {"role": "user", "content": f"Question:\n{user_question}\n \
+                 \n Code:\n{code} Context:\n{regeneration_context}\n"}
+                ],
+            temperature=0.2,
+            max_tokens=512,
+        )
+        return resp.choices[0].message.content
     
 
 

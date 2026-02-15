@@ -50,12 +50,12 @@ async def get_all_llm_configs(session:AsyncSession) -> List[LlmModelsOrm]:
     result = await session.execute(query)
     return result.scalars().all()
 
-async def get_api_key_by_conversation_id(
+async def get_api_by_conversation_id(
     session: AsyncSession,
     conversation_id: str
-) -> Optional[str]:
+) -> Optional[LlmModelsOrm]:
     query = (
-        select(LlmModelsOrm.api_key)
+        select(LlmModelsOrm)
         .join(
             ConversationsOrm,
             ConversationsOrm.llm_id == LlmModelsOrm.id
@@ -64,3 +64,13 @@ async def get_api_key_by_conversation_id(
     )
     result = await session.execute(query)
     return result.scalar_one_or_none()
+
+if __name__ == "__main__":
+    import asyncio
+    from src.persistence.impl.database.database import async_session_factory
+    async def main():
+        async with async_session_factory() as session:
+            llm_configs = await get_api_by_conversation_id(session=session, conversation_id="d14f8a04-229a-4e6e-bd63-8b2d16261235")
+            print(llm_configs)
+
+    asyncio.run(main())

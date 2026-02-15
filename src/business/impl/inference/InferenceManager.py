@@ -241,7 +241,7 @@ class InferenceManager(IInferenceManager):
                 id_of=str(chat.user_id)
             )
 
-        api_key = await repo.get_llm_key_by_chat_id(chat_id=str(conversation_id))
+        modell = await repo.get_llm_by_chat_id(chat_id=str(conversation_id))
         messages = [(message.message, message.response) for message in chat.messages]
         if remove_last:
             messages = messages[:-1]
@@ -249,7 +249,8 @@ class InferenceManager(IInferenceManager):
         result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
             conversation_history=messages,
-            api_key=api_key
+            api_key=modell.api_key,
+            model=modell.api_url
         )
         graph = await self._get_graph_representation(result)
         end = time.monotonic()
@@ -272,6 +273,7 @@ class InferenceManager(IInferenceManager):
         user_input: str,
         conversation_history: List[Tuple[str, str]],
         api_key: str,
+        model: str
     ) -> str:
         """
         Generate code based on user input, validate it, and regenerate if necessary.
@@ -286,7 +288,7 @@ class InferenceManager(IInferenceManager):
         doc_context = await prompt_manager.retrieve_context(user_input)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)
     
-        code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key)
+        code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key, model)
         code = await self._clean_markdown(code)
 
         validation_result = await validator.validate_code(code)
@@ -296,7 +298,7 @@ class InferenceManager(IInferenceManager):
                 context = prompt_manager.make_regeneration_context(
                     validation_result.exitCode, validation_result.rawOutput)
                 
-                code = await aiclient.regenerate(user_input, context, code, api_key)
+                code = await aiclient.regenerate(user_input, context, code, api_key, model)
                 code = await self._clean_markdown(code)
                 
                 validation_result = await validator.validate_code(code) 

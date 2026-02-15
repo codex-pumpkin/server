@@ -11,6 +11,7 @@ from src.core.dtos import (
     ConversationResponse,
     MessageResponse,
     Message,
+    LLMConfigurationRequest,
     LLMConfigurationResponse,
     ConversationRequest
 )
@@ -108,7 +109,7 @@ class IEntityRepository(ABC):
     @abstractmethod
     async def get_llm_configs(self) -> List[LLMConfigurationResponse]: ...
     @abstractmethod
-    async def get_llm_key_by_chat_id(self, chat_id:str) -> str: ...
+    async def get_llm_by_chat_id(self, chat_id:str) -> Optional[LLMConfigurationRequest]: ...
     @abstractmethod
     async def get_key_of_model(self, model_id:str) -> Optional[str]: ...
 
