@@ -13,3 +13,6 @@ class IMailSender(ABC):
     async def send_password_reset_email(self, to_email: str, reset_link: str) -> None:
         ...
 
+    @abstractmethod
+    async def send_temporary_password_email(self, to_email: str, password: str) -> None:
+        ...
