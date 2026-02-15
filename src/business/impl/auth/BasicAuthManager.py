@@ -17,6 +17,7 @@ from src.core.dtos import (
 from src.core.exceptions import (
     AuthError,
     VerificationError,
+    NotFoundError
 )
 
 from typing import Annotated, Optional
@@ -24,15 +25,58 @@ from uuid import UUID
 from pydantic import Field
 
 from src.business.impl.auth.tokens import encode_jwt
-from src.persistence import PersistenceFactory
+from src.persistence import PersistenceFactory, IEntityRepository
+import random
+
 
 class BasicAuthManager(IBasicAuthManager):
 
-    async def authenticate_with_google(self, token_jwt: TokenModel):
-        pass
+    def _generate_password(self) -> str:
+        letters = "qwertyuiopasdghklzxcvbnm1234567890<>,.:;!@#$%^*(){}[]"
+        password = ""
+        for i in range(12):
+            password += random.choice(letters)
+        return password
 
-    async def google_callback(self, token_jwt: TokenModel):
-        pass
+    async def google_callback(self, username:str, email:str, picture:str) -> TokenResponse:
+        repo = await PersistenceFactory.get_entity_repository()
+        user = await repo.get_user_by_email(email=email)
+        if user is not None:
+            await repo.invalidate_all_refresh_tokens(user_id=str(user.id))
+            tokens = await self._generate_tokens_pair(
+                user=user,
+                repo=repo
+            )
+            return tokens
+        addition = 0
+        while True:
+            if addition == 0:
+                new_user_name = username
+            else:
+                new_user_name = username + str(addition)
+            taken = await repo.is_username_taken(new_user_name)
+            addition += 1
+            if not taken:
+                username = new_user_name
+                break
+        password = self._generate_password()
+        request = SignupRequest(
+            email=email,
+            password=password,
+            username=username
+        )
+        user = await repo.create_user(user=request)
+        mail_sender = await PersistenceFactory.get_mail_sender()
+        await mail_sender.send_temporary_password_email(
+            to_email=email,
+            password=password
+        )
+        tokens = await self._generate_tokens_pair(
+            user=user,
+            repo=repo
+        )
+        return tokens
+
 
     async def verify_email_token(self, request: EmailVerificationSubmitRequest):
         token = request.verification_token
@@ -40,7 +84,10 @@ class BasicAuthManager(IBasicAuthManager):
 
         token_info = await repo.get_token(str(token))
         if token_info is None:
-            raise VerificationError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if token_info.token_type != "email":
             raise VerificationError("Token isn't email token!")
         if token_info.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
@@ -62,7 +109,10 @@ class BasicAuthManager(IBasicAuthManager):
         repo = await PersistenceFactory.get_entity_repository()
         token = await repo.get_token(request.reset_token)
         if token is None:
-            raise AuthError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if token.token_type != "password":
             raise AuthError("Token isn't of type recover password!")
         if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
@@ -91,7 +141,10 @@ class BasicAuthManager(IBasicAuthManager):
         repo = await PersistenceFactory.get_entity_repository()
         refresh_token = await repo.get_token(token)
         if refresh_token is None:
-            raise AuthError("Token doesn't exist!")
+            raise NotFoundError(
+                type_of="token",
+                id_of=str(token)
+            )
         if refresh_token.token_type != "refresh":
             raise AuthError("Token isn't of type refresh!")
         if not refresh_token.valid or refresh_token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
@@ -130,12 +183,25 @@ class BasicAuthManager(IBasicAuthManager):
             raise AuthError("Users email is not verified!")
 
         await repo.invalidate_all_refresh_tokens(str(user.id))
+        tokens = await self._generate_tokens_pair(
+            user=user,
+            repo=repo
+        )
+        return tokens
+
+
+    async def _generate_tokens_pair(
+        self,
+        user: AccountResponse,
+        repo: IEntityRepository
+    ) -> TokenResponse:
         refresh_token = await repo.create_token(str(user.id), "refresh")
         refresh_token = str(refresh_token.id)
         access_token = encode_jwt(
             payload=
                 {
                     "sub":str(user.id),
+                    "is_admin": user.is_admin
                 }
         )
         token_response = TokenResponse(

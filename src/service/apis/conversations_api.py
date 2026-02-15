@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from typing import Dict, List  # noqa: F401
+from typing import Dict, List, Optional  # noqa: F401
 
 from src.business.interfaces import IInferenceManager
 
@@ -22,11 +22,16 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from openapi_server.models.extra_models import TokenModel  # noqa: F401
-from pydantic import Field, StrictInt, StrictStr
+from uuid import UUID
+
+from src.core.dtos import TokenModel  # noqa: F401
+from pydantic import Field
 from typing import List
 from typing_extensions import Annotated
-from src.service.security_api import get_token_jwt
+from src.service.security_api import (
+    get_token_jwt,
+    get_token_jwt_mandatory
+)
 
 from src.core.dtos import (
     ConversationRequest,
@@ -36,7 +41,6 @@ from src.core.dtos import (
     UpdateConversationRequest
 )
 router = APIRouter()
-
 
 
 @router.get(
@@ -51,11 +55,11 @@ router = APIRouter()
 )
 async def conversations_get(
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    inference_manger : IInferenceManager = Depends(get_inference_manager)
 ) -> List[ConversationResponse]:
     """Returns a list of all conversations for the current user. """
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
     return await inference_manger.get_conversations_by_user(token_jwt)
 
 
@@ -73,19 +77,22 @@ async def conversations_get(
 )
 async def conversations_post(
     conversation_request: ConversationRequest = Body(None, description=""),
-    token_jwt: TokenModel = Security(
+    token_jwt: Optional[TokenModel] = Security(
         get_token_jwt
     ),
+    inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> ConversationResponse:
     """Starts a new conversation with the given message, LLM configuration, and target language. """
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
-    return await inference_manger.start_conversation(token_jwt, conversation_request)
+    return await inference_manger.start_conversation(
+        token_jwt=token_jwt,
+        conversation_request=conversation_request
+    )
 
 
 @router.put(
-    "/conversations/{id}",
+    "/conversations/{conversation_id}",
     responses={
-        200: {"model": ConversationResponse, "description": "Conversation updated successfully"},
+        200: {"description": "Conversation updated successfully"},
         400: {"description": "Invalid request"},
         401: {"description": "User not authenticated"},
         403: {"description": "User does not have permission to update this conversation or conversation now found"},
@@ -95,19 +102,29 @@ async def conversations_post(
     response_model_by_alias=True,
 )
 async def conversations_id_put(
-    id: Annotated[StrictStr, Field(description="ID of the conversation to update")] = Path(..., description="ID of the conversation to update"),
+    conversation_id: Annotated[
+        UUID,
+        Field(description="Id of the conversation to modify")
+    ] = Path(
+        ...,
+        description="Id of the conversation to modify"
+    ),
     update_conversation_request: UpdateConversationRequest = Body(None, description=""),
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
-) -> ConversationResponse:
+    inference_manger: IInferenceManager = Depends(get_inference_manager)
+) -> None:
     """Alters metadata of a conversation, such as its name or pinned state."""
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
-    return await inference_manger.update_conversation(id, UpdateConversationRequest, token_jwt)
+    return await inference_manger.update_conversation(
+        conversation_id=conversation_id,
+        update_conversation_request=update_conversation_request,
+        token_jwt=token_jwt
+    )
 
 
 @router.delete(
-    "/conversations/{id}",
+    "/conversations/{conversation_id}",
     responses={
         204: {"description": "Conversation deleted successfully"},
         401: {"description": "User not authenticated"},
@@ -118,38 +135,59 @@ async def conversations_id_put(
     response_model_by_alias=True,
 )
 async def conversations_id_delete(
-    id: Annotated[StrictStr, Field(description="Id of the conversation to delete")] = Path(..., description="Id of the conversation to delete"),
-    token_jwt: TokenModel = Security(
-        get_token_jwt
+    conversation_id: Annotated[
+        UUID,
+        Field(description="Id of the conversation to delete")
+    ] = Path(
+        ...,
+        description="Id of the conversation to delete"
     ),
+    token_jwt: TokenModel = Security(
+        get_token_jwt_mandatory
+    ),
+    inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> None:
     """Deletes the conversation with the given Id. """
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
-    return await inference_manger.removeConversation(token_jwt, id)
+    return await inference_manger.remove_conversation(
+        conversation_id=conversation_id,
+        token_jwt=token_jwt
+    )
 
 @router.put(
-    "/conversations/{id}/messages",
+    "/conversations/{conversation_id}/messages",
     responses={
         200: {"model": MessageResponse, "description": "Message changed successfully"},
+        401: {"description": "User not authenticated"},
+        403: {"description": "User does not have permission to delete this conversation or conversation not found"},
     },
     tags=["Conversations"],
     summary="Regenerate a message.",
-    response_model_by_alias=True,
 )
 async def conversations_id_messages_put(
-    id: Annotated[StrictInt, Field(description="Id of the target conversation")] = Path(..., description="Id of the target conversation"),
+    conversation_id: Annotated[
+        UUID,
+        Field(description="Id of the target conversation")
+    ] = Path(
+        ...,
+        description="Id of the target conversation"
+    ),
     message_request: MessageRequest = Body(None, description=""),
     token_jwt: TokenModel = Security(
         get_token_jwt
     ),
+    inference_manger: IInferenceManager = Depends(get_inference_manager)
+
 ) -> MessageResponse:
     """Resend a message by providing a new prompt."""
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
-    return await inference_manger.message_regeneration(token_jwt, id, message_request)
+    return await inference_manger.message_regeneration(
+        token_jwt=token_jwt,
+        conversation_id=conversation_id,
+        message_request=message_request
+    )
 
 
 @router.post(
-    "/conversations/{id}/messages",
+    "/conversations/{conversation_id}/messages",
     responses={
         200: {"model": MessageResponse, "description": "Message added successfully"},
         400: {"description": "Invalid request"},
@@ -162,13 +200,20 @@ async def conversations_id_messages_put(
     response_model_by_alias=True,
 )
 async def conversations_id_messages_post(
-    id: Annotated[StrictInt, Field(description="Id of the target conversation")] = Path(..., description="Id of the target conversation"),
+    conversation_id: UUID = Path(
+        ...,
+        description="Id of the target conversation"
+    ),
     message_request: MessageRequest = Body(None, description=""),
     token_jwt: TokenModel = Security(
-        get_token_jwt
+        get_token_jwt_mandatory
     ),
+    inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> MessageResponse:
     """Adds a new message to an existing conversation. """
-    inference_manger : IInferenceManager = Depends(get_inference_manager())
-    return await inference_manger.post_message_to_conversation(token_jwt, id, message_request)
+    return await inference_manger.post_message_to_conversation(
+        token_jwt=token_jwt,
+        conversation_id=conversation_id,
+        message_request=message_request
+    )
 

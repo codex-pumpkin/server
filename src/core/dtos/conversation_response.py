@@ -24,6 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from src.core.dtos.message_response import MessageResponse
 from src.core.dtos.target_language import TargetLanguage
+from uuid import UUID
+
 try:
     from typing import Self
 except ImportError:
@@ -33,12 +35,14 @@ class ConversationResponse(BaseModel):
     """
     ConversationResponse
     """ # noqa: E501
-    id: StrictStr = Field(description="Id of the conversation")
+    id: UUID = Field(description="Id of the conversation")
     name: StrictStr = Field(description="Name of the conversation")
     pinned: Optional[StrictBool] = Field(default=None, description="Whether the conversation is pinned")
     llm_model_config_id: StrictStr = Field(description="Id of the LLM-configuration")
-    created_at: StrictStr = Field(description="The instant when the object was created")
+    created_at: float = Field(description="The instant when the object was created")
+    updated_at: float
     target_language: TargetLanguage
+    user_id: UUID
     messages: List[MessageResponse] = Field(description="List of messages in the conversation")
     __properties: ClassVar[List[str]] = ["id", "name", "pinned", "llm_model_config_id", "created_at", "target_language", "messages"]
 

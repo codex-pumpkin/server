@@ -8,6 +8,7 @@ from .extra_models import TokenModel
 from .llm_configuration_request import LLMConfigurationRequest
 from .llm_configuration_response import LLMConfigurationResponse
 from .login_request import LoginRequest
+from .message import Message
 from .message_request import MessageRequest
 from .message_response import MessageResponse
 from .password_reset_request_request import PasswordResetRequestRequest
@@ -32,6 +33,7 @@ __all__ = [
     "LLMConfigurationRequest",
     "LLMConfigurationResponse",
     "LoginRequest",
+    "Message",
     "MessageRequest",
     "MessageResponse",
     "PasswordResetSubmitRequest",

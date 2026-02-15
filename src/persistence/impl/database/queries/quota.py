@@ -16,3 +16,5 @@ async def set_quota(session:AsyncSession, member_limit, admin_limit):
     )
     await session.execute(stmt)
     await session.commit()
+
+
