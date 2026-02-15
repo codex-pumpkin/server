@@ -10,6 +10,7 @@ _PREPROMPT: Final[str] = textwrap.dedent("""
     **Ignore the context entirely if it's not directly relevant to the requested circuit (e.g., do not add hierarchical elements or macro-models unless explicitly asked).**
     Do not copy naming errors.
     Only 1 circuit, do not divide code in multiple circuits!!!
+    In all circuits include ".plot", ".print", or ".fourier" lines for execution in batch mode!!!
 
     CRITICAL STRUCTURAL RULES (ORDER MATTERS):
     1. Title line starting with *
@@ -76,6 +77,7 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
     We send you code you generated earlier for reference,
     along with exitCode, rawOutput from ngspice 
     and the user question itself.
+    In all circuits include ".plot", ".print", or ".fourier" lines for execution in batch mode!!!
                                                      
     CRITICAL STRUCTURAL RULES (ORDER MATTERS):
     1. Title line starting with *
@@ -120,7 +122,7 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
 
 class AIClient(IAIClient):
 
-    async def get_response(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-4o-mini") -> str:
+    async def get_response(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-5-mini") -> str:
         """
         Client for interacting with OpenAI API to get chat completions
         prompt: the input text prompt for the AI model
@@ -129,20 +131,45 @@ class AIClient(IAIClient):
         Returns the AI-generated response as a string
         """
         
-        client = AsyncOpenAI(api_key=api_key)
+        '''client = AsyncOpenAI(api_key=api_key)
         resp = await client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system",  "content": _PREPROMPT},
                 {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
                 ],
-            temperature=0.2,
+            temperature=1,
             max_tokens=512,
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message.content'''
+        
+        input=[
+            {
+                "role": "system",
+                "content": _PREPROMPT,
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Context:\n{retrieved_context}\n\n"
+                    f"{conversation_history}\n\n"
+                    f"Question:\n{user_question}"
+                ),
+            },
+        ]
+
+        client = AsyncOpenAI(api_key=api_key)
+
+
+        resp = await client.responses.create(
+        model=model,
+        input=input
+        )
+
+        return resp.output_text
     
 
-    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-4o-mini") -> str:
+    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-5-mini") -> str:
         """
         Client for interacting with OpenAI API to get chat completions
         prompt: the input text prompt for the AI model
@@ -151,7 +178,7 @@ class AIClient(IAIClient):
         Returns the AI-generated response as a string
         """
 
-        client = AsyncOpenAI(api_key=api_key)
+        '''client = AsyncOpenAI(api_key=api_key)
         resp = await client.chat.completions.create(
             model=model,
             messages=[
@@ -159,10 +186,36 @@ class AIClient(IAIClient):
                 {"role": "user", "content": f"Question:\n{user_question}\n \
                  \n Code:\n{code} Context:\n{regeneration_context}\n"}
                 ],
-            temperature=0.2,
+            temperature=1,
             max_tokens=512,
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message.content'''
+
+        client = AsyncOpenAI(api_key=api_key)
+
+        input=[
+            {
+                "role": "system",
+                "content": _REGENRATION_PREPROMPT,
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Question:\n{user_question}\n\n"
+                    f"Code:\n{code}\n\n"
+                    f"Context:\n{regeneration_context}\n"
+                ),
+            },
+        ]
+
+        resp = await client.responses.create(
+        model=model,
+        input=input
+        )
+
+        return resp.output_text
+
+
     
     
 
