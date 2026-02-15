@@ -3,7 +3,7 @@
 Backend API service for authentication and quota management, built with FastAPI.
 
 ## Tech Stack
-- Python 3.11+
+- Python 3.13
 - FastAPI + Uvicorn
 - SQLAlchemy + SQLite
 - OpenAI SDK
@@ -18,7 +18,7 @@ Backend API service for authentication and quota management, built with FastAPI.
 - `requeirements.txt`: Python dependencies (filename is intentionally spelled this way in repo).
 
 ## Prerequisites
-- Python `3.11` or newer
+- Python `3.13` or newer
 - `pip`
 
 ## Setup
@@ -40,38 +40,36 @@ Server starts on:
 
 Useful docs:
 - Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
 
-## Available API Routes
-### Authentication
-- `GET /auth/google/login`
-- `GET /auth/google/callback`
-- `POST /auth/login`
-- `POST /auth/signup`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `POST /auth/request-password-reset`
-- `POST /auth/submit-password-reset`
-- `POST /auth/request-email-verification`
-- `POST /auth/submit-email-verification`
 
-### Quota
-- `GET /quota`
-- `PUT /quota`
+## Environment Variables (Mandatory)
 
-## Data and Persistence
-- SQLite file: `database.db` (created automatically when starting the app).
-- ChromaDB data and documents are under `src/persistence/impl/chroma_database/`.
+The following environment variables **must be set** before starting the application:
+ - `APP_MAIL`
+ - `MAIL_PASSWORD`
+ - `JWT_SECRET`
+ - `CLIENT_SECRET`
+ - `CLIENT_ID`
 
-## Configuration Notes
-Current settings are defined directly in `src/core/settings.py` (mail, JWT, LLM). For production use:
-- move secrets/API keys to environment variables,
-- rotate any exposed credentials,
-- disable debug-style logging and `reload=True`.
 
-## Quick Health Check
-After startup:
+##  Docker Build & Run
+
+Build the Docker image:
+
 ```bash
-curl http://localhost:8000/docs
+docker build -t codex-server .
 ```
-You should receive the Swagger UI HTML page.
+
+Run the container using environment variables from a `.env` file:
+
+```bash
+docker run --env-file .env -p 8000:8000 codex-server
+```
+
+The application will start inside the container and be available at:
+
+```
+http://localhost:8000/docs
+```
+
+Using a `.env` file allows you to securely provide required environment variables at runtime without hardcoding them into the Docker image.
