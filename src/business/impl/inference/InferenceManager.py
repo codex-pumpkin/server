@@ -135,13 +135,15 @@ class InferenceManager(IInferenceManager):
         )
         end = time.monotonic()
         chat_id = uuid.uuid4()
+        graph_gen = await PersistenceFactory.get_graph_generator()
+        graph = graph_gen.gen_graph(code=result)
 
         message = MessageResponse(
             id=uuid.uuid4(),
             created_at=datetime.datetime.now(datetime.UTC).timestamp(),
             message=request.message,
             response=result,
-            response_secondary=result,
+            graph=graph,
             generation_millis=int((end - start) / 1000)
         )
         res = ConversationResponse(
@@ -163,6 +165,7 @@ class InferenceManager(IInferenceManager):
         request:ConversationRequest
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
+
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
             raise QuotaExceededError()
