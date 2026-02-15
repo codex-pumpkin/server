@@ -55,8 +55,10 @@ from src.core.dtos import (
     TokenInfo,
     QuotaConfig,
     ConversationResponse,
-    MessageResponse
+    MessageResponse, AnalyticsResponse
 )
+
+from src.persistence.impl.database.queries.analytics import get_analytics
 
 from src.persistence.impl.database.conversation_utils import conversation_to_dto
 
@@ -427,7 +429,7 @@ class EntityRepository(IEntityRepository):
             user = await self.get_user_by_id(user_id=user_id)
             quota = await self.get_quota()
             daily_quota = quota.admin if user.is_admin else quota.member
-            return daily_quota - res
+            return max(0, daily_quota - res)
 
     async def is_quota_exceeded(self, user_id: str) -> bool:
         return (await self.get_user_quota_remaining(user_id=user_id)) == 0
@@ -435,7 +437,9 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Analytics / Usage-related
     # --------------------
-    async def get_usage_data(self) -> UsageData: ...
+    async def get_usage_data(self) -> AnalyticsResponse:
+        async with async_session_factory() as session:
+            return await get_analytics(session=session)
 
     # --------------------
     # Profile Picture

@@ -112,7 +112,7 @@ class AIClient(IAIClient):
                 {"role": "system",  "content": _PREPROMPT},
                 {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
                 ],
-            temperature=0.0,
+            temperature=0.2,
             max_tokens=512,
         )
         return resp.choices[0].message.content
@@ -135,7 +135,7 @@ class AIClient(IAIClient):
                 {"role": "user", "content": f"Question:\n{user_question}\n \
                  \n Code:\n{code} Context:\n{regeneration_context}\n"}
                 ],
-            temperature=0.0,
+            temperature=0.2,
             max_tokens=512,
         )
         return resp.choices[0].message.content
