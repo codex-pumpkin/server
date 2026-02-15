@@ -114,8 +114,8 @@ class MailSender(IMailSender):
 
         await self._send_email(to_email, subject, html_content)
 
-    async def send_temporary_password_email(self, to_email: str, temp_password: str) -> None:
-        subject = "CodeX Temporary Password"
+    async def send_temporary_password_email(self, to_email: str, password: str) -> None:
+        subject = "CodeX Password"
 
         html_content = f"""
         <html>
@@ -132,34 +132,20 @@ class MailSender(IMailSender):
                     </p>
 
                     <p>
-                        A temporary password has been generated for your 
+                        A password has been generated for your 
                         <b style="color: #ff6600;">CodeX</b> account.
                     </p>
 
                     <p>
-                        Please use the following password to log in:
+                        You can use the following password to log in:
                     </p>
 
                     <div style="font-size: 28px; font-weight: bold; letter-spacing: 6px; 
                                 background-color: #fff3e6; color: #ff6600; 
                                 padding: 15px; border-radius: 8px; 
                                 display: inline-block; margin: 15px 0;">
-                        {temp_password}
+                        {password}
                     </div>
-
-                    <p>
-                      This temporary password will expire in <b>15 minutes</b>.
-                    </p>
-
-                    <p>
-                        For security reasons, you will be required to change your password after logging in.
-                    </p>
-
-                    <hr style="border:none; border-top:1px solid #eee; margin:20px 0;">
-
-                    <p>
-                        If you did not sign in using Google, please contact support immediately.
-                    </p>
 
                     <p>
                         Best regards,<br>
