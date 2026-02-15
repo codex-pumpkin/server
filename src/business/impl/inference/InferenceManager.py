@@ -161,7 +161,7 @@ class InferenceManager(IInferenceManager):
 
     async def _start_conversation(
         self,
-        token_jwt: Optional[TokenModel],
+        token_jwt: TokenModel,
         request:ConversationRequest
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
