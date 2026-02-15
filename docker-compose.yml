@@ -1,7 +1,0 @@
-services:
-  server:
-    image: codex/server
-    ports:
-      - "8000:8000"
-    environment:
-      APP_MAIL:
