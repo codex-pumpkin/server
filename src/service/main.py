@@ -13,6 +13,7 @@
 
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.service.error_handlers import register_error_handlers
 from src.service.apis import main_router
@@ -21,6 +22,14 @@ app = FastAPI(
     title="CodeX - REST API",
     description="This is the OpenAPI specification of the *REST-API* interface provided by the *CodeX Server* component.",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200", "http://localhost:8080"],  # Angular Dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(main_router)

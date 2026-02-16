@@ -27,7 +27,7 @@ class IBasicAuthManager(ABC):
         pass
 
     @abstractmethod
-    async def generate_email_verification(self, user: AccountResponse):
+    async def generate_email_verification(self, user_id:UUID, user_email:str):
         pass
 
     @abstractmethod
