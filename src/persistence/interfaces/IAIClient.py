@@ -5,9 +5,25 @@ from abc import abstractmethod, ABC
 
 class IAIClient(ABC):
     @abstractmethod
-    async def get_response(self, user_question: str, retrieved_context: str, api_key: str, model: str) -> str:
+    async def get_response(
+        self,
+        user_question: str,
+        retrieved_context: str,
+        conversation_history: str,
+        api_key: str,
+        model: str,
+        api_url: str
+    ) -> str:
         ...
 
     @abstractmethod
-    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str) -> str:
+    async def regenerate(
+        self,
+        user_question: str,
+        regeneration_context: str,
+        code: str,
+        api_key: str,
+        model: str,
+        api_url:str
+    ) -> str:
         ...    

@@ -64,6 +64,7 @@ class LlmModelsOrm(Base):
 
     id: Mapped[uuid_pk]
     name: Mapped[str] = mapped_column()
+    model_name: Mapped[str] = mapped_column()
     url: Mapped[str] = mapped_column()
     api_key: Mapped[str] = mapped_column()
 
@@ -71,6 +72,7 @@ class LlmModelsOrm(Base):
         return LLMConfigurationResponse(
             id=self.id,
             name=self.name,
+            model_name=self.model_name,
             api_url=self.url,
             api_key_set=True
         )
@@ -79,7 +81,8 @@ class LlmModelsOrm(Base):
         return LLMConfigurationRequest(
             name=self.name,
             api_url=self.url,
-            api_key=self.api_key
+            api_key=self.api_key,
+            model_name=self.model_name
         )
 
 class ConversationsOrm(Base):

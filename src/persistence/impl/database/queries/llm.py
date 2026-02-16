@@ -21,7 +21,14 @@ async def get_model_by_id(session:AsyncSession, llm_id:str) -> Optional[LlmModel
     return llm_config
 
 
-async def change_llm(session:AsyncSession, llm_id:str, name:str, url:str, key:Optional[str]):
+async def change_llm(
+    session:AsyncSession,
+    llm_id:str,
+    model_name:str,
+    name:str,
+    url:str,
+    key:Optional[str]
+):
     if key is None:
         stmt = (
             update(LlmModelsOrm)
@@ -32,7 +39,7 @@ async def change_llm(session:AsyncSession, llm_id:str, name:str, url:str, key:Op
         stmt = (
             update(LlmModelsOrm)
             .where(LlmModelsOrm.id == llm_id)
-            .values(name=name, url=url, api_key=key)
+            .values(name=name, url=url, api_key=key, model_name=model_name)
         )
     await session.execute(stmt)
     await session.commit()

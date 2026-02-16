@@ -126,25 +126,29 @@ class InferenceManager(IInferenceManager):
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
         api_key = await repo.get_key_of_model(request.llm_model_config_id)
+        model = await repo.get_model(request.llm_model_config_id)
 
         start = time.monotonic()
         result = await self._get_llm_response_and_validate(
             user_input=request.message,
             conversation_history=[],
-            api_key=api_key
+            api_key=api_key,
+            model=model.model_name,
+            llm_url=model.api_url
         )
         end = time.monotonic()
         chat_id = uuid.uuid4()
+
         graph_gen = await PersistenceFactory.get_graph_generator()
-        graph = graph_gen.gen_graph(code=result)
+        graph = await graph_gen.gen_graph(code=result)
 
         message = MessageResponse(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             created_at=datetime.datetime.now(datetime.UTC).timestamp(),
             message=request.message,
             response=result,
             graph=graph,
-            generation_millis=int((end - start) / 1000)
+            generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
             id=chat_id,
@@ -165,7 +169,6 @@ class InferenceManager(IInferenceManager):
         request:ConversationRequest
     ) -> ConversationResponse:
         repo = await PersistenceFactory.get_entity_repository()
-
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
             raise QuotaExceededError()
@@ -244,7 +247,7 @@ class InferenceManager(IInferenceManager):
                 id_of=str(chat.user_id)
             )
 
-        modell = await repo.get_llm_by_chat_id(chat_id=str(conversation_id))
+        model = await repo.get_llm_by_chat_id(chat_id=str(conversation_id))
         messages = [(message.message, message.response) for message in chat.messages]
         if remove_last:
             messages = messages[:-1]
@@ -252,8 +255,9 @@ class InferenceManager(IInferenceManager):
         result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
             conversation_history=messages,
-            api_key=modell.api_key,
-            model=modell.api_url
+            api_key=model.api_key,
+            model=model.model_name,
+            llm_url=model.api_url
         )
         graph = await self._get_graph_representation(result)
         end = time.monotonic()
@@ -276,7 +280,8 @@ class InferenceManager(IInferenceManager):
         user_input: str,
         conversation_history: List[Tuple[str, str]],
         api_key: str,
-        model: str
+        model: str,
+        llm_url: str
     ) -> str:
         """
         Generate code based on user input, validate it, and regenerate if necessary.
@@ -291,7 +296,7 @@ class InferenceManager(IInferenceManager):
         doc_context = await prompt_manager.retrieve_context(user_input)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)
     
-        code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key, model)
+        code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key, model, llm_url)
         code = await self._clean_markdown(code)
 
         validation_result = await validator.validate_code(code)
@@ -301,7 +306,7 @@ class InferenceManager(IInferenceManager):
                 context = prompt_manager.make_regeneration_context(
                     validation_result.exitCode, validation_result.rawOutput)
                 
-                code = await aiclient.regenerate(user_input, context, code, api_key, model)
+                code = await aiclient.regenerate(user_input, context, code, api_key, model, llm_url)
                 code = await self._clean_markdown(code)
                 
                 validation_result = await validator.validate_code(code) 

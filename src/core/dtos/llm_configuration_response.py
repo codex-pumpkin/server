@@ -34,6 +34,7 @@ class LLMConfigurationResponse(BaseModel):
     """ # noqa: E501
     id: UUID = Field(description="The id of the configuration")
     name: StrictStr = Field(description="Name of the LLM configuration")
+    model_name: StrictStr = Field(description="Model name of LLM")
     api_url: StrictStr = Field(description="URL to the OpenAI API endpoint")
     api_key_set: Optional[StrictBool] = Field(default=None, description="Whether the llm-config has an associated API-key.")
     __properties: ClassVar[List[str]] = ["id", "name", "api_url", "api_key_set"]
@@ -89,6 +90,7 @@ class LLMConfigurationResponse(BaseModel):
         _obj = cls.model_validate({
             "id": obj.get("id"),
             "name": obj.get("name"),
+            "model_name": obj.get("model_name"),
             "api_url": obj.get("api_url"),
             "api_key_set": obj.get("api_key_set")
         })

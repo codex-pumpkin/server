@@ -41,7 +41,8 @@ class SystemManager(ISystemManager):
         await repo.add_model(
             name=llm_configuration_request.name,
             url=llm_configuration_request.api_url,
-            key=llm_configuration_request.api_key
+            key=llm_configuration_request.api_key,
+            model_name=llm_configuration_request.model_name
         )
 
     async def update_llm_config(
@@ -63,7 +64,8 @@ class SystemManager(ISystemManager):
             model_id=str(llm_id),
             name=llm_configuration_request.name,
             url=llm_configuration_request.api_url,
-            key=llm_configuration_request.api_key
+            key=llm_configuration_request.api_key,
+            model_name=llm_configuration_request.model_name
         )
 
     async def process_llm_removal(
