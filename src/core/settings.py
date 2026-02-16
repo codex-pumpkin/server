@@ -1,7 +1,8 @@
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Annotated
-
+from dotenv import load_dotenv
+import os
 
 class MailSettings(BaseModel):
     smtp_server:str
@@ -36,17 +37,19 @@ class Settings(BaseModel):
     llm_settings: LLMSettings
     google_settings: GoogleAuthSettings
 
+load_dotenv()
+
 mail_settings = MailSettings(
-    smtp_server="smtp.gmail.com",
-    port=465,
-    app_mail="codex.mail.kit@gmail.com",
-    password="qmgp zach rxny otbs",
+    smtp_server=os.getenv("APP_MAIL_SMTP_SERVER"),
+    port=os.getenv("APP_MAIL_SMTP_PORT"),
+    app_mail=os.getenv("APP_MAIL"),
+    password=os.getenv("MAIL_PASSWORD"),
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4"
 )
 
 jwt_settings = JWTSettings(
     algorithm="HS256",
-    secret_key="secret",
+    secret_key=os.getenv("JWT_SECRET"),
     expire_time=15
 )
 
@@ -59,9 +62,9 @@ llm_settings = LLMSettings(
 )
 
 google_settings = GoogleAuthSettings(
-    client_id="720310987371-5rrnoedva7eq2lva8c0vdqtr2stsdq34.apps.googleusercontent.com",
+    client_id=os.getenv("CLIENT_ID"),
     token_url="https://oauth2.googleapis.com/token",
-    client_secret="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",
+    client_secret=os.getenv("CLIENT_SECRET"),
     redirect_uri="http://localhost:8000/auth/google/callback",
     url="https://accounts.google.com/o/oauth2/auth?",
     user_info_url="https://www.googleapis.com/oauth2/v3/userinfo"

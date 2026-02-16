@@ -7,8 +7,8 @@ if sys.platform.startswith('win32'):
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.persistence.impl.database.orm import create_tables
 import uvicorn
-from src.persistence.impl.database import create_tables
 
 if __name__ == "__main__":
     create_tables()

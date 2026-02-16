@@ -1,5 +1,4 @@
 # coding: utf-8
-from idlelib.window import add_windows_to_menu
 from typing import Dict, List  # noqa: F401
 
 from src.business.interfaces import (
