@@ -143,12 +143,12 @@ class InferenceManager(IInferenceManager):
         graph = await graph_gen.gen_graph(code=result)
 
         message = MessageResponse(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             created_at=datetime.datetime.now(datetime.UTC).timestamp(),
             message=request.message,
             response=result,
             graph=graph,
-            generation_millis=int((end - start) / 1000)
+            generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
             id=chat_id,
