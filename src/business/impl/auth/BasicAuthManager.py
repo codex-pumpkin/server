@@ -98,12 +98,12 @@ class BasicAuthManager(IBasicAuthManager):
         await repo.invalidate_token(str(token_info.id))
         await repo.verify_user(str(token_info.user_id))
 
-    async def generate_email_verification(self, user: AccountResponse):
+    async def generate_email_verification(self, user_id:UUID, user_email:str):
         repo = await PersistenceFactory.get_entity_repository()
-        token = await repo.create_token(str(user.id), "email")
+        token = await repo.create_token(str(user_id), "email")
         mail_sender = await PersistenceFactory.get_mail_sender()
         print(f"token={str(token.id)}")
-        await mail_sender.send_confirmation_email(user.email, str(token.id))
+        await mail_sender.send_confirmation_email(user_email, str(token.id))
 
     async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
         repo = await PersistenceFactory.get_entity_repository()
@@ -166,7 +166,7 @@ class BasicAuthManager(IBasicAuthManager):
     async def register(self, request: SignupRequest):
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.create_user(request)
-        await self.generate_email_verification(user)
+        await self.generate_email_verification(user.id, user.email)
 
 
     async def authenticate(self, request: LoginRequest) -> TokenResponse:
@@ -180,6 +180,9 @@ class BasicAuthManager(IBasicAuthManager):
             raise AuthError("User is not found!")
 
         if not user.is_verified:
+            # If a user that is not email-verified tries to login,
+            # the request fails but we send the verification email.
+            await self.generate_email_verification(user.id, user.email)
             raise AuthError("Users email is not verified!")
 
         await repo.invalidate_all_refresh_tokens(str(user.id))

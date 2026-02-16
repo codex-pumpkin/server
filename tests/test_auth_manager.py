@@ -205,5 +205,5 @@ def test_register_creates_user_and_sends_verification(monkeypatch):
     asyncio.run(manager.register(request))
 
     repo.create_user.assert_awaited_once_with(request)
-    manager.generate_email_verification.assert_awaited_once_with(user)
+    manager.generate_email_verification.assert_awaited_once_with(user.id, user.email)
 

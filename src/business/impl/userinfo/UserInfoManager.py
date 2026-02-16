@@ -23,7 +23,7 @@ class UserInfoManager(IUserInfoManager):
         if user.email != update_account_request.email:
             flag = True
 
-        await repo.change_mail_username(
+        await repo.update_user(
             user_id=str(token_jwt.sub),
             email=update_account_request.email,
             username=update_account_request.username
@@ -33,7 +33,7 @@ class UserInfoManager(IUserInfoManager):
             await repo.unverify_user(user_id=str(token_jwt.sub))
             auth_manager = await BusinessFactory.get_basic_auth_manager()
             user = await repo.get_user_by_id(user_id=str(token_jwt.sub))
-            await auth_manager.generate_email_verification(user=user)
+            await auth_manager.generate_email_verification(user.id, user.email)
 
     async def get_profile_picture(self, token_jwt: TokenModel):
         pass
