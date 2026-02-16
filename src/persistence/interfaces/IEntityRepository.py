@@ -52,8 +52,7 @@ class IEntityRepository(ABC):
     async def is_username_taken(self, username: str) -> bool: ...
     @abstractmethod
     async def change_password(self, user_id: str, new_password: str) -> bool: ...
-    @abstractmethod
-    async def change_mail_username(self, user_id: str, email: str, username: str) -> bool: ...
+
 
     # --------------------
     # Token-related

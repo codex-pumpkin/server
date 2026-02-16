@@ -19,11 +19,7 @@ from pydantic import Field
 class IBasicAuthManager(ABC):
 
     @abstractmethod
-    async def authenticate_with_google(self, token_jwt: TokenModel):
-        pass
-
-    @abstractmethod
-    async def google_callback(self, token_jwt: TokenModel):
+    async def google_callback(self, username:str, email:str, picture:str) -> TokenResponse:
         pass
 
     @abstractmethod
@@ -43,8 +39,17 @@ class IBasicAuthManager(ABC):
         pass
 
     @abstractmethod
-    async def user_logout(self, refresh_token: Annotated[UUID, Field(
-        description="The refresh token to invalidate. If omitted, all sessions will be terminated.")]):
+    async def user_logout(
+        self,
+        refresh_token: Annotated[
+            UUID,
+            Field(
+                description=
+                "The refresh token to invalidate. "
+                "If omitted, all sessions will be terminated."
+            )
+        ]
+    ):
         pass
 
     @abstractmethod
