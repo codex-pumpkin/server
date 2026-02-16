@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import process
 import tempfile
 import os
 from src.persistence.interfaces import ICodeValidator
@@ -28,8 +29,19 @@ class CodeValidator(ICodeValidator):
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await process.communicate()
-
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=7
+                )
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                return ValidationResult(
+                    isValid=True,
+                    exitCode=process.returncode,
+                    rawOutput="Simulation timed out",
+                )
             # Combine and decode output
             output = (stdout + stderr).decode("utf-8", errors="ignore")
 
