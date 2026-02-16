@@ -10,6 +10,7 @@ class MailSettings(BaseModel):
     app_mail:Annotated[str, EmailStr]
     password:str
     logo:str
+    client_base_url:str
 
 class JWTSettings(BaseModel):
     algorithm:str
@@ -44,7 +45,8 @@ mail_settings = MailSettings(
     port=os.getenv("APP_MAIL_SMTP_PORT"),
     app_mail=os.getenv("APP_MAIL"),
     password=os.getenv("MAIL_PASSWORD"),
-    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4"
+    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
+    client_base_url=os.getenv("CLIENT_BASE_URL")
 )
 
 jwt_settings = JWTSettings(
