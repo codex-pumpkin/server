@@ -123,8 +123,15 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
 
 class AIClient(IAIClient):
 
-
-    async def get_response(self, user_question: str, retrieved_context: str, conversation_history: str, api_key: str, model: str="gpt-o4-mini", api_url: str="https://api.openai.com/v1") -> str:
+    async def get_response(
+        self,
+        user_question: str,
+        retrieved_context: str,
+        conversation_history: str,
+        api_key: str,
+        model: str = "gpt-o4-mini",
+        api_url: str = "https://api.openai.com/v1"
+    ) -> str:
         """
         Client for interacting with OpenAI API to get chat completions
         prompt: the input text prompt for the AI model
@@ -137,10 +144,18 @@ class AIClient(IAIClient):
             return await self._get_response_new(user_question, retrieved_context, conversation_history, api_key, model, api_url)
         else:
             return await self._get_response_old(user_question, retrieved_context, conversation_history, api_key, model, api_url)
-        
-    
 
-    async def regenerate(self, user_question: str, regeneration_context: str, code: str, api_key: str, model: str="gpt-o4-mini", api_url: str="https://api.openai.com/v1") -> str:
+
+
+    async def regenerate(
+        self,
+        user_question: str,
+        regeneration_context: str,
+        code: str,
+        api_key: str,
+        model: str="gpt-o4-mini",
+        api_url: str="https://api.openai.com/v1"
+    ) -> str:
         """
         Client for interacting with OpenAI API to get chat completions
         prompt: the input text prompt for the AI model
@@ -156,16 +171,17 @@ class AIClient(IAIClient):
 
 
 
-    async def _get_response_new(self, 
-            user_question: str, 
-            retrieved_context: str, 
-            conversation_history: str, 
-            api_key: str, 
-            model: str="gpt-5-mini",
-            api_url: str="https://api.openai.com/v1",
-            ) -> str:
-        
-        input=[
+    async def _get_response_new(
+        self,
+        user_question: str,
+        retrieved_context: str,
+        conversation_history: str,
+        api_key: str,
+        model: str="gpt-5-mini",
+        api_url: str="https://api.openai.com/v1",
+    ) -> str:
+
+        input_to_llm = [
             {
                 "role": "system",
                 "content": _PREPROMPT,
@@ -183,25 +199,24 @@ class AIClient(IAIClient):
         client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_url,
-            )
-
+        )
 
         resp = await client.responses.create(
-        model=model,
-        input=input
+            model=model,
+            input=input_to_llm
         )
 
         return resp.output_text
-    
+
     async def _regenerate_new(
-            self, user_question: str, 
-            regeneration_context: str, 
-            code: str, 
-            api_key: str, 
-            model: str="gpt-5-mini", 
+            self, user_question: str,
+            regeneration_context: str,
+            code: str,
+            api_key: str,
+            model: str="gpt-5-mini",
             api_url: str="https://api.openai.com/v1",
             ) -> str:
-        
+
         client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_url,
@@ -228,17 +243,17 @@ class AIClient(IAIClient):
         )
 
         return resp.output_text
-    
+
     async def _get_response_old(
-            self, 
-            user_question: str, 
-            retrieved_context: str, 
-            conversation_history: str, 
-            api_key: str, 
+            self,
+            user_question: str,
+            retrieved_context: str,
+            conversation_history: str,
+            api_key: str,
             model: str="gpt-o4-mini",
             api_url: str="https://api.openai.com/v1",
             ) -> str:
-        
+
         client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_url,
@@ -253,16 +268,16 @@ class AIClient(IAIClient):
             max_tokens=512,
         )
         return resp.choices[0].message.content
-    
-    async def _regenerate_old(self, 
-            user_question: str, 
-            regeneration_context: str, 
-            code: str, 
-            api_key: str, 
-            model: str="gpt-o4-mini", 
+
+    async def _regenerate_old(self,
+            user_question: str,
+            regeneration_context: str,
+            code: str,
+            api_key: str,
+            model: str="gpt-o4-mini",
             api_url: str="https://api.openai.com/v1"
             ) -> str:
-        
+
         client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_url,
@@ -278,6 +293,6 @@ class AIClient(IAIClient):
             max_tokens=512,
         )
         return resp.choices[0].message.content
-    
+
 
 

@@ -363,12 +363,13 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # LLM Model-related
     # --------------------
-    async def add_model(self, name:str, url:str, key:str) -> str:
+    async def add_model(self, name: str, model_name: str, url: str, key: str) -> str:
         async with async_session_factory() as session:
             orm = LlmModelsOrm(
                 name=name,
                 url=url,
-                api_key=key
+                api_key=key,
+                model_name=model_name
             )
             session.add(orm)
             await session.commit()
@@ -379,11 +380,19 @@ class EntityRepository(IEntityRepository):
         async with async_session_factory() as session:
             await delete_llm(session=session, llm_id=model_id)
 
-    async def change_model(self, model_id: str, name:str, url:str, key:Optional[str]) -> None:
+    async def change_model(
+        self,
+        model_id: str,
+        name: str,
+        model_name: str,
+        url: str,
+        key: Optional[str]
+    ) -> None:
         async with async_session_factory() as session:
             await change_llm(
                 session=session,
                 llm_id=model_id,
+                model_name=model_name,
                 name=name,
                 url=url,
                 key=key
