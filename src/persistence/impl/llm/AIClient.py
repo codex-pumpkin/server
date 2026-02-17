@@ -1,7 +1,16 @@
 from typer import prompt
 from typing_extensions import Final
 import textwrap
-from openai import AsyncOpenAI
+from openai import APIConnectionError, APIError, AsyncOpenAI, AuthenticationError, BadRequestError, NotFoundError, PermissionDeniedError, RateLimitError
+from src.core.exceptions import (
+    LLMAuthenticationError,
+    LLMNotFoundError,
+    LLMPermissionDeniedError,  
+    LLMBadRequestError,
+    LLMAPIConnectionError,
+    LLMAPIError,
+    LLMRateLimitError
+)
 from src.persistence.interfaces import IAIClient
 
 _PREPROMPT: Final[str] = textwrap.dedent("""
@@ -194,18 +203,41 @@ class AIClient(IAIClient):
                 ),
             },
         ]
+        try:
 
-        client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=api_url,
-        )
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=api_url,
+            )
 
-        resp = await client.responses.create(
-            model=model,
-            input=input_to_llm
-        )
+            resp = await client.responses.create(
+                model=model,
+                input=input_to_llm
+            )
 
-        return resp.output_text
+            return resp.output_text
+        
+
+        except AuthenticationError as e:
+            raise LLMAuthenticationError()
+
+        except APIConnectionError as e:
+            raise LLMAPIConnectionError()
+
+        except NotFoundError as e:
+            raise LLMNotFoundError()
+
+        except BadRequestError as e:
+            raise LLMBadRequestError()
+
+        except PermissionDeniedError as e:
+            raise LLMPermissionDeniedError()
+
+        except APIError as e:
+            raise LLMAPIError()
+        
+        except RateLimitError as e:
+            raise LLMRateLimitError()
 
     async def _regenerate_new(
             self, user_question: str,
@@ -216,12 +248,7 @@ class AIClient(IAIClient):
             api_url: str="https://api.openai.com/v1",
             ) -> str:
 
-        client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=api_url,
-            )
-
-        input=[
+        input_to_llm=[
             {
                 "role": "system",
                 "content": _REGENRATION_PREPROMPT,
@@ -235,13 +262,41 @@ class AIClient(IAIClient):
                 ),
             },
         ]
+        try:
 
-        resp = await client.responses.create(
-        model=model,
-        input=input
-        )
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=api_url,
+                )
 
-        return resp.output_text
+            resp = await client.responses.create(
+            model=model,
+            input=input_to_llm
+            )
+
+            return resp.output_text
+
+        except AuthenticationError as e:
+            raise LLMAuthenticationError()
+
+        except APIConnectionError as e:
+            raise LLMAPIConnectionError()
+
+        except NotFoundError as e:
+            raise LLMNotFoundError()
+
+        except BadRequestError as e:
+            raise LLMBadRequestError()
+
+        except PermissionDeniedError as e:
+            raise LLMPermissionDeniedError()
+
+        except APIError as e:
+            raise LLMAPIError()
+        
+        except RateLimitError as e:
+            raise LLMRateLimitError()
+        
 
     async def _get_response_old(
             self,
@@ -252,21 +307,43 @@ class AIClient(IAIClient):
             model: str="gpt-o4-mini",
             api_url: str="https://api.openai.com/v1",
             ) -> str:
-
-        client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=api_url,
+        
+        try:
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=api_url,
+                )
+            resp = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system",  "content": _PREPROMPT},
+                    {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
+                    ],
+                temperature=0.2,
+                max_tokens=512,
             )
-        resp = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system",  "content": _PREPROMPT},
-                {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
-                ],
-            temperature=0.2,
-            max_tokens=512,
-        )
-        return resp.choices[0].message.content
+            return resp.choices[0].message.content
+        
+        except AuthenticationError as e:
+            raise LLMAuthenticationError()
+
+        except APIConnectionError as e:
+            raise LLMAPIConnectionError()
+
+        except NotFoundError as e:
+            raise LLMNotFoundError()
+
+        except BadRequestError as e:
+            raise LLMBadRequestError()
+
+        except PermissionDeniedError as e:
+            raise LLMPermissionDeniedError()
+
+        except APIError as e:
+            raise LLMAPIError()
+        
+        except RateLimitError as e:
+            raise LLMRateLimitError()
 
     async def _regenerate_old(self,
             user_question: str,
@@ -276,22 +353,44 @@ class AIClient(IAIClient):
             model: str="gpt-o4-mini",
             api_url: str="https://api.openai.com/v1"
             ) -> str:
-
-        client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=api_url,
+        
+        try:
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=api_url,
+                )
+            resp = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system",  "content": _REGENRATION_PREPROMPT},
+                    {"role": "user", "content": f"Question:\n{user_question}\n \
+                    \n Code:\n{code} Context:\n{regeneration_context}\n"}
+                    ],
+                temperature=0.2,
+                max_tokens=512,
             )
-        resp = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system",  "content": _REGENRATION_PREPROMPT},
-                {"role": "user", "content": f"Question:\n{user_question}\n \
-                 \n Code:\n{code} Context:\n{regeneration_context}\n"}
-                ],
-            temperature=0.2,
-            max_tokens=512,
-        )
-        return resp.choices[0].message.content
+            return resp.choices[0].message.content
+        
+        except AuthenticationError as e:
+            raise LLMAuthenticationError()
+
+        except APIConnectionError as e:
+            raise LLMAPIConnectionError()
+
+        except NotFoundError as e:
+            raise LLMNotFoundError()
+
+        except BadRequestError as e:
+            raise LLMBadRequestError()
+
+        except PermissionDeniedError as e:
+            raise LLMPermissionDeniedError()
+
+        except APIError as e:
+            raise LLMAPIError()
+        
+        except RateLimitError as e:
+            raise LLMRateLimitError()
 
 
 
