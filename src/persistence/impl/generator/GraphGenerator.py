@@ -23,7 +23,7 @@ class GraphGenerator(IGraphGenerator):
                 subckt_circute = subckt_stmt.build(ground=0)
                 circute_dict[subckt_name] = await self._parse_circuit(subckt_circute.elements)
 
-            return json.dumps(circute_dict, indent=2)
+            return json.dumps(circute_dict)
         except Exception as e:
             print(f"ERROR parsing circuit: {e}")
             import traceback

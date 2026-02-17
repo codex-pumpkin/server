@@ -5,6 +5,13 @@ from .VerificationError import VerificationError
 from .QuotaExceededError import QuotaExceededError
 from .NotFoundError import NotFoundError
 from .AccessError import AccessError
+from .LLMBadRequestError import LLMBadRequestError
+from .LLMAPIConnectionError import LLMAPIConnectionError   
+from .LLMAPIError import LLMAPIError
+from .LLMAuthenticationError import LLMAuthenticationError
+from .LLMNotFoundError import LLMNotFoundError
+from .LLMPermissionDeniedError import LLMPermissionDeniedError
+from .LLMRateLimitError import LLMRateLimitError
 
 __all__ = [
     "AppError",
@@ -13,5 +20,12 @@ __all__ = [
     "VerificationError",
     "QuotaExceededError",
     "NotFoundError",
-    "AccessError"
+    "AccessError",
+    "LLMBadRequestError",
+    "LLMAPIConnectionError",
+    "LLMAPIError",
+    "LLMAuthenticationError",
+    "LLMNotFoundError",
+    "LLMPermissionDeniedError",
+    "LLMRateLimitError"
 ]
