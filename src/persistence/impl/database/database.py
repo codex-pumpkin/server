@@ -4,14 +4,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 
 sync_engine = create_engine(
     "sqlite:///database.db",
-    echo=True
+    echo=False
 )
 
 session_factory = sessionmaker(bind=sync_engine, autoflush=False, autocommit=False)
 
 async_engine = create_async_engine(
     "sqlite+aiosqlite:///database.db",
-    echo=True
+    echo=False
 )
 
 async_session_factory = async_sessionmaker(bind=async_engine, autoflush=False, autocommit=False)
