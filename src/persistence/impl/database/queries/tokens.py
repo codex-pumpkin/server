@@ -14,6 +14,7 @@ from typing import Optional
 
 
 async def create_token(session:AsyncSession, user_id:str, token_type:str) -> TokensOrm:
+    """Create token."""
     now = datetime.datetime.now(datetime.UTC)
     exp = now + datetime.timedelta(minutes=settings.refresh_settings.expire_time)
     token = TokensOrm(
@@ -27,6 +28,7 @@ async def create_token(session:AsyncSession, user_id:str, token_type:str) -> Tok
     return token
 
 async def get_token_by_id(session:AsyncSession, token_id:str) -> Optional[TokensOrm]:
+    """Get token by id."""
     query = select(TokensOrm).where(TokensOrm.id == token_id)
     result = await session.execute(query)
     token = result.scalar_one_or_none()
@@ -34,6 +36,7 @@ async def get_token_by_id(session:AsyncSession, token_id:str) -> Optional[Tokens
 
 
 async def invalidate_all_refresh(session:AsyncSession, user_id:str) -> None:
+    """Invalidate all refresh."""
     stmt = (
         update(TokensOrm)
         .where(TokensOrm.user_id == user_id and TokensOrm.type == TokenType.REFRESH)

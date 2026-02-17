@@ -6,6 +6,7 @@ from src.persistence.impl.database.models import ConversationsOrm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 async def conversation_to_dto(session:AsyncSession, conversation:ConversationsOrm) -> ConversationResponse:
+    """Conversation to dto."""
     messages = await get_chat_messages(
         session=session,
         conversation_id=conversation.id,

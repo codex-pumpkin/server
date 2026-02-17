@@ -9,6 +9,7 @@ _chroma_client: Optional[chromadb.PersistentClient] | None = None
 class SemanticRepository(ISemanticRepository):
     
     def __init__(self, namedb: str="SPICE_Docs") -> None:
+        """Initialize the instance."""
         self.collection = self.get_chroma_client().get_collection(
             name=namedb,
             embedding_function=embedding_functions.DefaultEmbeddingFunction()
@@ -17,6 +18,7 @@ class SemanticRepository(ISemanticRepository):
     """ Get a singleton ChromaDB client instance """
     @staticmethod
     def get_chroma_client(source:Union[Path, str]=Path(__file__).resolve().parent / "chroma_db") -> chromadb.PersistentClient:
+        """Get chroma client."""
         global _chroma_client
         if _chroma_client is None:
             _chroma_client = chromadb.PersistentClient(path=source)
@@ -28,6 +30,7 @@ class SemanticRepository(ISemanticRepository):
         output: list of similar text chunks
     '''
     def get_similar_chunks(self, user_input: str, num_of_chunks: int) -> list:
+        """Get similar chunks."""
         result = self.collection.query(
             query_texts=[user_input],
             n_results=num_of_chunks,

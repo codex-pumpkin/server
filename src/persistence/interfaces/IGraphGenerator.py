@@ -6,4 +6,5 @@ from abc import ABC, abstractmethod
 class IGraphGenerator(ABC):
     @abstractmethod
     async def gen_graph(self, code:str) -> str:
+        """Gen graph."""
         ...

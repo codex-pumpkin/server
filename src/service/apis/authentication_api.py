@@ -59,6 +59,7 @@ import httpx
     response_model_by_alias=True,
 )
 async def auth_google_login_get():
+    """Auth google login get."""
     params = {
         "client_id": settings.google_settings.client_id,
         "redirect_uri": settings.google_settings.redirect_uri,
@@ -93,6 +94,7 @@ async def google_callback(
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
 
+    """Google callback."""
     token_url = settings.google_settings.token_url
 
     data = {
@@ -142,6 +144,7 @@ async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
+    """Auth login post."""
     return await auth_manager.authenticate(login_request)
 
 
@@ -161,6 +164,7 @@ async def auth_signup_post(
     signup_request: SignupRequest = Body(None, description=""),
     auth_manger: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
+    """Auth signup post."""
     await auth_manger.register(signup_request)
 
 
@@ -179,6 +183,7 @@ async def auth_refresh_post(
     refresh_request: RefreshRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
+    """Auth refresh post."""
     return await auth_manager.refresh_access_token(refresh_request)
 
 

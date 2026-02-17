@@ -19,6 +19,7 @@ class PersistenceFactory:
 
     @classmethod
     async def _get_singleton(cls, interface: Type[T], implementation: Type[T]) -> T:
+        """Get singleton."""
         if interface not in cls._singletons:
             async with cls._lock:
                 if interface not in cls._singletons:
@@ -31,30 +32,36 @@ class PersistenceFactory:
 
     @classmethod
     async def get_ai_client(cls) -> IAIClient:
+        """Get ai client."""
         from src.persistence.impl.llm import AIClient
         return await cls._get_singleton(IAIClient, AIClient)
 
     @classmethod
     async def get_code_validator(cls) -> ICodeValidator:
+        """Get code validator."""
         from src.persistence.impl.validator import CodeValidator
         return await cls._get_singleton(ICodeValidator, CodeValidator)
 
     @classmethod
     async def get_entity_repository(cls) -> IEntityRepository:
+        """Get entity repository."""
         from src.persistence.impl.database import EntityRepository
         return await cls._get_singleton(IEntityRepository, EntityRepository)
 
     @classmethod
     async def get_graph_generator(cls) -> IGraphGenerator:
+        """Get graph generator."""
         from src.persistence.impl.generator import GraphGenerator
         return await cls._get_singleton(IGraphGenerator, GraphGenerator)
 
     @classmethod
     async def get_mail_sender(cls) -> IMailSender:
+        """Get mail sender."""
         from src.persistence.impl.mail import MailSender
         return await cls._get_singleton(IMailSender, MailSender)
 
     @classmethod
     async def get_semantic_repository(cls) -> ISemanticRepository:
+        """Get semantic repository."""
         from src.persistence.impl.chroma_database import SemanticRepository
         return await cls._get_singleton(ISemanticRepository, SemanticRepository)

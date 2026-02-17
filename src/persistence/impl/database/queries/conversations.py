@@ -13,6 +13,7 @@ from typing import Optional, List
 
 
 async def get_chats(session:AsyncSession, user_id:str) -> List[ConversationsOrm]:
+    """Get chats."""
     query = (
         select(ConversationsOrm)
         .where(ConversationsOrm.user_id == user_id)
@@ -22,6 +23,7 @@ async def get_chats(session:AsyncSession, user_id:str) -> List[ConversationsOrm]
     return list(result.scalars().all())
 
 async def get_chat_messages(session:AsyncSession, conversation_id:str) -> List[MessagesOrm]:
+    """Get chat messages."""
     query = (
         select(MessagesOrm)
         .where(MessagesOrm.conversation_id == conversation_id)
@@ -31,6 +33,7 @@ async def get_chat_messages(session:AsyncSession, conversation_id:str) -> List[M
     return list(result.scalars().all())
 
 async def get_chat_by_id(session:AsyncSession, conversation_id:str) -> Optional[ConversationsOrm]:
+    """Get chat by id."""
     query = (
         select(ConversationsOrm)
         .where(ConversationsOrm.id == conversation_id)
@@ -41,6 +44,7 @@ async def get_chat_by_id(session:AsyncSession, conversation_id:str) -> Optional[
 
 
 async def update_conversation(session:AsyncSession, conversation_id:str, name:str, is_pinned:bool) -> None:
+    """Update conversation."""
     stmt = (
         update(ConversationsOrm)
         .where(ConversationsOrm.id == conversation_id)
@@ -50,6 +54,7 @@ async def update_conversation(session:AsyncSession, conversation_id:str, name:st
     await session.commit()
 
 async def update_conversation_update_time(session:AsyncSession, conversation_id:str) -> None:
+    """Update conversation update time."""
     stmt = (
         update(ConversationsOrm)
         .where(ConversationsOrm.id == conversation_id)
@@ -60,6 +65,7 @@ async def update_conversation_update_time(session:AsyncSession, conversation_id:
 
 
 async def get_messages_sent_today_by_user(session:AsyncSession, user_id:str) -> int:
+    """Get messages sent today by user."""
     now = datetime.datetime.now(datetime.UTC)
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
 

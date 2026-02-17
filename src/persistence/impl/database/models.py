@@ -48,6 +48,7 @@ class UsersOrm(Base):
     )
 
     def to_dto(self) -> AccountResponse:
+        """To dto."""
         return AccountResponse(
             id=self.id,
             email=self.email,
@@ -69,6 +70,7 @@ class LlmModelsOrm(Base):
     api_key: Mapped[str] = mapped_column()
 
     def to_dto(self) -> LLMConfigurationResponse:
+        """To dto."""
         return LLMConfigurationResponse(
             id=self.id,
             name=self.name,
@@ -78,6 +80,7 @@ class LlmModelsOrm(Base):
         )
     
     def to_dto_request(self) -> LLMConfigurationRequest:
+        """To dto request."""
         return LLMConfigurationRequest(
             name=self.name,
             api_url=self.url,
@@ -125,6 +128,7 @@ class MessagesOrm(Base):
     )
 
     def to_dto(self) -> MessageResponse:
+        """To dto."""
         return MessageResponse(
             id=self.id,
             created_at=self.created_at.timestamp(),
@@ -155,6 +159,7 @@ class TokensOrm(Base):
     )
 
     def to_dto(self) -> TokenInfo:
+        """To dto."""
         return TokenInfo(
             id=uuid.UUID(self.id),
             created_at=self.created_at,
@@ -172,6 +177,7 @@ class QuotaOrm(Base):
     member_limit: Mapped[int]
 
     def to_dto(self) -> QuotaConfig:
+        """To dto."""
         return QuotaConfig(
             admin=self.admin_limit,
             member=self.member_limit

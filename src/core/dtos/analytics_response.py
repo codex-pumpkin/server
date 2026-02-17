@@ -60,6 +60,7 @@ class AnalyticsResponse(BaseModel):
 
     @classmethod
     def validate_usage_length(cls, v: List[int]) -> List[int]:
+        """Validate usage length."""
         if len(v) != 96:
             raise ValueError("usage must contain exactly 96 values (24h / 15min)")
         if any(x < 0 for x in v):

@@ -19,6 +19,7 @@ class BusinessFactory:
 
     @classmethod
     async def _get_singleton(cls, interface: Type[T], implementation: Type[T]) -> T:
+        """Get singleton."""
         if interface not in cls._singletons:
             async with cls._lock:
                 if interface not in cls._singletons:
@@ -31,25 +32,30 @@ class BusinessFactory:
 
     @classmethod
     async def get_inference_manager(cls) -> IInferenceManager:
+        """Get inference manager."""
         from src.business.impl.inference.InferenceManager import InferenceManager
         return await cls._get_singleton(IInferenceManager, InferenceManager)
 
     @classmethod
     async def get_system_manager(cls) -> ISystemManager:
+        """Get system manager."""
         from src.business.impl.system.SystemManager import SystemManager
         return await cls._get_singleton(ISystemManager, SystemManager)
 
     @classmethod
     async def get_basic_auth_manager(cls) -> IBasicAuthManager:
+        """Get basic auth manager."""
         from src.business.impl.auth.BasicAuthManager import BasicAuthManager
         return await cls._get_singleton(IBasicAuthManager, BasicAuthManager)
 
     @classmethod
     async def get_user_info_manager(cls) -> IUserInfoManager:
+        """Get user info manager."""
         from src.business.impl.userinfo.UserInfoManager import UserInfoManager
         return await cls._get_singleton(IUserInfoManager, UserInfoManager)
 
     @classmethod
     async def get_prompt_manager(cls) -> IPromptManager:
+        """Get prompt manager."""
         from src.business.impl.prompt.PromptManager import PromptManager
         return await cls._get_singleton(IPromptManager, PromptManager)

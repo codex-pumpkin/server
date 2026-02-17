@@ -11,10 +11,12 @@ class PromptManager(IPromptManager):
         return "\n".join(chunks)
 
     def make_regeneration_context(self, exit_code: int, raw_output: str) -> str:
+        """Make regeneration context."""
         context = "Ngspice exited with code: {} .Ngspice output is: {}".format(exit_code, raw_output)
         return context
     
     def get_conversation_context(self, conversation_history: List[Tuple[str, str]]) -> str:
+        """Get conversation context."""
         if not conversation_history:
             return ""
         context = "Conversation history:\n"

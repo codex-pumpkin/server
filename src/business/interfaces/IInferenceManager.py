@@ -18,6 +18,7 @@ class IInferenceManager(ABC):
 
     @abstractmethod
     async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
+        """Get conversations by user."""
         pass
 
     @abstractmethod
@@ -30,6 +31,7 @@ class IInferenceManager(ABC):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ) -> MessageResponse:
+        """Post message to conversation."""
         pass
 
     @abstractmethod
@@ -42,6 +44,7 @@ class IInferenceManager(ABC):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ) -> MessageResponse:
+        """Message regeneration."""
         pass
 
     @abstractmethod
@@ -53,6 +56,7 @@ class IInferenceManager(ABC):
         ],
         token_jwt: TokenModel
     ):
+        """Remove conversation."""
         pass
 
     @abstractmethod
@@ -61,6 +65,7 @@ class IInferenceManager(ABC):
         token_jwt: TokenModel,
         conversation_request: ConversationRequest
     ) -> ConversationResponse:
+        """Start conversation."""
         pass
 
     @abstractmethod
@@ -73,4 +78,5 @@ class IInferenceManager(ABC):
         update_conversation_request: UpdateConversationRequest,
         token_jwt: TokenModel
     ):
+        """Update conversation."""
         pass

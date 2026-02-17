@@ -10,6 +10,7 @@ def encode_jwt(
     expire_minutes: int = settings.jwt_settings.expire_time,
     time_delta: Optional[datetime.timedelta] = None
 ) -> str:
+    """Encode jwt."""
     payload_copy = payload.copy()
     now = datetime.datetime.now(datetime.UTC)
     if time_delta is not None:
@@ -31,6 +32,7 @@ def decode_jwt(
     secret_key:str = settings.jwt_settings.secret_key,
     algorithm:str = settings.jwt_settings.algorithm
    ) -> Dict:
+    """Decode jwt."""
     return jwt.decode(
         encoded,
         secret_key,
@@ -38,6 +40,7 @@ def decode_jwt(
     )
 
 def check_if_jwt_valid(jwt_token:str) -> bool:
+    """Check if jwt valid."""
     try:
         data:Dict = decode_jwt(jwt_token)
     except Exception as e:
@@ -46,6 +49,7 @@ def check_if_jwt_valid(jwt_token:str) -> bool:
 
 
 def _main():
+    """Main."""
     encoded = encode_jwt({"id":"ast"})
     print(encoded)
     decoded = decode_jwt(encoded)

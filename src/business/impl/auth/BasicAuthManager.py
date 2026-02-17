@@ -32,6 +32,7 @@ import random
 class BasicAuthManager(IBasicAuthManager):
 
     def _generate_password(self) -> str:
+        """Generate password."""
         letters = "qwertyuiopasdghklzxcvbnm1234567890<>,.:;!@#$%^*(){}[]"
         password = ""
         for i in range(12):
@@ -39,6 +40,7 @@ class BasicAuthManager(IBasicAuthManager):
         return password
 
     async def google_callback(self, username:str, email:str, picture:str) -> TokenResponse:
+        """Google callback."""
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.get_user_by_email(email=email)
         if user is not None:
@@ -79,6 +81,7 @@ class BasicAuthManager(IBasicAuthManager):
 
 
     async def verify_email_token(self, request: EmailVerificationSubmitRequest):
+        """Verify email token."""
         token = request.verification_token
         repo = await PersistenceFactory.get_entity_repository()
 
@@ -99,6 +102,7 @@ class BasicAuthManager(IBasicAuthManager):
         await repo.verify_user(str(token_info.user_id))
 
     async def generate_email_verification(self, user_id:UUID, user_email:str):
+        """Generate email verification."""
         repo = await PersistenceFactory.get_entity_repository()
         token = await repo.create_token(str(user_id), "email")
         mail_sender = await PersistenceFactory.get_mail_sender()
@@ -106,6 +110,7 @@ class BasicAuthManager(IBasicAuthManager):
         await mail_sender.send_confirmation_email(user_email, str(token.id))
 
     async def complete_password_recovery(self, request: PasswordResetSubmitRequest):
+        """Complete password recovery."""
         repo = await PersistenceFactory.get_entity_repository()
         token = await repo.get_token(request.reset_token)
         if token is None:
@@ -121,6 +126,7 @@ class BasicAuthManager(IBasicAuthManager):
         await repo.change_password(str(token.user_id), request.new_password)
 
     async def initiate_password_recovery(self, request: PasswordResetRequestRequest):
+        """Initiate password recovery."""
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.get_user_by_email(request.email)
         if user is None:
@@ -131,12 +137,14 @@ class BasicAuthManager(IBasicAuthManager):
         await mail_sender.send_password_reset_email(user.email, str(token.id))
 
     async def user_logout(self, refresh_token: UUID):
+        """User logout."""
         repo = await PersistenceFactory.get_entity_repository()
         success = await repo.invalidate_token(str(refresh_token))
         if not success:
             raise AuthError()
 
     async def refresh_access_token(self, request: RefreshRequest) -> TokenResponse:
+        """Refresh access token."""
         token = str(request.refresh_token)
         repo = await PersistenceFactory.get_entity_repository()
         refresh_token = await repo.get_token(token)
@@ -164,12 +172,14 @@ class BasicAuthManager(IBasicAuthManager):
         )
 
     async def register(self, request: SignupRequest):
+        """Register."""
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.create_user(request)
         await self.generate_email_verification(user.id, user.email)
 
 
     async def authenticate(self, request: LoginRequest) -> TokenResponse:
+        """Authenticate."""
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.authenticate(
             username=request.username,
@@ -198,6 +208,7 @@ class BasicAuthManager(IBasicAuthManager):
         user: AccountResponse,
         repo: IEntityRepository
     ) -> TokenResponse:
+        """Generate tokens pair."""
         refresh_token = await repo.create_token(str(user.id), "refresh")
         refresh_token = str(refresh_token.id)
         access_token = encode_jwt(

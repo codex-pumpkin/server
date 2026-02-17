@@ -32,6 +32,7 @@ from uuid import UUID
 class InferenceManager(IInferenceManager):
 
     async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
+        """Get conversations by user."""
         repo = await PersistenceFactory.get_entity_repository()
         return await repo.get_chats(str(token_jwt.sub))
 
@@ -44,6 +45,7 @@ class InferenceManager(IInferenceManager):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ):
+        """Post message to conversation."""
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -72,6 +74,7 @@ class InferenceManager(IInferenceManager):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ) -> MessageResponse:
+        """Message regeneration."""
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -102,6 +105,7 @@ class InferenceManager(IInferenceManager):
         ],
         token_jwt: TokenModel
     ):
+        """Remove conversation."""
         repo = await PersistenceFactory.get_entity_repository()
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
@@ -124,6 +128,7 @@ class InferenceManager(IInferenceManager):
         self,
         request: ConversationRequest
     ) -> ConversationResponse:
+        """Start conversation not logged in."""
         repo = await PersistenceFactory.get_entity_repository()
         api_key = await repo.get_key_of_model(request.llm_model_config_id)
         model = await repo.get_model(request.llm_model_config_id)
@@ -168,6 +173,7 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel,
         request:ConversationRequest
     ) -> ConversationResponse:
+        """Start conversation."""
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -186,6 +192,7 @@ class InferenceManager(IInferenceManager):
         token_jwt: Optional[TokenModel],
         conversation_request: ConversationRequest
     ) -> ConversationResponse:
+        """Start conversation."""
         if token_jwt is None:
             return await self._start_conversation_not_logged_in(
                 request=conversation_request
@@ -206,6 +213,7 @@ class InferenceManager(IInferenceManager):
         update_conversation_request: UpdateConversationRequest,
         token_jwt: TokenModel
     ) -> None:
+        """Update conversation."""
         repo = await PersistenceFactory.get_entity_repository()
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
@@ -234,6 +242,7 @@ class InferenceManager(IInferenceManager):
         repo: IEntityRepository,
         remove_last: bool = False
     ) -> Message:
+        """Get message."""
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
         if chat is None:
             raise NotFoundError(
@@ -271,6 +280,7 @@ class InferenceManager(IInferenceManager):
         return message
 
     async def _get_graph_representation(self, llm_response: str) -> str:
+        """Get graph representation."""
         graph_generator = await PersistenceFactory.get_graph_generator()
         graph = await graph_generator.gen_graph(llm_response)
         return graph

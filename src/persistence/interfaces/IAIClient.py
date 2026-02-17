@@ -14,6 +14,7 @@ class IAIClient(ABC):
         model: str,
         api_url: str
     ) -> str:
+        """Get response."""
         ...
 
     @abstractmethod
@@ -26,4 +27,5 @@ class IAIClient(ABC):
         model: str,
         api_url:str
     ) -> str:
+        """Regenerate."""
         ...    
