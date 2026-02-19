@@ -24,6 +24,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Configure CORS for local front-end development environments. The current
+# allowlist targets common local ports used by Angular and other dev servers.
+# Credentials are enabled to support authenticated browser requests.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200", "http://localhost:8080"],  # Angular Dev
@@ -32,5 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register API routes first, then attach centralized exception handlers so
+# endpoint-specific and application-level errors are converted consistently.
 app.include_router(main_router)
 register_error_handlers(app)

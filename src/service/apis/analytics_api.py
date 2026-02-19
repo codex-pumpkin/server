@@ -44,5 +44,14 @@ async def analytics_get(
     ),
     system_manger: ISystemManager = Depends(get_system_manager)
 ) -> AnalyticsResponse:
-    """Returns the analytics. Only for Admins."""
+    """
+    Return aggregated analytics data for administrators.
+
+    @param
+        token_jwt (TokenModel): Admin-authenticated token payload from security dependency.
+        system_manger (ISystemManager): Business manager used to load analytics.
+
+    @return
+        AnalyticsResponse: Aggregated usage analytics for the system.
+    """
     return await system_manger.get_analytics()

@@ -12,12 +12,32 @@ from src.persistence import PersistenceFactory
 class UserInfoManager(IUserInfoManager):
 
     async def get_account_info(self, token_jwt: TokenModel) -> AccountResponse:
-        """Get account info."""
+        """
+        Retrieve account information for the authenticated user.
+
+        @param
+            token_jwt (TokenModel): Decoded JWT payload containing the authenticated
+            user identifier in `sub`.
+
+        @return
+            AccountResponse: Account profile data loaded from persistence.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         return await repo.get_user_by_id(str(token_jwt.sub))
 
     async def update_user_name_email(self, token_jwt: TokenModel, update_account_request: UpdateAccountRequest):
-        """Update user name email."""
+        """
+        Update username and email for the authenticated user account.
+
+        @param
+            token_jwt (TokenModel): Decoded JWT payload for identifying the caller.
+            update_account_request (UpdateAccountRequest): New username/email values
+            to be applied to the user account.
+
+        @return
+            None: Persists account updates and may trigger reverification flow if
+            the email address has changed.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         user = await repo.get_user_by_id(str(token_jwt.sub))
 
@@ -38,9 +58,26 @@ class UserInfoManager(IUserInfoManager):
             await auth_manager.generate_email_verification(user.id, user.email)
 
     async def get_profile_picture(self, token_jwt: TokenModel):
-        """Get profile picture."""
+        """
+        Retrieve profile picture for the authenticated user.
+
+        @param
+            token_jwt (TokenModel): Decoded JWT payload for identifying the caller.
+
+        @return
+            None: Not implemented yet.
+        """
         pass
 
     async def update_profile_picture(self, token_jwt: TokenModel, image_data: bytes):
-        """Update profile picture."""
+        """
+        Update profile picture for the authenticated user.
+
+        @param
+            token_jwt (TokenModel): Decoded JWT payload for identifying the caller.
+            image_data (bytes): Binary image content to be stored as profile picture.
+
+        @return
+            None: Not implemented yet.
+        """
         pass

@@ -59,7 +59,12 @@ import httpx
     response_model_by_alias=True,
 )
 async def auth_google_login_get():
-    """Auth google login get."""
+    """
+    Build Google OAuth login URL and redirect user to consent screen.
+
+    @return
+        RedirectResponse: Redirect response pointing to Google authorization endpoint.
+    """
     params = {
         "client_id": settings.google_settings.client_id,
         "redirect_uri": settings.google_settings.redirect_uri,
@@ -94,7 +99,16 @@ async def google_callback(
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
 
-    """Google callback."""
+    """
+    Process Google OAuth callback and exchange code for application tokens.
+
+    @param
+        code (str): Authorization code returned by Google after user consent.
+        auth_manager (IBasicAuthManager): Business manager used to resolve/create user and issue tokens.
+
+    @return
+        TokenResponse: Access and refresh tokens for the authenticated application session.
+    """
     token_url = settings.google_settings.token_url
 
     data = {
@@ -144,7 +158,16 @@ async def auth_login_post(
     login_request: LoginRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    """Auth login post."""
+    """
+    Authenticate user with username/email and password.
+
+    @param
+        login_request (LoginRequest): Login payload containing credentials.
+        auth_manager (IBasicAuthManager): Business manager used for authentication flow.
+
+    @return
+        TokenResponse: Access and refresh tokens for a successful login.
+    """
     return await auth_manager.authenticate(login_request)
 
 
@@ -164,7 +187,16 @@ async def auth_signup_post(
     signup_request: SignupRequest = Body(None, description=""),
     auth_manger: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
-    """Auth signup post."""
+    """
+    Register a new user account.
+
+    @param
+        signup_request (SignupRequest): Registration payload for creating a user.
+        auth_manger (IBasicAuthManager): Business manager used to create account and verification flow.
+
+    @return
+        None: Creates account and triggers verification process.
+    """
     await auth_manger.register(signup_request)
 
 
@@ -183,7 +215,16 @@ async def auth_refresh_post(
     refresh_request: RefreshRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
-    """Auth refresh post."""
+    """
+    Refresh access token using an existing refresh token.
+
+    @param
+        refresh_request (RefreshRequest): Payload containing refresh token reference.
+        auth_manager (IBasicAuthManager): Business manager used to validate and refresh tokens.
+
+    @return
+        TokenResponse: New access token and refresh token data.
+    """
     return await auth_manager.refresh_access_token(refresh_request)
 
 
@@ -205,7 +246,17 @@ async def auth_logout_post(
     ),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
-    """If a refresh token is provided as a query parameter, only that session is logged out. If none is provided, **all** sessions for the user are logged out. """
+    """
+    Log out user session by invalidating a refresh token.
+
+    @param
+        refresh_token (UUID): Refresh token to invalidate.
+        token_jwt (TokenModel): Authenticated user token payload from security dependency.
+        auth_manager (IBasicAuthManager): Business manager used to execute logout logic.
+
+    @return
+        None: Invalidates the target refresh token.
+    """
     return await auth_manager.user_logout(refresh_token)
 
 
@@ -223,7 +274,16 @@ async def auth_request_password_reset_post(
     password_reset_request_request: PasswordResetRequestRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
-    """Sends a password-reset token to the specified email-address, if an account exists for that email address. """
+    """
+    Initiate password reset flow for a user email.
+
+    @param
+        password_reset_request_request (PasswordResetRequestRequest): Payload with account email address.
+        auth_manager (IBasicAuthManager): Business manager used to create and deliver reset token.
+
+    @return
+        None: Sends password-reset email when account exists.
+    """
 
     return await auth_manager.initiate_password_recovery(password_reset_request_request)
 
@@ -243,7 +303,16 @@ async def auth_submit_password_reset_post(
     password_reset_submit_request: PasswordResetSubmitRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
-    """Accepts the password-reset token sent via email and a new password. Does not require the user to be logged in. """
+    """
+    Complete password reset using submitted reset token and new password.
+
+    @param
+        password_reset_submit_request (PasswordResetSubmitRequest): Payload with reset token and new password.
+        auth_manager (IBasicAuthManager): Business manager used to validate token and update password.
+
+    @return
+        None: Applies password update when token is valid.
+    """
 
     return await auth_manager.complete_password_recovery(password_reset_submit_request)
 
@@ -263,6 +332,15 @@ async def auth_submit_email_verification_post(
     email_verification_submit_request: EmailVerificationSubmitRequest = Body(None),
     auth_manager:IBasicAuthManager = Depends(get_auth_manager)
 ) -> None:
-    """Accepts the email-verification token sent to the user&#39;s email. """
+    """
+    Confirm user email verification with submitted verification token.
+
+    @param
+        email_verification_submit_request (EmailVerificationSubmitRequest): Payload with verification token.
+        auth_manager (IBasicAuthManager): Business manager used to validate and consume token.
+
+    @return
+        None: Marks user as verified when token is valid.
+    """
 
     return await auth_manager.verify_email_token(email_verification_submit_request)

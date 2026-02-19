@@ -57,7 +57,15 @@ router = APIRouter()
 async def llm_configurations_get(
     system_manager: ISystemManager = Depends(get_system_manager)
 ) -> List[LLMConfigurationResponse]:
-    """Adds a new LLM configuration for the authenticated user."""
+    """
+    Return all configured LLM model entries.
+
+    @param
+        system_manager (ISystemManager): Business manager used to fetch model configurations.
+
+    @return
+        List[LLMConfigurationResponse]: Persisted LLM configuration records.
+    """
     return await system_manager.get_llm_configs()
 
 
@@ -79,7 +87,17 @@ async def llm_configurations_post(
     ),
     system_manager: ISystemManager = Depends(get_system_manager)
 ) -> None:
-    """Adds a new LLM configuration for the authenticated user."""
+    """
+    Create a new LLM configuration entry.
+
+    @param
+        llm_configuration_request (LLMConfigurationRequest): Payload with model endpoint and credentials.
+        token_jwt (TokenModel): Admin-authenticated token payload.
+        system_manager (ISystemManager): Business manager used to persist model config.
+
+    @return
+        None: Stores a new LLM configuration.
+    """
     return await system_manager.validate_and_persist_llm_config(llm_configuration_request)
 
 
@@ -107,7 +125,18 @@ async def llm_configurations_id_put(
     system_manager: ISystemManager = Depends(get_system_manager)
 
 ) -> None:
-    """Updates an existing LLM configuration of the authenticated user by its id."""
+    """
+    Update an existing LLM configuration by identifier.
+
+    @param
+        llm_id (UUID): Identifier of LLM configuration to update.
+        llm_configuration_request (LLMConfigurationRequest): Payload with updated model values.
+        token_jwt (TokenModel): Admin-authenticated token payload.
+        system_manager (ISystemManager): Business manager used to persist update.
+
+    @return
+        None: Applies requested LLM configuration changes.
+    """
     return await system_manager.update_llm_config(
         llm_id=llm_id,
         llm_configuration_request=llm_configuration_request
@@ -136,5 +165,15 @@ async def llm_configurations_id_delete(
     system_manager: ISystemManager = Depends(get_system_manager)
 
 ) -> None:
-    """Deletes an LLM configuration of the authenticated user by its id."""
+    """
+    Delete an LLM configuration by identifier.
+
+    @param
+        llm_id (UUID): Identifier of LLM configuration to delete.
+        token_jwt (TokenModel): Admin-authenticated token payload.
+        system_manager (ISystemManager): Business manager used to remove model config.
+
+    @return
+        None: Removes the target LLM configuration.
+    """
     return await system_manager.process_llm_removal(llm_id=llm_id)

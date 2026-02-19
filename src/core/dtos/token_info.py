@@ -10,3 +10,5 @@ class TokenInfo(BaseModel):
     created_at: datetime.datetime
     expires_at: datetime.datetime
     user_id: UUID
+
+

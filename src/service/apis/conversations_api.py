@@ -59,7 +59,16 @@ async def conversations_get(
     ),
     inference_manger : IInferenceManager = Depends(get_inference_manager)
 ) -> List[ConversationResponse]:
-    """Returns a list of all conversations for the current user. """
+    """
+    Return all conversations for the authenticated user.
+
+    @param
+        token_jwt (TokenModel): Authenticated user token payload.
+        inference_manger (IInferenceManager): Business manager used to load conversations.
+
+    @return
+        List[ConversationResponse]: Conversation list for the current user.
+    """
     return await inference_manger.get_conversations_by_user(token_jwt)
 
 
@@ -82,7 +91,17 @@ async def conversations_post(
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> ConversationResponse:
-    """Starts a new conversation with the given message, LLM configuration, and target language. """
+    """
+    Start a new conversation for authenticated or guest flow.
+
+    @param
+        conversation_request (ConversationRequest): Payload containing initial message and model metadata.
+        token_jwt (Optional[TokenModel]): Optional authenticated token payload.
+        inference_manger (IInferenceManager): Business manager used to create conversation.
+
+    @return
+        ConversationResponse: Created conversation with initial response message.
+    """
     return await inference_manger.start_conversation(
         token_jwt=token_jwt,
         conversation_request=conversation_request
@@ -115,7 +134,18 @@ async def conversations_id_put(
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> None:
-    """Alters metadata of a conversation, such as its name or pinned state."""
+    """
+    Update conversation metadata such as name and pinned state.
+
+    @param
+        conversation_id (UUID): Identifier of conversation to update.
+        update_conversation_request (UpdateConversationRequest): Payload with editable fields.
+        token_jwt (TokenModel): Authenticated user token payload.
+        inference_manger (IInferenceManager): Business manager used to apply update.
+
+    @return
+        None: Persists conversation metadata changes.
+    """
     return await inference_manger.update_conversation(
         conversation_id=conversation_id,
         update_conversation_request=update_conversation_request,
@@ -147,7 +177,17 @@ async def conversations_id_delete(
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> None:
-    """Deletes the conversation with the given Id. """
+    """
+    Delete a specific conversation for the authenticated user.
+
+    @param
+        conversation_id (UUID): Identifier of conversation to delete.
+        token_jwt (TokenModel): Authenticated user token payload.
+        inference_manger (IInferenceManager): Business manager used to remove conversation.
+
+    @return
+        None: Deletes the target conversation.
+    """
     return await inference_manger.remove_conversation(
         conversation_id=conversation_id,
         token_jwt=token_jwt
@@ -178,7 +218,18 @@ async def conversations_id_messages_put(
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 
 ) -> MessageResponse:
-    """Resend a message by providing a new prompt."""
+    """
+    Regenerate the last assistant response in a conversation.
+
+    @param
+        conversation_id (UUID): Identifier of target conversation.
+        message_request (MessageRequest): Payload with prompt used for regeneration.
+        token_jwt (TokenModel): Authenticated user token payload.
+        inference_manger (IInferenceManager): Business manager used to regenerate message.
+
+    @return
+        MessageResponse: Regenerated message response saved to conversation.
+    """
     return await inference_manger.message_regeneration(
         token_jwt=token_jwt,
         conversation_id=conversation_id,
@@ -210,7 +261,18 @@ async def conversations_id_messages_post(
     ),
     inference_manger: IInferenceManager = Depends(get_inference_manager)
 ) -> MessageResponse:
-    """Adds a new message to an existing conversation. """
+    """
+    Add a follow-up message to an existing conversation.
+
+    @param
+        conversation_id (UUID): Identifier of target conversation.
+        message_request (MessageRequest): Payload with user message content.
+        token_jwt (TokenModel): Authenticated user token payload.
+        inference_manger (IInferenceManager): Business manager used to generate and store response.
+
+    @return
+        MessageResponse: Newly created message response pair.
+    """
     return await inference_manger.post_message_to_conversation(
         token_jwt=token_jwt,
         conversation_id=conversation_id,

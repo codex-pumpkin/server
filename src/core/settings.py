@@ -5,6 +5,16 @@ from dotenv import load_dotenv
 import os
 
 class MailSettings(BaseModel):
+    """
+    Mail transport and branding configuration.
+
+    @param smtp_server (str): SMTP host used to send transactional emails.
+    @param port (int): SMTP port number.
+    @param app_mail (Annotated[str, EmailStr]): Sender email address.
+    @param password (str): App password or SMTP credential.
+    @param logo (str): Public logo URL used in email templates.
+    @param client_base_url (str): Client application base URL for email links.
+    """
     smtp_server:str
     port:int = Field(ge=0, lt=0xFFFF)
     app_mail:Annotated[str, EmailStr]
@@ -13,17 +23,44 @@ class MailSettings(BaseModel):
     client_base_url:str
 
 class JWTSettings(BaseModel):
+    """
+    JWT token configuration.
+
+    @param algorithm (str): JWT signing algorithm.
+    @param secret_key (str): Secret key used for JWT signing and validation.
+    @param expire_time (int): Access-token expiry time in minutes.
+    """
     algorithm:str
     secret_key:str
     expire_time:int
 
 class RefreshSettings(BaseModel):
+    """
+    Refresh-token configuration.
+
+    @param expire_time (int): Refresh-token expiry time in minutes.
+    """
     expire_time:int
 
 class LLMSettings(BaseModel):
+    """
+    LLM generation behavior configuration.
+
+    @param num_of_regenerations (int): Maximum regeneration attempts after validation failure.
+    """
     num_of_regenerations: int
 
 class GoogleAuthSettings(BaseModel):
+    """
+    Google OAuth client configuration.
+
+    @param client_id (str): OAuth client identifier.
+    @param redirect_uri (str): OAuth callback URI used by this server.
+    @param url (str): Google OAuth authorization endpoint base URL.
+    @param client_secret (str): OAuth client secret.
+    @param token_url (str): Google OAuth token exchange endpoint.
+    @param user_info_url (str): Google user-info endpoint URL.
+    """
     client_id: str
     redirect_uri: str
     url: str
@@ -32,6 +69,15 @@ class GoogleAuthSettings(BaseModel):
     user_info_url: str
 
 class Settings(BaseModel):
+    """
+    Aggregated application settings container.
+
+    @param mail_settings (MailSettings): Email transport settings.
+    @param jwt_settings (JWTSettings): JWT settings.
+    @param refresh_settings (RefreshSettings): Refresh-token settings.
+    @param llm_settings (LLMSettings): LLM runtime settings.
+    @param google_settings (GoogleAuthSettings): Google OAuth settings.
+    """
     mail_settings: MailSettings
     jwt_settings: JWTSettings
     refresh_settings: RefreshSettings
