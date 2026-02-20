@@ -60,6 +60,10 @@ class AnalyticsResponse(BaseModel):
 
     @classmethod
     def validate_usage_length(cls, v: List[int]) -> List[int]:
+        """
+        @param v (List[int]): Usage list to validate for expected interval count and value bounds.
+        @return List[int]: Validated usage list when checks pass.
+        """
         if len(v) != 96:
             raise ValueError("usage must contain exactly 96 values (24h / 15min)")
         if any(x < 0 for x in v):
@@ -67,20 +71,28 @@ class AnalyticsResponse(BaseModel):
         return v
 
     def to_str(self) -> str:
-        """Returns the string representation of the model using alias"""
+        """
+        @return str: Returns the string representation of the model using alias.
+        """
         return pprint.pformat(self.model_dump(by_alias=True))
 
     def to_json(self) -> str:
-        """Returns the JSON representation of the model using alias"""
+        """
+        @return str: Returns the JSON representation of the model using alias.
+        """
         return json.dumps(self.to_dict(), default=str)
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of AnalyticsResponse from a JSON string"""
+        """
+        @param json_str (str): JSON string payload used to create the model instance.
+        @return Self: Create an instance of AnalyticsResponse from a JSON string.
+        """
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return the dictionary representation of the model using alias.
+        """
+        @return Dict[str, Any]: Return the dictionary representation of the model using alias.
 
         Differences from calling pydantic's `self.model_dump(by_alias=True)`:
 
@@ -102,7 +114,10 @@ class AnalyticsResponse(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of AnalyticsResponse from a dict"""
+        """
+        @param obj (Dict): Dictionary payload used to create the model instance.
+        @return Self: Create an instance of AnalyticsResponse from a dict.
+        """
         if obj is None:
             return None
 
@@ -115,5 +130,7 @@ class AnalyticsResponse(BaseModel):
             "usage": obj.get("usage")
         })
         return _obj
+
+
 
 

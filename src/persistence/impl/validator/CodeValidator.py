@@ -14,6 +14,7 @@ class CodeValidator(ICodeValidator):
 
     async def validate_code(self, code: str) -> ValidationResult:
         # Create a temporary .cir file with the SPICE code
+        """Validate code."""
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".cir", delete=False) as tmp_file:
             tmp_file.write(code)
             tmp_file.flush()
@@ -76,6 +77,7 @@ class CodeValidator(ICodeValidator):
 
 
 async def _main():
+    """Main."""
     code = """
     * RC circuit test
     V1 1 0 DC 5

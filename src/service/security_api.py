@@ -1,8 +1,10 @@
 # coding: utf-8
 import datetime
-from typing import List
+from typing import Optional
+from uuid import UUID
 
 from fastapi import Depends, Security  # noqa: F401
+from fastapi import HTTPException, status
 from fastapi.openapi.models import OAuthFlowImplicit, OAuthFlows  # noqa: F401
 from fastapi.security import (  # noqa: F401
     HTTPAuthorizationCredentials,
@@ -15,27 +17,25 @@ from fastapi.security import (  # noqa: F401
     SecurityScopes,
 )
 from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
-from fastapi import HTTPException, status
-from src.core.dtos.extra_models import TokenModel
+
 from src.business.impl.auth import check_if_jwt_valid, decode_jwt
-from typing import Optional
-from uuid import UUID
+from src.core.dtos.extra_models import TokenModel
+
 
 def get_token_jwt(
-    access_token: Optional[UUID] = Security(
-        APIKeyHeader(name="access_token", auto_error=False)
-    )
+        access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> Optional[TokenModel]:
-    if not access_token:
+    """Get token jwt."""
+    if access_token is None:
         return None
 
-    if not check_if_jwt_valid(str(access_token)):
+    if not check_if_jwt_valid(access_token.credentials):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="access_token isnt valid!",
         )
 
-    payload = decode_jwt(str(access_token))
+    payload = decode_jwt(access_token.credentials)
     token_data = TokenModel(**payload)
 
     if token_data.exp.replace(tzinfo=None) < datetime.datetime.now(datetime.UTC).replace(tzinfo=None):
@@ -47,10 +47,9 @@ def get_token_jwt(
     return token_data
 
 def get_token_jwt_mandatory(
-    access_token: UUID = Security(
-        APIKeyHeader(name="access_token", auto_error=False)
-    )
+        access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> TokenModel:
+    """Get token jwt mandatory."""
     token = get_token_jwt(access_token=access_token)
     if token is None:
         raise HTTPException(
@@ -60,10 +59,9 @@ def get_token_jwt_mandatory(
     return token
 
 def get_token_jwt_mandatory_admin(
-    access_token: UUID = Security(
-        APIKeyHeader(name="access_token", auto_error=False)
-    )
+        access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> TokenModel:
+    """Get token jwt mandatory admin."""
     token_data = get_token_jwt_mandatory(access_token=access_token)
 
     if not token_data.is_admin:

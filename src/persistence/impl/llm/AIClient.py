@@ -189,6 +189,7 @@ class AIClient(IAIClient):
         api_url: str="https://api.openai.com/v1",
     ) -> str:
 
+        """Get response new."""
         input_to_llm = [
             {
                 "role": "system",
@@ -248,6 +249,7 @@ class AIClient(IAIClient):
             api_url: str="https://api.openai.com/v1",
             ) -> str:
 
+        """Regenerate new."""
         input_to_llm=[
             {
                 "role": "system",
@@ -308,6 +310,7 @@ class AIClient(IAIClient):
             api_url: str="https://api.openai.com/v1",
             ) -> str:
         
+        """Get response old."""
         try:
             client = AsyncOpenAI(
                 api_key=api_key,
@@ -354,6 +357,7 @@ class AIClient(IAIClient):
             api_url: str="https://api.openai.com/v1"
             ) -> str:
         
+        """Regenerate old."""
         try:
             client = AsyncOpenAI(
                 api_key=api_key,

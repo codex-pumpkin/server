@@ -7,6 +7,7 @@ import asyncio
 
 class GraphGenerator(IGraphGenerator):
     async def gen_graph(self, code: str) -> str:
+        """Gen graph."""
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".cir", delete=False) as tmp_file:
             tmp_file.write(code)
             tmp_path = tmp_file.name
@@ -36,6 +37,7 @@ class GraphGenerator(IGraphGenerator):
                 pass
 
     async def _parse_circuit(self, circuit_elements):
+        """Parse circuit."""
         components = []
         for element in circuit_elements:
             try:
@@ -327,6 +329,7 @@ X1 1 2 3 4 DIFF_AMP
 if __name__ == "__main__":
     """Test function for simple circuits and MOSFET circuits"""
     async def main():
+        """Main."""
         test_circuit = test2
         generator = GraphGenerator()
         components = await generator.gen_graph(test_circuit)

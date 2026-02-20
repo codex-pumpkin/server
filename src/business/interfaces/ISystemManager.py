@@ -13,22 +13,27 @@ from src.core.dtos import (
 class ISystemManager(ABC):
     @abstractmethod
     async def get_quota_settings(self):
+        """Get quota settings."""
         pass
 
     @abstractmethod
     async def apply_quota_adjustment(self, quota_config: QuotaConfig):
+        """Apply quota adjustment."""
         pass
 
     @abstractmethod
     async def get_analytics(self):
+        """Get analytics."""
         pass
 
     @abstractmethod
     async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
+        """Get llm configs."""
         pass
 
     @abstractmethod
     async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
+        """Validate and persist llm config."""
         pass
 
     @abstractmethod
@@ -40,6 +45,7 @@ class ISystemManager(ABC):
         ],
         llm_configuration_request: LLMConfigurationRequest
     ):
+        """Update llm config."""
         pass
 
     @abstractmethod
@@ -50,4 +56,5 @@ class ISystemManager(ABC):
             Field(description="ID of the LLM configuration to delete")
         ]
     ):
+        """Process llm removal."""
         pass

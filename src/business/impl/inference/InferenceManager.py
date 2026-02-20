@@ -32,6 +32,13 @@ from uuid import UUID
 class InferenceManager(IInferenceManager):
 
     async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
+        """
+        Retrieve all conversations belonging to the authenticated user.
+
+        @param token_jwt (TokenModel): Decoded JWT payload containing user id in `sub`.
+
+        @return List[ConversationResponse]: User conversation list with metadata and messages.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         return await repo.get_chats(str(token_jwt.sub))
 
@@ -44,6 +51,15 @@ class InferenceManager(IInferenceManager):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ):
+        """
+        Append a new generated response to an existing conversation.
+
+        @param conversation_id (UUID): Identifier of the target conversation.
+        @param message_request (MessageRequest): Payload containing the user message text.
+        @param token_jwt (TokenModel): Decoded JWT payload for access validation.
+
+        @return MessageResponse: Newly persisted message/response pair.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -72,6 +88,15 @@ class InferenceManager(IInferenceManager):
         message_request: MessageRequest,
         token_jwt: TokenModel
     ) -> MessageResponse:
+        """
+        Regenerate the most recent assistant response for a conversation.
+
+        @param conversation_id (UUID): Identifier of the target conversation.
+        @param message_request (MessageRequest): User prompt used for regeneration.
+        @param token_jwt (TokenModel): Decoded JWT payload for access validation.
+
+        @return MessageResponse: Replacement message generated and stored for the conversation.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -102,6 +127,14 @@ class InferenceManager(IInferenceManager):
         ],
         token_jwt: TokenModel
     ):
+        """
+        Delete a conversation owned by the authenticated user.
+
+        @param conversation_id (UUID): Identifier of the conversation to delete.
+        @param token_jwt (TokenModel): Decoded JWT payload for ownership validation.
+
+        @return None: Removes the conversation when ownership and existence checks pass.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
@@ -124,6 +157,14 @@ class InferenceManager(IInferenceManager):
         self,
         request: ConversationRequest
     ) -> ConversationResponse:
+        """
+        Generate a one-off conversation result for unauthenticated users.
+
+        @param request (ConversationRequest): Conversation payload including model id,
+        @param target language, optional name, and first message.
+
+        @return ConversationResponse: In-memory conversation object with a single generated message.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         api_key = await repo.get_key_of_model(request.llm_model_config_id)
         model = await repo.get_model(request.llm_model_config_id)
@@ -168,6 +209,14 @@ class InferenceManager(IInferenceManager):
         token_jwt: TokenModel,
         request:ConversationRequest
     ) -> ConversationResponse:
+        """
+        Create a persisted conversation for an authenticated user and add first message.
+
+        @param token_jwt (TokenModel): Decoded JWT payload containing user identifier.
+        @param request (ConversationRequest): Conversation creation payload.
+
+        @return ConversationResponse: Persisted conversation with the initial generated reply.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
@@ -186,6 +235,15 @@ class InferenceManager(IInferenceManager):
         token_jwt: Optional[TokenModel],
         conversation_request: ConversationRequest
     ) -> ConversationResponse:
+        """
+        Start a conversation in authenticated or unauthenticated mode.
+
+        @param token_jwt (Optional[TokenModel]): Auth token payload when user is logged in,
+            or `None` for guest flow.
+        @param conversation_request (ConversationRequest): Conversation start request.
+
+        @return ConversationResponse: Conversation object returned from the selected flow.
+        """
         if token_jwt is None:
             return await self._start_conversation_not_logged_in(
                 request=conversation_request
@@ -206,6 +264,15 @@ class InferenceManager(IInferenceManager):
         update_conversation_request: UpdateConversationRequest,
         token_jwt: TokenModel
     ) -> None:
+        """
+        Update mutable conversation fields such as name and pin state.
+
+        @param conversation_id (UUID): Identifier of the conversation to update.
+        @param update_conversation_request (UpdateConversationRequest): New editable values.
+        @param token_jwt (TokenModel): Decoded JWT payload for ownership validation.
+
+        @return None: Persists the requested conversation updates.
+        """
         repo = await PersistenceFactory.get_entity_repository()
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
 
@@ -234,6 +301,18 @@ class InferenceManager(IInferenceManager):
         repo: IEntityRepository,
         remove_last: bool = False
     ) -> Message:
+        """
+        Generate a message payload by invoking the LLM and graph generator.
+
+        @param conversation_id (UUID): Conversation identifier used for lookup and access checks.
+        @param message_request (MessageRequest): User message used as LLM input.
+        @param token_jwt (TokenModel): Decoded JWT payload for access control.
+        @param repo (IEntityRepository): Repository instance used for data loading.
+        @param remove_last (bool, optional): Whether to drop the last turn from history,
+        @param primarily used for regeneration. Defaults to False.
+
+        @return Message: Message entity ready for persistence.
+        """
         chat = await repo.get_chat_by_id(chat_id=str(conversation_id))
         if chat is None:
             raise NotFoundError(
@@ -271,6 +350,13 @@ class InferenceManager(IInferenceManager):
         return message
 
     async def _get_graph_representation(self, llm_response: str) -> str:
+        """
+        Convert generated code into graph representation.
+
+        @param llm_response (str): Generated code text returned by the language model.
+
+        @return str: Graph serialization produced by the graph generator backend.
+        """
         graph_generator = await PersistenceFactory.get_graph_generator()
         graph = await graph_generator.gen_graph(llm_response)
         return graph
@@ -284,10 +370,15 @@ class InferenceManager(IInferenceManager):
         llm_url: str
     ) -> str:
         """
-        Generate code based on user input, validate it, and regenerate if necessary.
-        user_input: The user's input prompt.
-        conversation_history: chat of user with LLM.
-        Returns the valid generated code as a string.
+        Generate code, validate it, and regenerate when validation fails.
+
+        @param user_input (str): Current user prompt sent to the model.
+        @param conversation_history (List[Tuple[str, str]]): Prior conversation turns.
+        @param api_key (str): API key for the configured LLM provider.
+        @param model (str): Provider-specific model identifier.
+        @param llm_url (str): Base URL for the LLM API endpoint.
+
+        @return str: Valid generated code or a fallback failure string if retries are exhausted.
         """
         prompt_manager = await BusinessFactory.get_prompt_manager()
         validator = await PersistenceFactory.get_code_validator()
@@ -319,7 +410,13 @@ class InferenceManager(IInferenceManager):
     
     
     async def _clean_markdown(self, code: str) -> str:
-        """Remove markdown formatting from the generated code."""
+        """
+        Remove fenced markdown wrappers from generated code blocks.
+
+        @param code (str): Raw LLM output that may include triple-backtick fences.
+
+        @return str: Cleaned code content without markdown fencing.
+        """
         if code.startswith("```") and code.endswith("```"):
             code = "\n".join(code.split("\n")[1:-1])
         return code

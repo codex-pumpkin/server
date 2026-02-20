@@ -17,6 +17,7 @@ ids = []
     Returns a list of text chunks
 '''
 def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
+    """Chunk by tokens."""
     tokens = enc.encode(text)
     chunks = []
 
@@ -34,6 +35,7 @@ def chunk_by_tokens(text : str, max_tokens=500, overlap=100) -> list[str]:
    Store in documents, metadatas, and ids lists
 '''
 def main(source:Union[Path, str]) -> None:
+    """Main."""
     for md_file in source.glob("*.md"):
         name = md_file.name
         content = md_file.read_text(encoding="utf-8")
@@ -54,7 +56,8 @@ def main(source:Union[Path, str]) -> None:
    Add documents to the collection
 '''
 def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Docs") -> None:
-    client = chromadb.PersistentClient(path=source)
+    """Build vector db."""
+    client = chromadb.HttpClient(host="chroma", port=8000)
 
     collection = client.get_or_create_collection(
         name=namedb,

@@ -11,16 +11,20 @@ class IUserInfoManager(ABC):
 
     @abstractmethod
     async def get_account_info(self, token_jwt: TokenModel) -> AccountResponse:
+        """Get account info."""
         pass
 
     @abstractmethod
     async def update_user_name_email(self, token_jwt: TokenModel, update_account_request: UpdateAccountRequest):
+        """Update user name email."""
         pass
 
     @abstractmethod
     async def get_profile_picture(self, token_jwt: TokenModel) -> Optional[bytes]:
+        """Get profile picture."""
         pass
 
     @abstractmethod
     async def update_profile_picture(self, user_id: TokenModel, image_data: bytes) -> None:
+        """Update profile picture."""
         pass

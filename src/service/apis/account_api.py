@@ -58,7 +58,16 @@ async def account_get(
     ),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> AccountResponse:
-    """Returns the account information for the currently authenticated user."""
+    """
+    Return account information for the currently authenticated user.
+
+    @param
+        token_jwt (TokenModel): Authenticated user token payload resolved from security dependency.
+        user_info (IUserInfoManager): Business manager used to fetch account data.
+
+    @return
+        AccountResponse: Account details for the authenticated user.
+    """
     return await user_info.get_account_info(token_jwt=token_jwt)
 
 
@@ -81,7 +90,17 @@ async def account_put(
     ),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ) -> None:
-    """Updates the authenticated user&#39;s email and username.  - **Both fields must be provided**.   - If the email is changed:   - User will be logged out from all sessions.   - Account will be set to unverified.   - A new email-verification email will be sent. """
+    """
+    Update authenticated user's email and username.
+
+    @param
+        update_account_request (UpdateAccountRequest): Payload with new email and username values.
+        token_jwt (TokenModel): Authenticated user token payload resolved from security dependency.
+        user_info (IUserInfoManager): Business manager used to apply account updates.
+
+    @return
+        None: Persists account updates and triggers reverification flow if email changes.
+    """
     await user_info.update_user_name_email(
         token_jwt=token_jwt,
         update_account_request=update_account_request

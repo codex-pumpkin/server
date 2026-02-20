@@ -1,5 +1,7 @@
 import asyncio
+import asyncio
 from pathlib import Path
+from unittest import result
 from unittest import result
 import chromadb
 from chromadb.utils import embedding_functions
@@ -23,8 +25,11 @@ class SemanticRepository(ISemanticRepository):
     @staticmethod
     def get_chroma_client() -> chromadb.PersistentClient:
         """Get chroma client."""
+    def get_chroma_client() -> chromadb.PersistentClient:
+        """Get chroma client."""
         global _chroma_client
         if _chroma_client is None:
+            _chroma_client = chromadb.HttpClient(host="chroma", port=8000)
             _chroma_client = chromadb.HttpClient(host="chroma", port=8000)
         return _chroma_client
 
@@ -37,8 +42,13 @@ class SemanticRepository(ISemanticRepository):
         """Get similar chunks."""
         result = await asyncio.to_thread(
             self.collection.query,
+    async def get_similar_chunks(self, user_input: str, num_of_chunks: int) -> list:
+        """Get similar chunks."""
+        result = await asyncio.to_thread(
+            self.collection.query,
             query_texts=[user_input],
             n_results=num_of_chunks,
             include=["documents"]
         )
         return result["documents"][0]
+    

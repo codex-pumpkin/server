@@ -70,6 +70,7 @@ class EntityRepository(IEntityRepository):
     # User-related
     # --------------------
     async def get_user_by_id(self, user_id: str) -> Optional[AccountResponse]:
+        """Get user by id."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session, user_id)
             if user is None:
@@ -77,6 +78,7 @@ class EntityRepository(IEntityRepository):
             return user.to_dto()
 
     async def get_user_by_email(self, email: str) -> Optional[AccountResponse]:
+        """Get user by email."""
         async with async_session_factory() as session:
             user = await get_user_by_email(session, email)
             if user is None:
@@ -84,6 +86,7 @@ class EntityRepository(IEntityRepository):
             return user.to_dto()
 
     async def create_user(self, user: SignupRequest) -> AccountResponse:
+        """Create user."""
         user_orm = UsersOrm(
             email=user.email,
             hashed_password=hash_password(user.password),
@@ -124,6 +127,7 @@ class EntityRepository(IEntityRepository):
                 raise UserConflictError(field=field)
 
     async def update_user(self, user_id: str, email: str, username: str) -> bool:
+        """Update user."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             user.email = email
@@ -135,6 +139,7 @@ class EntityRepository(IEntityRepository):
     # Authentication & validation
     # --------------------
     async def authenticate(self, username:Optional[str], email: Optional[str], password: str) -> Optional[AccountResponse]:
+        """Authenticate."""
         async with async_session_factory() as session:
             user = None
             if email is not None:
@@ -149,6 +154,7 @@ class EntityRepository(IEntityRepository):
 
 
     async def is_user_verified(self, user_id: str) -> bool:
+        """Is user verified."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             if user is None:
@@ -156,6 +162,7 @@ class EntityRepository(IEntityRepository):
             return user.is_verified
 
     async def unverify_user(self, user_id:str) -> bool:
+        """Unverify user."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             if user is None:
@@ -165,6 +172,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def verify_user(self, user_id: str) -> bool:
+        """Verify user."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             if not user:
@@ -174,6 +182,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def is_user_admin(self, user_id: str) -> bool:
+        """Is user admin."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             if user is None:
@@ -181,6 +190,7 @@ class EntityRepository(IEntityRepository):
             return user.is_admin
 
     async def is_email_taken(self, email: str) -> bool:
+        """Is email taken."""
         async with async_session_factory() as session:
             user = await get_user_by_email(session=session, email=email)
             if user is None:
@@ -188,6 +198,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def is_username_taken(self, username: str) -> bool:
+        """Is username taken."""
         async with async_session_factory() as session:
             user = await get_user_by_username(session=session, username=username)
             if user is None:
@@ -195,6 +206,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def change_password(self, user_id: str, new_password: str) -> bool:
+        """Change password."""
         async with async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
             if user is None:
@@ -207,6 +219,7 @@ class EntityRepository(IEntityRepository):
     # Token-related
     # --------------------
     async def get_token(self, token_id: str) -> Optional[TokenInfo]:
+        """Get token."""
         async with async_session_factory() as session:
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
@@ -214,11 +227,13 @@ class EntityRepository(IEntityRepository):
             return token.to_dto()
 
     async def create_token(self, user_id: str, token_type:Union[Literal["refresh"], Literal["email"], Literal["password"]]) -> TokenInfo:
+        """Create token."""
         async with async_session_factory() as session:
             token = await create_token(session=session, user_id=user_id, token_type=token_type)
             return token.to_dto()
 
     async def change_token(self, token_id: str) -> Optional[TokenInfo]:
+        """Change token."""
         async with async_session_factory() as session:
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
@@ -236,10 +251,12 @@ class EntityRepository(IEntityRepository):
             return new_token.to_dto()
 
     async def invalidate_all_refresh_tokens(self, user_id:str):
+        """Invalidate all refresh tokens."""
         async with async_session_factory() as session:
             await invalidate_all_refresh(session=session, user_id=user_id)
 
     async def invalidate_token(self, token_id: str) -> bool:
+        """Invalidate token."""
         async with async_session_factory() as session:
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
@@ -249,6 +266,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def is_token_valid(self, token_id: str) -> bool:
+        """Is token valid."""
         async with async_session_factory() as session:
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
@@ -261,6 +279,7 @@ class EntityRepository(IEntityRepository):
     # Chat / Conversation-related
     # --------------------
     async def get_chats(self, user_id: str) -> List[ConversationResponse]:
+        """Get chats."""
         async with async_session_factory() as session:
             chat_list = await get_chats(
                 session=session,
@@ -272,6 +291,7 @@ class EntityRepository(IEntityRepository):
 
 
     async def get_chat_by_id(self, chat_id: str) -> Optional[ConversationResponse]:
+        """Get chat by id."""
         async with async_session_factory() as session:
             chat = await get_chat_by_id(session=session, conversation_id=chat_id)
             if chat is None:
@@ -280,6 +300,7 @@ class EntityRepository(IEntityRepository):
 
 
     async def create_chat(self, user_id: str, request: ConversationRequest) -> str:
+        """Create chat."""
         async with async_session_factory() as session:
             chat_orm = ConversationsOrm(
                 name=request.name,
@@ -293,6 +314,7 @@ class EntityRepository(IEntityRepository):
             return chat_orm.id
 
     async def update_chat(self, chat_id: str, name: str, is_pinned: bool) -> bool:
+        """Update chat."""
         async with async_session_factory() as session:
             chat = await get_chat_by_id(
                 session=session,
@@ -310,6 +332,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def delete_chat(self, chat_id:str) -> bool:
+        """Delete chat."""
         async with async_session_factory() as session:
             chat = await get_chat_by_id(
                 session=session,
@@ -326,6 +349,7 @@ class EntityRepository(IEntityRepository):
     # Message-related
     # --------------------
     async def add_message(self, chat_id: str, message: Message) -> bool:
+        """Add message."""
         async with async_session_factory() as session:
             orm = MessagesOrm(
                 prompt=message.message,
@@ -344,6 +368,7 @@ class EntityRepository(IEntityRepository):
             return True
 
     async def get_messages(self, chat_id: str) -> List[MessageResponse]:
+        """Get messages."""
         async with async_session_factory() as session:
             messages_orm = await get_chat_messages(session=session, conversation_id=chat_id)
             messages_dto = [message.to_dto() for message in messages_orm]
@@ -351,6 +376,7 @@ class EntityRepository(IEntityRepository):
 
 
     async def delete_last_message(self, chat_id: str) -> bool:
+        """Delete last message."""
         async with async_session_factory() as session:
             messages = await get_chat_messages(session=session, conversation_id=chat_id)
             last = messages[-1]
@@ -362,6 +388,7 @@ class EntityRepository(IEntityRepository):
     # LLM Model-related
     # --------------------
     async def add_model(self, name: str, model_name: str, url: str, key: str) -> str:
+        """Add model."""
         async with async_session_factory() as session:
             orm = LlmModelsOrm(
                 name=name,
@@ -375,6 +402,7 @@ class EntityRepository(IEntityRepository):
             return orm.id
 
     async def remove_model(self, model_id: str) -> None:
+        """Remove model."""
         async with async_session_factory() as session:
             await delete_llm(session=session, llm_id=model_id)
 
@@ -386,6 +414,7 @@ class EntityRepository(IEntityRepository):
         url: str,
         key: Optional[str]
     ) -> None:
+        """Change model."""
         async with async_session_factory() as session:
             await change_llm(
                 session=session,
@@ -397,6 +426,7 @@ class EntityRepository(IEntityRepository):
             )
 
     async def get_model(self, model_id: str) -> Optional[LLMConfigurationResponse]:
+        """Get model."""
         async with async_session_factory() as session:
             llm_config = await get_model_by_id(session=session, llm_id=model_id)
             if llm_config is None:
@@ -404,6 +434,7 @@ class EntityRepository(IEntityRepository):
             return llm_config.to_dto()
 
     async def get_key_of_model(self, model_id:str) -> Optional[str]:
+        """Get key of model."""
         async with async_session_factory() as session:
             llm_config = await get_model_by_id(session=session, llm_id=model_id)
             if llm_config is None:
@@ -411,12 +442,14 @@ class EntityRepository(IEntityRepository):
             return llm_config.api_key
 
     async def get_llm_configs(self) -> List[LLMConfigurationResponse]:
+        """Get llm configs."""
         async with async_session_factory() as session:
             orm_configs = await get_all_llm_configs(session)
             dto_configs = [config.to_dto() for config in orm_configs]
             return dto_configs
 
     async def get_llm_by_chat_id(self, chat_id:str) -> Optional[LLMConfigurationRequest]:
+        """Get llm by chat id."""
         async with async_session_factory() as session:
             llm_model = await get_api_by_conversation_id(
                 session=session,
@@ -431,6 +464,7 @@ class EntityRepository(IEntityRepository):
     # Quota-related
     # --------------------
     async def change_quota(self, quota: QuotaConfig) -> None:
+        """Change quota."""
         async with async_session_factory() as session:
             await set_quota(
                 session=session,
@@ -439,11 +473,13 @@ class EntityRepository(IEntityRepository):
             )
 
     async def get_quota(self) -> QuotaConfig:
+        """Get quota."""
         async with async_session_factory() as session:
             quota_orm = await get_quota(session=session)
             return quota_orm.to_dto()
 
     async def get_user_quota_remaining(self, user_id: str) -> int:
+        """Get user quota remaining."""
         async with async_session_factory() as session:
             res = await get_messages_sent_today_by_user(session=session, user_id=user_id)
             user = await self.get_user_by_id(user_id=user_id)
@@ -452,12 +488,14 @@ class EntityRepository(IEntityRepository):
             return max(0, daily_quota - res)
 
     async def is_quota_exceeded(self, user_id: str) -> bool:
+        """Is quota exceeded."""
         return (await self.get_user_quota_remaining(user_id=user_id)) == 0
 
     # --------------------
     # Analytics / Usage-related
     # --------------------
     async def get_usage_data(self) -> AnalyticsResponse:
+        """Get usage data."""
         async with async_session_factory() as session:
             return await get_analytics(session=session)
 

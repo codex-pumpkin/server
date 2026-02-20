@@ -15,14 +15,32 @@ class MailSettings(BaseModel):
     @param logo (str): Public logo URL used in email templates.
     @param client_base_url (str): Client application base URL for email links.
     """
+    """
+    Mail transport and branding configuration.
+
+    @param smtp_server (str): SMTP host used to send transactional emails.
+    @param port (int): SMTP port number.
+    @param app_mail (Annotated[str, EmailStr]): Sender email address.
+    @param password (str): App password or SMTP credential.
+    @param logo (str): Public logo URL used in email templates.
+    @param client_base_url (str): Client application base URL for email links.
+    """
     smtp_server:str
     port:int = Field(ge=0, lt=0xFFFF)
     app_mail:Annotated[str, EmailStr]
     password:str
     logo:str
     client_base_url:str
+    client_base_url:str
 
 class JWTSettings(BaseModel):
+    """
+    JWT token configuration.
+
+    @param algorithm (str): JWT signing algorithm.
+    @param secret_key (str): Secret key used for JWT signing and validation.
+    @param expire_time (int): Access-token expiry time in minutes.
+    """
     """
     JWT token configuration.
 
@@ -40,6 +58,11 @@ class RefreshSettings(BaseModel):
 
     @param expire_time (int): Refresh-token expiry time in minutes.
     """
+    """
+    Refresh-token configuration.
+
+    @param expire_time (int): Refresh-token expiry time in minutes.
+    """
     expire_time:int
 
 class LLMSettings(BaseModel):
@@ -48,9 +71,24 @@ class LLMSettings(BaseModel):
 
     @param num_of_regenerations (int): Maximum regeneration attempts after validation failure.
     """
+    """
+    LLM generation behavior configuration.
+
+    @param num_of_regenerations (int): Maximum regeneration attempts after validation failure.
+    """
     num_of_regenerations: int
 
 class GoogleAuthSettings(BaseModel):
+    """
+    Google OAuth client configuration.
+
+    @param client_id (str): OAuth client identifier.
+    @param redirect_uri (str): OAuth callback URI used by this server.
+    @param url (str): Google OAuth authorization endpoint base URL.
+    @param client_secret (str): OAuth client secret.
+    @param token_url (str): Google OAuth token exchange endpoint.
+    @param user_info_url (str): Google user-info endpoint URL.
+    """
     """
     Google OAuth client configuration.
 
@@ -125,6 +163,8 @@ mail_settings = MailSettings(
     port=os.getenv("APP_MAIL_SMTP_PORT"),
     app_mail=os.getenv("APP_MAIL"),
     password=os.getenv("MAIL_PASSWORD"),
+    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
+    client_base_url=os.getenv("CLIENT_BASE_URL")
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
     client_base_url=os.getenv("CLIENT_BASE_URL")
 )

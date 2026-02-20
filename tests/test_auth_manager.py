@@ -27,6 +27,7 @@ def _token_info(
     user_id: uuid.UUID | None = None,
     expires_delta_minutes: int = 30,
 ) -> TokenInfo:
+    """Token info."""
     user_id = user_id or uuid.uuid4()
     now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     return TokenInfo(
@@ -40,6 +41,7 @@ def _token_info(
 
 
 def _user_dto(user_id: uuid.UUID | None = None, verified: bool = True, is_admin: bool = False):
+    """User dto."""
     user_id = user_id or uuid.uuid4()
     now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp()
     return SimpleNamespace(
@@ -54,7 +56,9 @@ def _user_dto(user_id: uuid.UUID | None = None, verified: bool = True, is_admin:
 
 
 def _patch_repo(monkeypatch, repo):
+    """Patch repo."""
     async def _get_entity_repository(cls):
+        """Get entity repository."""
         return repo
 
     monkeypatch.setattr(
@@ -63,13 +67,16 @@ def _patch_repo(monkeypatch, repo):
 
 
 def _patch_mail_sender(monkeypatch, sender):
+    """Patch mail sender."""
     async def _get_mail_sender(cls):
+        """Get mail sender."""
         return sender
 
     monkeypatch.setattr(PersistenceFactory, "get_mail_sender", classmethod(_get_mail_sender))
 
 
 def test_authenticate_success_returns_tokens(monkeypatch):
+    """Test authenticate success returns tokens."""
     repo = AsyncMock()
     user = _user_dto(verified=True)
     refresh = _token_info(token_type="refresh", user_id=user.id)
@@ -90,6 +97,7 @@ def test_authenticate_success_returns_tokens(monkeypatch):
 
 
 def test_authenticate_raises_when_user_missing(monkeypatch):
+    """Test authenticate raises when user missing."""
     repo = AsyncMock()
     repo.authenticate.return_value = None
     _patch_repo(monkeypatch, repo)
@@ -102,6 +110,7 @@ def test_authenticate_raises_when_user_missing(monkeypatch):
 
 
 def test_authenticate_raises_when_user_not_verified(monkeypatch):
+    """Test authenticate raises when user not verified."""
     repo = AsyncMock()
     repo.authenticate.return_value = _user_dto(verified=False)
     _patch_repo(monkeypatch, repo)
@@ -114,6 +123,7 @@ def test_authenticate_raises_when_user_not_verified(monkeypatch):
 
 
 def test_refresh_access_token_success_includes_admin_claim(monkeypatch):
+    """Test refresh access token success includes admin claim."""
     repo = AsyncMock()
     user = _user_dto(is_admin=True)
     old_token = _token_info(token_type="refresh", user_id=user.id)
@@ -135,6 +145,7 @@ def test_refresh_access_token_success_includes_admin_claim(monkeypatch):
 
 
 def test_refresh_access_token_rejects_wrong_token_type(monkeypatch):
+    """Test refresh access token rejects wrong token type."""
     repo = AsyncMock()
     wrong_token = _token_info(token_type="email")
     repo.get_token.return_value = wrong_token
@@ -148,6 +159,7 @@ def test_refresh_access_token_rejects_wrong_token_type(monkeypatch):
 
 
 def test_verify_email_token_invalid_type_raises(monkeypatch):
+    """Test verify email token invalid type raises."""
     repo = AsyncMock()
     token = _token_info(token_type="password")
     repo.get_token.return_value = token
@@ -161,6 +173,7 @@ def test_verify_email_token_invalid_type_raises(monkeypatch):
 
 
 def test_initiate_password_recovery_sends_mail(monkeypatch):
+    """Test initiate password recovery sends mail."""
     repo = AsyncMock()
     mail_sender = AsyncMock()
     user = _user_dto()
@@ -179,6 +192,7 @@ def test_initiate_password_recovery_sends_mail(monkeypatch):
 
 
 def test_complete_password_recovery_changes_password(monkeypatch):
+    """Test complete password recovery changes password."""
     repo = AsyncMock()
     token = _token_info(token_type="password", user_id=uuid.uuid4())
     repo.get_token.return_value = token
@@ -193,6 +207,7 @@ def test_complete_password_recovery_changes_password(monkeypatch):
 
 
 def test_register_creates_user_and_sends_verification(monkeypatch):
+    """Test register creates user and sends verification."""
     repo = AsyncMock()
     user = _user_dto()
     repo.create_user.return_value = user
@@ -205,5 +220,5 @@ def test_register_creates_user_and_sends_verification(monkeypatch):
     asyncio.run(manager.register(request))
 
     repo.create_user.assert_awaited_once_with(request)
-    manager.generate_email_verification.assert_awaited_once_with(user)
+    manager.generate_email_verification.assert_awaited_once_with(user.id, user.email)
 

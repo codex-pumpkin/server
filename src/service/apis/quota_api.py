@@ -43,7 +43,16 @@ async def quota_get(
     system_manger : ISystemManager = Depends(get_system_manager),
     token_jwt: TokenModel = Security(get_token_jwt)
 ) -> QuotaConfig:
-    """Returns the current quota configuration."""
+    """
+    Return current global quota configuration.
+
+    @param
+        system_manger (ISystemManager): Business manager used to load quota settings.
+        token_jwt (TokenModel): Authenticated token payload from security dependency.
+
+    @return
+        QuotaConfig: Active quota settings used by the system.
+    """
     return await system_manger.get_quota_settings()
 
 
@@ -63,5 +72,15 @@ async def quota_put(
     token_jwt: TokenModel = Security(get_token_jwt_mandatory_admin),
     system_manger: ISystemManager = Depends(get_system_manager)
 ) -> None:
-    """Updates the quota limits for members and admins. Only for admins."""
+    """
+    Update quota configuration values.
+
+    @param
+        quota_config (QuotaConfig): Payload containing updated quota limits.
+        token_jwt (TokenModel): Admin-authenticated token payload.
+        system_manger (ISystemManager): Business manager used to persist quota updates.
+
+    @return
+        None: Saves new quota settings.
+    """
     return await system_manger.apply_quota_adjustment(quota_config=quota_config)

@@ -15,19 +15,22 @@ Backend API service for authentication and quota management, built with FastAPI.
 - `src/service/apis/`: API routers.
 - `src/business/`: business-layer managers.
 - `src/persistence/`: DB, LLM, mail, and vector-store integrations.
-- `requeirements.txt`: Python dependencies (filename is intentionally spelled this way in repo).
+- `requirements.txt`: Python dependencies.
 
 ## Prerequisites
-- Python `3.13` or newer
+- Python `3.13` (recommended)
 - `pip`
 
 ## Setup
+From the project root:
+
 ```bash
+cd server
 python -m venv .venv
 # Windows PowerShell
 .\.venv\Scripts\Activate.ps1
 
-pip install -r requeirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run (Development)
@@ -45,11 +48,46 @@ Useful docs:
 ## Environment Variables (Mandatory)
 
 The following environment variables **must be set** before starting the application:
- - `APP_MAIL`
- - `MAIL_PASSWORD`
- - `JWT_SECRET`
- - `CLIENT_SECRET`
- - `CLIENT_ID`
+- `APP_MAIL`
+- `MAIL_PASSWORD`
+- `JWT_SECRET`
+- `CLIENT_SECRET`
+- `CLIENT_ID`
+- `APP_MAIL_SMTP_SERVER`
+- `APP_MAIL_SMTP_PORT`
+- `CLIENT_BASE_URL`
+
+You can copy `.env_example` into `.env` and fill in real values:
+
+```bash
+cp .env_example .env
+```
+
+PowerShell equivalent:
+
+```powershell
+Copy-Item .env_example .env
+```
+
+Example:
+
+```env
+APP_MAIL=you@example.com
+MAIL_PASSWORD=your_mail_password
+JWT_SECRET=some_long_random_secret
+CLIENT_SECRET=google_client_secret
+CLIENT_ID=google_client_id
+APP_MAIL_SMTP_SERVER=smtp.gmail.com
+APP_MAIL_SMTP_PORT=587
+CLIENT_BASE_URL=http://localhost:3000
+```
+
+## Tests
+Run tests from the `server` directory:
+
+```bash
+pytest -q
+```
 
 
 ##  Docker Build & Run
