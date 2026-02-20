@@ -15,6 +15,7 @@ from typing import Optional, List
 async def get_analytics(session: AsyncSession) -> AnalyticsResponse:
     end_time = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     start_time = end_time - datetime.timedelta(hours=24)
+    start_time = start_time.replace(tzinfo=None)
 
     stmt = (
         select(MessagesOrm.created_at)

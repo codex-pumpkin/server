@@ -10,7 +10,7 @@ _chroma_client: Optional[chromadb.PersistentClient] | None = None
 
 class SemanticRepository(ISemanticRepository):
 
-    def init(self, namedb: str="SPICE_Docs") -> None:
+    def __init__(self, namedb: str="SPICE_Docs") -> None:
         """Initialize the instance."""
         self.collection = self.get_chroma_client().get_collection(
             name=namedb,
