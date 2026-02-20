@@ -44,9 +44,7 @@ def init_db():
     source = Path("docs")
     source.mkdir(exist_ok=True)
 
-    if chroma_empty:
-        pass
-    else:
+    if not chroma_empty:
         current_hashes = _compute_current_hashes(source)
         cached_hashes = _load_cache()
         if current_hashes != cached_hashes:
@@ -80,7 +78,7 @@ def _file_hash(path: Path) -> str:
 
 def _compute_current_hashes(source: Path) -> dict:
     return {
-        pdf.name: _file_hash(pdf)
+        pdf.name: [_file_hash(pdf), pdf.stat().st_size, pdf.stat().st_mtime]
         for pdf in source.glob("*.pdf")
     }
 
