@@ -461,9 +461,3 @@ class EntityRepository(IEntityRepository):
         async with async_session_factory() as session:
             return await get_analytics(session=session)
 
-    # --------------------
-    # Profile Picture
-    # --------------------
-    async def save_profile_picture(self, user_id: str, file_data: bytes) -> None: ...
-    async def get_profile_picture(self, user_id: str) -> bytes: ...
-    async def delete_profile_picture(self, user_id: str) -> None: ...

@@ -90,6 +90,14 @@ class DatabaseSettings(BaseModel):
         Generates a SQLAlchemy / psycopg compatible database URL.
         """
         return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+    
+class PicturesSettings(BaseModel):
+    """
+    Pictures storage configuration.
+
+    @param path (str): Path to the directory where profile pictures are stored.
+    """
+    path: str
 
 class Settings(BaseModel):
     """
@@ -108,6 +116,7 @@ class Settings(BaseModel):
     llm_settings: LLMSettings
     google_settings: GoogleAuthSettings
     database_settings: DatabaseSettings
+    pictures_settings: PicturesSettings
 
 load_dotenv()
 
@@ -150,13 +159,17 @@ database_settings = DatabaseSettings(
     user=os.getenv("DATABASE_USER"),
     password=os.getenv("DATABASE_PASSWORD"),
 )
-    
 
+pictures_settings = PicturesSettings(
+    path=os.getenv("PICTURES_PATH")
+)
+    
 settings = Settings(
     mail_settings=mail_settings,
     jwt_settings=jwt_settings,
     refresh_settings=refresh_settings,
     llm_settings=llm_settings,
     google_settings=google_settings,
-    database_settings=database_settings
+    database_settings=database_settings,
+    pictures_settings=pictures_settings
 )

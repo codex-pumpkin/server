@@ -8,10 +8,13 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.persistence.impl.database.orm import create_tables
+from src.core.settings import settings
 import uvicorn
+
 
 if __name__ == "__main__":
     create_tables()
+    os.makedirs(settings.pictures_settings.path, exist_ok=True)
     uvicorn.run(
         "src.service.main:app",
         host="0.0.0.0",

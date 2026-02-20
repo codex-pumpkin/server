@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from src.core.dtos import (
     TokenModel,
-    UpdateAccountRequest, AccountResponse,
+    UpdateAccountRequest,
+    AccountResponse,
 )
-
-from uuid import UUID
-
 
 class IUserInfoManager(ABC):
 
@@ -19,9 +18,9 @@ class IUserInfoManager(ABC):
         pass
 
     @abstractmethod
-    async def get_profile_picture(self, token_jwt: TokenModel):
+    async def get_profile_picture(self, token_jwt: TokenModel) -> Optional[bytes]:
         pass
 
     @abstractmethod
-    async def update_profile_picture(self, user_id: UUID, image_data: bytes):
+    async def update_profile_picture(self, user_id: TokenModel, image_data: bytes) -> None:
         pass
