@@ -15,7 +15,9 @@ def _wait_for_chroma():
         except Exception:
             logging.info("⏳ Waiting for Chroma...")
             time.sleep(2)
+    logging.error("❌ Chroma did not respond after multiple attempts.")
     raise RuntimeError("Chroma not ready")
+
 
 def init_db():
     _wait_for_chroma()

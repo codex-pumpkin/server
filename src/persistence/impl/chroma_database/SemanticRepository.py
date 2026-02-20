@@ -25,7 +25,7 @@ class SemanticRepository(ISemanticRepository):
         """Get chroma client."""
         global _chroma_client
         if _chroma_client is None:
-            _chroma_client = chromadb.HttpClient(host="localhost", port=8000)
+            _chroma_client = chromadb.HttpClient(host="chroma", port=8000)
         return _chroma_client
 
     ''' Retrieve similar text chunks from the collection based on user input
