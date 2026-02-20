@@ -1,5 +1,8 @@
+import logging
 import sys
 import asyncio
+from chromadb.utils import embedding_functions
+import chromadb
 
 if sys.platform.startswith('win32'):
     # Windows requires a Proactor-based event loop policy for reliable async IO
@@ -13,11 +16,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.persistence.impl.database.orm import create_tables
 import uvicorn
+from src.persistence.impl.chroma_database.initDB import init_db
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 if __name__ == "__main__":
     # Create database tables before starting the HTTP server so the application
     # can serve requests immediately without waiting for lazy initialization.
     create_tables()
+    init_db()
     # Run the FastAPI app with a fixed host/port configuration for local and
     # containerized deployments; reload stays disabled for production-like runs.
     uvicorn.run(

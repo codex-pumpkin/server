@@ -115,7 +115,7 @@ async def account_put(
 async def account_profile_picture_get(
     token_jwt: TokenModel = Security(get_token_jwt_mandatory),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
-) -> FileResponse:
+)   -> FileResponse:
     """
     Return profile picture for the authenticated user.
 

@@ -17,7 +17,7 @@ class PromptManager(IPromptManager):
             str: Newline-separated context snippets injected into LLM prompting.
         """
         repo = await PersistenceFactory.get_semantic_repository()
-        chunks = repo.get_similar_chunks(user_input, top_k)
+        chunks = await repo.get_similar_chunks(user_input, top_k)
         return "\n".join(chunks)
 
     def make_regeneration_context(self, exit_code: int, raw_output: str) -> str:
