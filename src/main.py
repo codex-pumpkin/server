@@ -1,3 +1,4 @@
+import logging
 import sys
 import asyncio
 from chromadb.utils import embedding_functions
@@ -16,6 +17,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.persistence.impl.database.orm import create_tables
 import uvicorn
 from src.persistence.impl.chroma_database.initDB import init_db
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 if __name__ == "__main__":
     # Create database tables before starting the HTTP server so the application
