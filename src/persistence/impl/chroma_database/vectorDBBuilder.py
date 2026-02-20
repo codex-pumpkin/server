@@ -57,7 +57,7 @@ def main(source:Union[Path, str]) -> None:
 '''
 def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Docs") -> None:
     """Build vector db."""
-    client = chromadb.PersistentClient(path=source)
+    client = chromadb.chromadb.HttpClient(host="chroma", port=8000)
 
     collection = client.get_or_create_collection(
         name=namedb,
