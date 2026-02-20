@@ -5,11 +5,13 @@ from src.persistence.impl.database.models import QuotaOrm
 
 
 async def get_quota(session:AsyncSession) -> QuotaOrm:
+    """Get quota."""
     query = select(QuotaOrm)
     res = await session.execute(query)
     return res.scalars().first()
 
 async def set_quota(session:AsyncSession, member_limit, admin_limit):
+    """Set quota."""
     stmt = update(QuotaOrm).values(
         member_limit=member_limit,
         admin_limit=admin_limit

@@ -7,6 +7,7 @@ from typing import Union
    output: path to folder to save markdown files
 '''
 def convert_pdf_to_markdown(source:Union[Path, str], output:Union[Path, str]) -> None:
+    """Convert pdf to markdown."""
     source = Path(source)
     output = Path(output)
     for pdf_file in source.glob("*.pdf"):
@@ -16,6 +17,7 @@ def convert_pdf_to_markdown(source:Union[Path, str], output:Union[Path, str]) ->
         md_path.write_text(markdown, encoding="utf-8")
 
 def main() -> None:
+    """Main."""
     folder = Path("docs")
     output_folder = Path("markdown")
     convert_pdf_to_markdown(folder, output_folder)

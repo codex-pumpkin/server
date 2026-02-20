@@ -12,6 +12,7 @@ from src.core.settings import settings
 from typing import Optional, List
 
 async def get_model_by_id(session:AsyncSession, llm_id:str) -> Optional[LlmModelsOrm]:
+    """Get model by id."""
     query = (
         select(LlmModelsOrm)
         .where(LlmModelsOrm.id == llm_id)
@@ -29,6 +30,7 @@ async def change_llm(
     url:str,
     key:Optional[str]
 ):
+    """Change llm."""
     if key is None:
         stmt = (
             update(LlmModelsOrm)
@@ -45,12 +47,14 @@ async def change_llm(
     await session.commit()
 
 async def delete_llm(session:AsyncSession, llm_id:str):
+    """Delete llm."""
     orm = await get_model_by_id(session=session, llm_id=llm_id)
     if orm is not None:
         await session.delete(orm)
         await session.commit()
 
 async def get_all_llm_configs(session:AsyncSession) -> List[LlmModelsOrm]:
+    """Get all llm configs."""
     query = (
         select(LlmModelsOrm)
     )
@@ -61,6 +65,7 @@ async def get_api_by_conversation_id(
     session: AsyncSession,
     conversation_id: str
 ) -> Optional[LlmModelsOrm]:
+    """Get api by conversation id."""
     query = (
         select(LlmModelsOrm)
         .join(
@@ -76,6 +81,7 @@ if __name__ == "__main__":
     import asyncio
     from src.persistence.impl.database.database import async_session_factory
     async def main():
+        """Main."""
         async with async_session_factory() as session:
             llm_configs = await get_api_by_conversation_id(session=session, conversation_id="d14f8a04-229a-4e6e-bd63-8b2d16261235")
             print(llm_configs)

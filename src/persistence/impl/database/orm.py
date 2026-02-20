@@ -7,11 +7,13 @@ import logging
 
 
 def tables_exist() -> bool:
+    """Tables exist."""
     inspector = inspect(sync_engine)
     return inspector.has_table("users")
 
 
 def create_tables():
+    """Create tables."""
     sync_engine.echo = False
     if tables_exist():
         logging.info("Tables already exist. Skipping creation.")
@@ -26,6 +28,7 @@ def create_tables():
 
 
 def create_quota():
+    """Create quota."""
     quota = QuotaOrm(
         admin_limit=100,
         member_limit=20
@@ -35,6 +38,7 @@ def create_quota():
         session.commit()
 
 def create_user():
+    """Create user."""
     user = UsersOrm(
         email="123",
         username="123",
@@ -55,6 +59,7 @@ def create_user():
         session.commit()
 
 async def test():
+    """Test."""
     await async_engine.dispose()
 
 

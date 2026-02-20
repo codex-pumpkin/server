@@ -25,6 +25,7 @@ from src.core.dtos.extra_models import TokenModel
 def get_token_jwt(
         access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> Optional[TokenModel]:
+    """Get token jwt."""
     if access_token is None:
         return None
 
@@ -48,6 +49,7 @@ def get_token_jwt(
 def get_token_jwt_mandatory(
         access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> TokenModel:
+    """Get token jwt mandatory."""
     token = get_token_jwt(access_token=access_token)
     if token is None:
         raise HTTPException(
@@ -59,6 +61,7 @@ def get_token_jwt_mandatory(
 def get_token_jwt_mandatory_admin(
         access_token: HTTPAuthorizationCredentials | None = Security(HTTPBearer(auto_error=False))
 ) -> TokenModel:
+    """Get token jwt mandatory admin."""
     token_data = get_token_jwt_mandatory(access_token=access_token)
 
     if not token_data.is_admin:

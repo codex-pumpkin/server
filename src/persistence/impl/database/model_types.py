@@ -25,6 +25,7 @@ created_at_type = Annotated[
 
 
 def generate_code() -> str:
+    """Generate code."""
     out = ""
     for _ in range(6):
         out += str(random.randint(0, 9))

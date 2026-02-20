@@ -22,6 +22,7 @@ class Base(DeclarativeBase):
     repr_cols:tuple[str] = tuple()
 
     def __repr__(self):
+        """Repr."""
         cols = []
         for idx, col in enumerate(self.__table__.columns.keys()):
             if col in self.repr_cols or idx < self.repr_first_cols:

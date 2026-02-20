@@ -11,6 +11,7 @@ from src.persistence.interfaces import IMailSender
 
 class MailSender(IMailSender):
     def __init__(self, settings:MailSettings = default_settings.mail_settings):
+        """Initialize the instance."""
         self.context:ssl.SSLContext = ssl.create_default_context()
         self.settings:MailSettings = settings
 
@@ -66,6 +67,7 @@ class MailSender(IMailSender):
         await self._send_email(to_email, subject, html_content)
 
     async def send_password_reset_email(self, to_email: str, reset_code: str) -> None:
+        """Send password reset email."""
         subject = "CodeX Password Reset Code"
 
         html_content = f"""
@@ -118,6 +120,7 @@ class MailSender(IMailSender):
         await self._send_email(to_email, subject, html_content)
 
     async def send_temporary_password_email(self, to_email: str, password: str) -> None:
+        """Send temporary password email."""
         subject = "CodeX Password"
 
         html_content = f"""
@@ -163,6 +166,7 @@ class MailSender(IMailSender):
 
 
 async def main():
+    """Main."""
     mailer = MailSender(default_settings.mail_settings)
     await mailer.send_confirmation_email("lublusosku@gmail.com", "123456")
     await asyncio.sleep(1)
