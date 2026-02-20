@@ -144,7 +144,7 @@ class InferenceManager(IInferenceManager):
 
         message = MessageResponse(
             id=str(uuid.uuid4()),
-            created_at=datetime.datetime.now(datetime.UTC).timestamp(),
+            created_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp(),
             message=request.message,
             response=result,
             graph=graph,
@@ -155,8 +155,8 @@ class InferenceManager(IInferenceManager):
             name=request.name,
             target_language=request.target_language,
             llm_model_config_id=request.llm_model_config_id,
-            created_at=datetime.datetime.now(datetime.UTC).timestamp(),
-            updated_at=datetime.datetime.now(datetime.UTC).timestamp(),
+            created_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp(),
+            updated_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp(),
             user_id=uuid.uuid4(),
             messages=[message]
         )

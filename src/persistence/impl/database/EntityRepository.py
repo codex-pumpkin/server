@@ -253,7 +253,7 @@ class EntityRepository(IEntityRepository):
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
                 return False
-            if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+            if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp():
                 return False
             return True
 

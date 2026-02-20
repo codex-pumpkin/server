@@ -11,7 +11,7 @@ def encode_jwt(
     time_delta: Optional[datetime.timedelta] = None
 ) -> str:
     payload_copy = payload.copy()
-    now = datetime.datetime.now(datetime.UTC)
+    now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     if time_delta is not None:
         expire = now + time_delta
     else:

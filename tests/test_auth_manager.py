@@ -28,7 +28,7 @@ def _token_info(
     expires_delta_minutes: int = 30,
 ) -> TokenInfo:
     user_id = user_id or uuid.uuid4()
-    now = datetime.datetime.now(datetime.UTC)
+    now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     return TokenInfo(
         id=uuid.uuid4(),
         token_type=token_type,
@@ -41,7 +41,7 @@ def _token_info(
 
 def _user_dto(user_id: uuid.UUID | None = None, verified: bool = True, is_admin: bool = False):
     user_id = user_id or uuid.uuid4()
-    now = datetime.datetime.now(datetime.UTC).timestamp()
+    now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp()
     return SimpleNamespace(
         id=user_id,
         email="test@example.com",
