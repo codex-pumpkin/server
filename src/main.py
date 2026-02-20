@@ -15,6 +15,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.persistence.impl.database.orm import create_tables
+from src.core.settings import settings
 import uvicorn
 from src.persistence.impl.chroma_database.initDB import init_db
 
@@ -27,6 +28,7 @@ if __name__ == "__main__":
     # Create database tables before starting the HTTP server so the application
     # can serve requests immediately without waiting for lazy initialization.
     create_tables()
+    os.makedirs(settings.pictures_settings.path, exist_ok=True)
     init_db()
     # Run the FastAPI app with a fixed host/port configuration for local and
     # containerized deployments; reload stays disabled for production-like runs.

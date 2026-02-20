@@ -38,7 +38,7 @@ def get_token_jwt(
     payload = decode_jwt(access_token.credentials)
     token_data = TokenModel(**payload)
 
-    if token_data.exp < datetime.datetime.now(datetime.UTC):
+    if token_data.exp.replace(tzinfo=None) < datetime.datetime.now(datetime.UTC).replace(tzinfo=None):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="access_token is expired!",

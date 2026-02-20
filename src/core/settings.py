@@ -15,14 +15,32 @@ class MailSettings(BaseModel):
     @param logo (str): Public logo URL used in email templates.
     @param client_base_url (str): Client application base URL for email links.
     """
+    """
+    Mail transport and branding configuration.
+
+    @param smtp_server (str): SMTP host used to send transactional emails.
+    @param port (int): SMTP port number.
+    @param app_mail (Annotated[str, EmailStr]): Sender email address.
+    @param password (str): App password or SMTP credential.
+    @param logo (str): Public logo URL used in email templates.
+    @param client_base_url (str): Client application base URL for email links.
+    """
     smtp_server:str
     port:int = Field(ge=0, lt=0xFFFF)
     app_mail:Annotated[str, EmailStr]
     password:str
     logo:str
     client_base_url:str
+    client_base_url:str
 
 class JWTSettings(BaseModel):
+    """
+    JWT token configuration.
+
+    @param algorithm (str): JWT signing algorithm.
+    @param secret_key (str): Secret key used for JWT signing and validation.
+    @param expire_time (int): Access-token expiry time in minutes.
+    """
     """
     JWT token configuration.
 
@@ -40,9 +58,19 @@ class RefreshSettings(BaseModel):
 
     @param expire_time (int): Refresh-token expiry time in minutes.
     """
+    """
+    Refresh-token configuration.
+
+    @param expire_time (int): Refresh-token expiry time in minutes.
+    """
     expire_time:int
 
 class LLMSettings(BaseModel):
+    """
+    LLM generation behavior configuration.
+
+    @param num_of_regenerations (int): Maximum regeneration attempts after validation failure.
+    """
     """
     LLM generation behavior configuration.
 
@@ -61,12 +89,53 @@ class GoogleAuthSettings(BaseModel):
     @param token_url (str): Google OAuth token exchange endpoint.
     @param user_info_url (str): Google user-info endpoint URL.
     """
+    """
+    Google OAuth client configuration.
+
+    @param client_id (str): OAuth client identifier.
+    @param redirect_uri (str): OAuth callback URI used by this server.
+    @param url (str): Google OAuth authorization endpoint base URL.
+    @param client_secret (str): OAuth client secret.
+    @param token_url (str): Google OAuth token exchange endpoint.
+    @param user_info_url (str): Google user-info endpoint URL.
+    """
     client_id: str
     redirect_uri: str
     url: str
     client_secret: str
     token_url: str
     user_info_url: str
+    
+class DatabaseSettings(BaseModel):
+    """
+    Database configuration.
+
+    @param host (str): Database host (use 'db' in Docker).
+    @param port (int): Database port.
+    @param name (str): Database name.
+    @param user (str): Database user.
+    @param password (str): Database password.
+    """
+    host: str
+    port: int = Field(ge=1, le=65535)
+    name: str
+    user: str
+    password: str
+
+    @property
+    def url(self) -> str:
+        """
+        Generates a SQLAlchemy / psycopg compatible database URL.
+        """
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+    
+class PicturesSettings(BaseModel):
+    """
+    Pictures storage configuration.
+
+    @param path (str): Path to the directory where profile pictures are stored.
+    """
+    path: str
 
 class Settings(BaseModel):
     """
@@ -77,12 +146,15 @@ class Settings(BaseModel):
     @param refresh_settings (RefreshSettings): Refresh-token settings.
     @param llm_settings (LLMSettings): LLM runtime settings.
     @param google_settings (GoogleAuthSettings): Google OAuth settings.
+    @param database_settings (DatabaseSettings): Database connection settings.
     """
     mail_settings: MailSettings
     jwt_settings: JWTSettings
     refresh_settings: RefreshSettings
     llm_settings: LLMSettings
     google_settings: GoogleAuthSettings
+    database_settings: DatabaseSettings
+    pictures_settings: PicturesSettings
 
 load_dotenv()
 
@@ -91,6 +163,8 @@ mail_settings = MailSettings(
     port=os.getenv("APP_MAIL_SMTP_PORT"),
     app_mail=os.getenv("APP_MAIL"),
     password=os.getenv("MAIL_PASSWORD"),
+    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
+    client_base_url=os.getenv("CLIENT_BASE_URL")
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
     client_base_url=os.getenv("CLIENT_BASE_URL")
 )
@@ -118,10 +192,24 @@ google_settings = GoogleAuthSettings(
     user_info_url="https://www.googleapis.com/oauth2/v3/userinfo"
 )
 
+database_settings = DatabaseSettings(
+    host=os.getenv("DATABASE_HOST", "localhost"),
+    port=int(os.getenv("DATABASE_PORT", 5432)),
+    name=os.getenv("DATABASE_NAME"),
+    user=os.getenv("DATABASE_USER"),
+    password=os.getenv("DATABASE_PASSWORD"),
+)
+
+pictures_settings = PicturesSettings(
+    path=os.getenv("PICTURES_PATH")
+)
+    
 settings = Settings(
     mail_settings=mail_settings,
     jwt_settings=jwt_settings,
     refresh_settings=refresh_settings,
     llm_settings=llm_settings,
-    google_settings=google_settings
+    google_settings=google_settings,
+    database_settings=database_settings,
+    pictures_settings=pictures_settings
 )

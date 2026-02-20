@@ -17,7 +17,8 @@ async def create_token(session:AsyncSession, user_id:str, token_type:str) -> Tok
     """Create token."""
     now = datetime.datetime.now(datetime.UTC)
     exp = now + datetime.timedelta(minutes=settings.refresh_settings.expire_time)
-    token = TokensOrm(
+    exp = exp.replace(tzinfo=None)
+    token = TokensOrm(  
         expires_at=exp,
         user_id=user_id,
         type=TokenType(token_type)

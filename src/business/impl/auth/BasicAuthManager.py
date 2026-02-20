@@ -138,7 +138,7 @@ class BasicAuthManager(IBasicAuthManager):
             )
         if token_info.token_type != "email":
             raise VerificationError("Token isn't email token!")
-        if token_info.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+        if token_info.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp():
             raise VerificationError("Token is already expired!")
         if not token_info.valid:
             raise VerificationError("Token is invalidated!")
@@ -187,7 +187,7 @@ class BasicAuthManager(IBasicAuthManager):
             )
         if token.token_type != "password":
             raise AuthError("Token isn't of type recover password!")
-        if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+        if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp():
             raise AuthError("Token isn't valid!")
         await repo.invalidate_token(str(token.id))
         await repo.change_password(str(token.user_id), request.new_password)
@@ -254,7 +254,7 @@ class BasicAuthManager(IBasicAuthManager):
             )
         if refresh_token.token_type != "refresh":
             raise AuthError("Token isn't of type refresh!")
-        if not refresh_token.valid or refresh_token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+        if not refresh_token.valid or refresh_token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp():
             raise AuthError("Token isn't valid!")
 
         refresh_token = await repo.change_token(token)

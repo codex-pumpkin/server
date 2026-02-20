@@ -271,7 +271,7 @@ class EntityRepository(IEntityRepository):
             token = await get_token_by_id(session=session, token_id=token_id)
             if token is None:
                 return False
-            if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).timestamp():
+            if not token.valid or token.expires_at.timestamp() < datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp():
                 return False
             return True
 
@@ -499,17 +499,3 @@ class EntityRepository(IEntityRepository):
         async with async_session_factory() as session:
             return await get_analytics(session=session)
 
-    # --------------------
-    # Profile Picture
-    # --------------------
-    async def save_profile_picture(self, user_id: str, file_data: bytes) -> None:
-        """Save profile picture."""
-        ...
-
-    async def get_profile_picture(self, user_id: str) -> bytes:
-        """Get profile picture."""
-        ...
-
-    async def delete_profile_picture(self, user_id: str) -> None:
-        """Delete profile picture."""
-        ...

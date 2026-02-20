@@ -58,7 +58,7 @@ async def update_conversation_update_time(session:AsyncSession, conversation_id:
     stmt = (
         update(ConversationsOrm)
         .where(ConversationsOrm.id == conversation_id)
-        .values(updated_at=datetime.datetime.now(datetime.UTC))
+        .values(updated_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
     )
     await session.execute(stmt)
     await session.commit()
@@ -67,7 +67,7 @@ async def update_conversation_update_time(session:AsyncSession, conversation_id:
 async def get_messages_sent_today_by_user(session:AsyncSession, user_id:str) -> int:
     """Get messages sent today by user."""
     now = datetime.datetime.now(datetime.UTC)
-    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0).replace(tzinfo=None)
 
     query = (
         select(func.count())

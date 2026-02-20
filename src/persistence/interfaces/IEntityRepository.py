@@ -206,18 +206,3 @@ class IEntityRepository(ABC):
         """Get usage data."""
         ...
 
-    # --------------------
-    # Profile Picture
-    # --------------------
-    @abstractmethod
-    async def save_profile_picture(self, user_id: str, file_data: bytes) -> None:
-        """Save profile picture."""
-        ...
-    @abstractmethod
-    async def get_profile_picture(self, user_id: str) -> bytes:
-        """Get profile picture."""
-        ...
-    @abstractmethod
-    async def delete_profile_picture(self, user_id: str) -> None:
-        """Delete profile picture."""
-        ...
