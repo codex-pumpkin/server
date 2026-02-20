@@ -121,7 +121,15 @@ async def account_profile_picture_get(
     token_jwt: TokenModel = Security(get_token_jwt_mandatory),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ):
-    """Returns the profile picture for the authenticated user."""
+    """
+    Returns the profile picture for the authenticated user.
+    
+    @param token_jwt (TokenModel): Authenticated user token payload resolved from security dependency.
+    @param user_info (IUserInfoManager): Business manager used to fetch profile picture data.
+    
+    @return StreamingResponse: If a profile picture exists, returns it as a JPEG image stream; otherwise returns None.
+    
+    """
     picture_data = await user_info.get_profile_picture(token_jwt)
     if picture_data is None:
         return None
@@ -147,7 +155,15 @@ async def account_profile_picture_put(
     token_jwt: TokenModel = Security(get_token_jwt_mandatory),
     user_info: IUserInfoManager = Depends(get_user_info_manager)
 ):
-    """Updates the profile picture of the authenticated user"""
+    """
+    Updates the profile picture of the authenticated user
+    
+    @param file (UploadFile): Uploaded image file for the new profile picture.
+    @param token_jwt (TokenModel): Authenticated user token payload resolved from security dependency.
+    @param user_info (IUserInfoManager): Business manager used to update profile picture data.
+    
+    @return None: Persists the new profile picture for the user.
+    """
     image_bytes = await file.read()
     with open(Path(settings.pictures_settings.path) / f"{token_jwt.sub}.jpg", "wb") as f:
         f.write(image_bytes)
