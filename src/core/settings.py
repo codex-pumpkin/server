@@ -165,8 +165,6 @@ mail_settings = MailSettings(
     password=os.getenv("MAIL_PASSWORD"),
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
     client_base_url=os.getenv("CLIENT_BASE_URL")
-    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
-    client_base_url=os.getenv("CLIENT_BASE_URL")
 )
 
 jwt_settings = JWTSettings(
