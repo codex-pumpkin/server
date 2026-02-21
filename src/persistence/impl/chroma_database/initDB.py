@@ -44,8 +44,8 @@ def init_db():
     source = Path("/app/docs")
     source.mkdir(exist_ok=True)
 
+    current_hashes = _compute_current_hashes(source)
     if not chroma_empty:
-        current_hashes = _compute_current_hashes(source)
         cached_hashes = _load_cache()
         if current_hashes != cached_hashes:
             logging.info(Fore.GREEN + "Document changes detected. Reinitializing ChromaDB...")
