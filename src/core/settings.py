@@ -199,7 +199,7 @@ database_settings = DatabaseSettings(
 )
 
 pictures_settings = PicturesSettings(
-    path=os.getenv("PICTURES_PATH")
+    path="/app/pictures"
 )
     
 settings = Settings(
