@@ -41,7 +41,7 @@ def init_db():
     client =_wait_for_chroma()
 
     chroma_empty = _check_if_chroma_is_empty(client)
-    source = Path("docs")
+    source = Path("/app/docs")
     source.mkdir(exist_ok=True)
 
     if not chroma_empty:

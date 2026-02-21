@@ -18,7 +18,7 @@ def convert_pdf_to_markdown(source:Union[Path, str], output:Union[Path, str]) ->
 
 def main() -> None:
     """Main."""
-    folder = Path("docs")
+    folder = Path("/app/docs")
     output_folder = Path("markdown")
     convert_pdf_to_markdown(folder, output_folder)
 
