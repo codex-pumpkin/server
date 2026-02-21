@@ -1,113 +1,90 @@
-# CodeX Server
+<p align="center">
+  <img src="Logo.svg" alt="Project Logo" width="500"/>
+</p>
 
-Backend API service for authentication and quota management, built with FastAPI.
-
-## Tech Stack
-- Python 3.13
-- FastAPI + Uvicorn
-- SQLAlchemy + SQLite
-- OpenAI SDK
-- ChromaDB (semantic retrieval)
+# CodeX Server Component
+This repository contains the code for the CodeX server component.
 
 ## Project Structure
-- `src/main.py`: local entry point (creates DB tables and starts Uvicorn).
-- `src/service/main.py`: FastAPI app registration.
-- `src/service/apis/`: API routers.
-- `src/business/`: business-layer managers.
-- `src/persistence/`: DB, LLM, mail, and vector-store integrations.
-- `requirements.txt`: Python dependencies.
+- `public/`: Public assets
+- `src/`: Source files. Main index and script file
+    - `app/environment`: Infrastructure to get environment configuration
+    - `app/model/network`: Connection to the REST-API of the backend
+    - `app/model/domain`: Domain models for the entities
+    - `app/model/authentication`: Abstraction over the authentication. Keeps the currently authenticated account
 
-## Prerequisites
-- Python `3.13` (recommended)
-- `pip`
+## Project Structure
+- `src/main.py`: local entry point
+- `src/service/main.py`: FastAPI app registration
+- `src/service/apis/`: API routers
+- `src/business/`: Business-layer managers
+- `src/persistence/`: DB, LLM, mail, and vector-store integrations
+- `requirements.txt`: Python dependencies
 
-## Setup
-From the project root:
+## Running
+Required: 
+- `python 3.13`
+- pip
 
+To run the server, do:
 ```bash
-cd server
 python -m venv .venv
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-
 pip install -r requirements.txt
-```
-
-## Run (Development)
-```bash
 python -m src.main
 ```
 
-Server starts on:
-- `http://localhost:8000`
-
-Useful docs:
-- Swagger UI: `http://localhost:8000/docs`
-
-
-## Environment Variables (Mandatory)
-
-The following environment variables **must be set** before starting the application:
-- `APP_MAIL`
-- `MAIL_PASSWORD`
-- `JWT_SECRET`
-- `CLIENT_SECRET`
-- `CLIENT_ID`
-- `APP_MAIL_SMTP_SERVER`
-- `APP_MAIL_SMTP_PORT`
-- `CLIENT_BASE_URL`
-
-You can copy `.env_example` into `.env` and fill in real values:
+On windows, use
 
 ```bash
-cp .env_example .env
+.\.venv\Scripts\Activate.ps1
 ```
 
-PowerShell equivalent:
+to create a virtual environment.
 
-```powershell
-Copy-Item .env_example .env
+## Containerization
+The project can be built into an image using
+```bash
+docker build . -t codex/server
 ```
 
-Example:
+The building process is configured by the `Dockerfile`, that mainly does:
+1. Install apt-packages
+2. Install python requirements
 
-```env
-APP_MAIL=you@example.com
-MAIL_PASSWORD=your_mail_password
-JWT_SECRET=some_long_random_secret
-CLIENT_SECRET=google_client_secret
-CLIENT_ID=google_client_id
-APP_MAIL_SMTP_SERVER=smtp.gmail.com
-APP_MAIL_SMTP_PORT=587
-CLIENT_BASE_URL=http://localhost:3000
-```
+### Container startup
+On startup, the `src.main` file is executed.
+This file, before running the REST-API via uvicorn, performs miscellaneous initializations, like
+- Creating the database tables
+- Creating data directories
 
-## Tests
-Run tests from the `server` directory:
+## Deployment
 
+After the project has been built into an image, it can be used via docker.
+
+An example docker-compose configuration [is provided](/docker-compose.yaml).
+
+### Environment parameters
+
+| Parameter Name       | Description                                                                                                          |
+|----------------------|----------------------------------------------------------------------------------------------------------------------|
+| APP_MAIL             | The username to the SMTP server. Usually the email-address.                                                          |
+| MAIL_PASSWORD        | The password to the SMTP server.                                                                                     |
+| APP_MAIL_SMTP_SERVER | The host of the SMTP server.                                                                                         |                                 |
+| APP_MAIL_SMTP_PORT   | The port of the SMTP server.                                                                                         |                                 |
+| JWT_SECRET           | The secret used to sign JWT's.                                                                                       |                                 |
+| CLIENT_SECRET        | The client secret of the google cloud project.                                                                       |                                 |
+| CLIENT_ID            | The client ID of the google cloud project.                                                                           |                                 |
+| CLIENT_BASE_URL      | The base url on which the frontend is running. No trailing slash.                                                    |                                 |
+| DATABASE_URL         | The postgres url to connect to the database. Must be of format `postgresql://<user>:<password>@<host>:<port>/<name>` |                                 |
+| CHROMA_PORT          | The port of the chroma database.                                                                                     |                                 |
+| CHROMA_HOST          | The host of the chroma database.                                                                                     |                                 |
+
+## Unit tests
+Major components are tested using `pytest`.
+
+To run all unit tests, use
 ```bash
 pytest -q
 ```
 
-
-##  Docker Build & Run
-
-Build the Docker image:
-
-```bash
-docker build -t codex-server .
-```
-
-Run the container using environment variables from a `.env` file:
-
-```bash
-docker run --env-file .env -p 8000:8000 codex-server
-```
-
-The application will start inside the container and be available at:
-
-```
-http://localhost:8000/docs
-```
-
-Using a `.env` file allows you to securely provide required environment variables at runtime without hardcoding them into the Docker image.
+This will create a coverage report in `coverage/`.
