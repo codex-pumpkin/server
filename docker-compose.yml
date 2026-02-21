@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: codex
+      POSTGRES_USER: codex_user
+      POSTGRES_PASSWORD: codex_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: "/chroma/data"
+      CHROMA_DB_IMPL: duckdb+parquet
+    volumes:
+      - ./data/chroma:/data
+
+  server:
+    image: codex/server
+    depends_on:
+      - db
+      - chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/documents:/app/docs
+      - ./data/pictures:/app/pictures
+    environment:
+      APP_MAIL: noreply@cloud.bumiller.me
+      MAIL_PASSWORD: p69#%!ES%hPojT
+      APP_MAIL_SMTP_SERVER: smtp.ionos.de
+      APP_MAIL_SMTP_PORT: 465
+      JWT_SECRET: 253ff144-32aa-4571-9f63-bec0717e8257
+      CLIENT_SECRET: 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
+      CLIENT_ID: 1058438557934-nu1fvr71olv1ueb3ton9p05ad5cffvdo.apps.googleusercontent.com
+      CLIENT_BASE_URL: "http://localhost:4200"
+      DATABASE_URL: "postgresql://codex_user:codex_password@db:5432/codex"
+      CHROMA_PORT: 8000
+      CHROMA_HOST: chroma

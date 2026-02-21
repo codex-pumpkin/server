@@ -61,7 +61,7 @@ This file, before running the REST-API via uvicorn, performs miscellaneous initi
 
 After the project has been built into an image, it can be used via docker.
 
-An example docker-compose configuration [is provided](/docker-compose.yaml).
+An example docker-compose configuration [is provided](/docker-compose.yml).
 
 ### Environment parameters
 
@@ -78,6 +78,13 @@ An example docker-compose configuration [is provided](/docker-compose.yaml).
 | DATABASE_URL         | The postgres url to connect to the database. Must be of format `postgresql://<user>:<password>@<host>:<port>/<name>` |                                 |
 | CHROMA_PORT          | The port of the chroma database.                                                                                     |                                 |
 | CHROMA_HOST          | The host of the chroma database.                                                                                     |                                 |
+
+### Volumes
+The following directories are used by the container:
+- `/app/docs`: Input directory for the PDF-files used as an input for the RAG-system
+- `/app/pictures`: Storage directory for profile-pictures of accounts
+
+They can be bound to volumes or local paths.
 
 ## Unit tests
 Major components are tested using `pytest`.
