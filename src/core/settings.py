@@ -107,27 +107,8 @@ class GoogleAuthSettings(BaseModel):
     user_info_url: str
     
 class DatabaseSettings(BaseModel):
-    """
-    Database configuration.
 
-    @param host (str): Database host (use 'db' in Docker).
-    @param port (int): Database port.
-    @param name (str): Database name.
-    @param user (str): Database user.
-    @param password (str): Database password.
-    """
-    host: str
-    port: int = Field(ge=1, le=65535)
-    name: str
-    user: str
-    password: str
-
-    @property
-    def url(self) -> str:
-        """
-        Generates a SQLAlchemy / psycopg compatible database URL.
-        """
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+    url: str
     
 class PicturesSettings(BaseModel):
     """
@@ -191,11 +172,7 @@ google_settings = GoogleAuthSettings(
 )
 
 database_settings = DatabaseSettings(
-    host=os.getenv("DATABASE_HOST", "localhost"),
-    port=int(os.getenv("DATABASE_PORT", 5432)),
-    name=os.getenv("DATABASE_NAME"),
-    user=os.getenv("DATABASE_USER"),
-    password=os.getenv("DATABASE_PASSWORD"),
+    url=os.getenv("DATABASE_URL")
 )
 
 pictures_settings = PicturesSettings(
