@@ -6,6 +6,8 @@ from unittest import result
 import chromadb
 from chromadb.utils import embedding_functions
 from typing import Optional, Union
+
+from src.core import settings
 from src.persistence.interfaces import ISemanticRepository
 
 _chroma_client: Optional[chromadb.PersistentClient] | None = None
@@ -24,7 +26,7 @@ class SemanticRepository(ISemanticRepository):
         """Get chroma client."""
         global _chroma_client
         if _chroma_client is None:
-            _chroma_client = chromadb.HttpClient(host="chroma", port=8000)
+            _chroma_client = chromadb.HttpClient(host=settings.chroma_settings.host, port=settings.chroma_settings.port)
         return _chroma_client
 
 

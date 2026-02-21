@@ -1,3 +1,4 @@
+from src.core import settings
 from src.persistence.impl.chroma_database.pdfToMarkdown import convert_pdf_to_markdown
 from src.persistence.impl.chroma_database import vectorDBBuilder
 import chromadb
@@ -16,7 +17,7 @@ CACHE = Path("docs_cache.json")
 def _wait_for_chroma():
     for _ in range(10):
         try:
-            client = chromadb.HttpClient(host="chroma", port=8000)
+            client = chromadb.HttpClient(host=settings.chroma_settings.host, port=settings.chroma_settings.port)
             client.heartbeat()
             return client
         except Exception:

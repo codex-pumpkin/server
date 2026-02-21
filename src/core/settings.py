@@ -107,8 +107,11 @@ class GoogleAuthSettings(BaseModel):
     user_info_url: str
     
 class DatabaseSettings(BaseModel):
-
     url: str
+
+class ChromaSettings(BaseModel):
+    host: str
+    port: int
     
 class PicturesSettings(BaseModel):
     """
@@ -136,6 +139,7 @@ class Settings(BaseModel):
     google_settings: GoogleAuthSettings
     database_settings: DatabaseSettings
     pictures_settings: PicturesSettings
+    chroma_settings: ChromaSettings
 
 load_dotenv()
 
@@ -178,6 +182,11 @@ database_settings = DatabaseSettings(
 pictures_settings = PicturesSettings(
     path="/app/pictures"
 )
+
+chroma_settings = ChromaSettings(
+    host=os.getenv("CHROMA_HOST"),
+    port=os.getenv("CHROMA_PORT")
+)
     
 settings = Settings(
     mail_settings=mail_settings,
@@ -186,5 +195,6 @@ settings = Settings(
     llm_settings=llm_settings,
     google_settings=google_settings,
     database_settings=database_settings,
-    pictures_settings=pictures_settings
+    pictures_settings=pictures_settings,
+    chroma_settings=chroma_settings
 )

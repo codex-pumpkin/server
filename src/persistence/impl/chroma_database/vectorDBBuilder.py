@@ -5,6 +5,8 @@ import chromadb
 from typing import Union
 from chromadb.utils import embedding_functions
 
+from src.core import settings
+
 enc = tiktoken.get_encoding("cl100k_base")
 
 documents = []
@@ -57,7 +59,7 @@ def main(source:Union[Path, str]) -> None:
 '''
 def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Docs") -> None:
     """Build vector db."""
-    client = chromadb.HttpClient(host="chroma", port=8000)
+    client = chromadb.HttpClient(host=settings.chroma_settings.host, port=settings.chroma_settings.port)
 
     collection = client.get_or_create_collection(
         name=namedb,
