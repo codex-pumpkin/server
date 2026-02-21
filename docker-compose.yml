@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: codex
+      POSTGRES_USER: codex_user
+      POSTGRES_PASSWORD: codex_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: "/chroma/data"
+      CHROMA_DB_IMPL: duckdb+parquet
+    volumes:
+      - ./data/chroma:/data
+
+  server:
+    image: codex/server
+    depends_on:
+      - db
+      - chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/documents:/app/docs
+      - ./data/pictures:/app/pictures
+    environment:
+      APP_MAIL: <mail>
+      MAIL_PASSWORD: <mail-password>
+      APP_MAIL_SMTP_SERVER: <smtp-host>
+      APP_MAIL_SMTP_PORT: 465
+      JWT_SECRET: example-secret-string
+      CLIENT_SECRET: <google-client-secret>
+      CLIENT_ID: <google-client-id>
+      CLIENT_BASE_URL: <base url of the client>
+      DATABASE_URL: "postgresql://codex_user:codex_password@db:5432/codex"
+      CHROMA_PORT: 8000
+      CHROMA_HOST: chroma

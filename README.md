@@ -79,6 +79,13 @@ An example docker-compose configuration [is provided](/docker-compose.yaml).
 | CHROMA_PORT          | The port of the chroma database.                                                                                     |                                 |
 | CHROMA_HOST          | The host of the chroma database.                                                                                     |                                 |
 
+### Volumes
+The following directories are used by the container:
+- `/app/docs`: Input directory for the PDF-files used as an input for the RAG-system
+- `/app/pictures`: Storage directory for profile-pictures of accounts
+
+They can be bound to volumes or local paths.
+
 ## Unit tests
 Major components are tested using `pytest`.
 
