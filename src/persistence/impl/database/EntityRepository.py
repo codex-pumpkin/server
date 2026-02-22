@@ -494,8 +494,12 @@ class EntityRepository(IEntityRepository):
     # --------------------
     # Analytics / Usage-related
     # --------------------
-    async def get_usage_data(self) -> AnalyticsResponse:
+    async def get_usage_data(self, period:int, interval:int) -> AnalyticsResponse:
         """Get usage data."""
         async with async_session_factory() as session:
-            return await get_analytics(session=session)
+            return await get_analytics(
+                session=session,
+                period=period,
+                interval=interval
+            )
 

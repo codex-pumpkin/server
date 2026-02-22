@@ -21,8 +21,7 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from src.core.dtos.extra_models import TokenModel  # noqa: F401
-from src.core.dtos.analytics_response import AnalyticsResponse
+from src.core.dtos import AnalyticsResponse, AnalyticsRequest, TokenModel
 from src.service.security_api import get_token_jwt, get_token_jwt_mandatory_admin
 
 router = APIRouter()
@@ -39,6 +38,7 @@ router = APIRouter()
     response_model_by_alias=True,
 )
 async def analytics_get(
+    analytics_request: AnalyticsRequest = Depends(),
     token_jwt: TokenModel = Security(
         get_token_jwt_mandatory_admin
     ),
@@ -54,4 +54,4 @@ async def analytics_get(
     @return
         AnalyticsResponse: Aggregated usage analytics for the system.
     """
-    return await system_manger.get_analytics()
+    return await system_manger.get_analytics(analytics_request)

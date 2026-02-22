@@ -1,6 +1,7 @@
 
 from .account_response import AccountResponse
 from .analytics_response import AnalyticsResponse
+from .analytics_request import AnalyticsRequest
 from .conversation_request import ConversationRequest
 from .conversation_response import ConversationResponse
 from .email_verification_submit_request import EmailVerificationSubmitRequest
@@ -26,6 +27,7 @@ __all__ = [
     "AccountResponse",
     "AccountResponse",
     "AnalyticsResponse",
+    "AnalyticsRequest",
     "ConversationRequest",
     "ConversationResponse",
     "EmailVerificationSubmitRequest",

@@ -7,7 +7,9 @@ from uuid import UUID
 from src.core.dtos import (
     TokenModel,
     QuotaConfig,
-    LLMConfigurationRequest, LLMConfigurationResponse
+    LLMConfigurationRequest,
+    LLMConfigurationResponse,
+    AnalyticsRequest
 )
 
 class ISystemManager(ABC):
@@ -22,7 +24,7 @@ class ISystemManager(ABC):
         pass
 
     @abstractmethod
-    async def get_analytics(self):
+    async def get_analytics(self, analytics_request: AnalyticsRequest):
         """Get analytics."""
         pass
 

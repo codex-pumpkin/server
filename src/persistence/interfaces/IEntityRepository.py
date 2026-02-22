@@ -202,7 +202,7 @@ class IEntityRepository(ABC):
     # Analytics / Usage-related
     # --------------------
     @abstractmethod
-    async def get_usage_data(self) -> UsageData:
+    async def get_usage_data(self, period:int, interval:int) -> UsageData:
         """Get usage data."""
         ...
 

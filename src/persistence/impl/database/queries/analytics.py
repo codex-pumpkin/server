@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,10 +13,10 @@ from src.core.settings import settings
 from typing import Optional, List
 
 
-async def get_analytics(session: AsyncSession) -> AnalyticsResponse:
+async def get_analytics(session: AsyncSession, period:int, interval:int) -> AnalyticsResponse:
     """Get analytics."""
     end_time = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
-    start_time = end_time - datetime.timedelta(hours=24)
+    start_time = end_time - datetime.timedelta(days=period)
     start_time = start_time.replace(tzinfo=None)
 
     stmt = (
@@ -27,7 +28,9 @@ async def get_analytics(session: AsyncSession) -> AnalyticsResponse:
     result = await session.execute(stmt)
     timestamps = result.scalars().all()
 
-    usage = [0] * 96
+    total_divisions = math.ceil((period * 24 * 60) / interval)
+
+    usage = [0] * total_divisions
 
     for created_at in timestamps:
         if created_at is None:
@@ -39,13 +42,13 @@ async def get_analytics(session: AsyncSession) -> AnalyticsResponse:
         if seconds < 0:
             continue
 
-        index = int(seconds // (15 * 60))
+        index = int(seconds // (interval * 60))
 
-        if 0 <= index < 96:
+        if 0 <= index < total_divisions:
             usage[index] += 1
 
     return AnalyticsResponse(
         start_time=start_time,
-        interval_minutes=15,
+        interval_minutes=interval,
         usage=usage
     )

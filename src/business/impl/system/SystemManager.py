@@ -6,7 +6,8 @@ from src.core.dtos import (
     TokenModel,
     QuotaConfig,
     LLMConfigurationRequest,
-    LLMConfigurationResponse
+    LLMConfigurationResponse,
+    AnalyticsRequest
 )
 
 from src.core.exceptions import (
@@ -54,7 +55,7 @@ class SystemManager(ISystemManager):
         repo = await PersistenceFactory.get_entity_repository()
         await repo.change_quota(quota_config)
 
-    async def get_analytics(self):
+    async def get_analytics(self, analytics_request: AnalyticsRequest):
         """
         Retrieve aggregated usage analytics.
 
@@ -62,7 +63,7 @@ class SystemManager(ISystemManager):
             AnalyticsResponse: Usage statistics prepared by the repository layer.
         """
         repo = await PersistenceFactory.get_entity_repository()
-        return await repo.get_usage_data()
+        return await repo.get_usage_data(analytics_request.period_of_days, analytics_request.time_interval_minutes)
 
     async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
         """
