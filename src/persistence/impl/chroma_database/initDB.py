@@ -11,7 +11,7 @@ import json
 from colorama import init, Fore, Style
 
 init(autoreset=True)
-CACHE = Path("/app/data/documents/docs_cache.json")
+CACHE = Path("/app/documents/docs_cache.json")
 
 
 def _wait_for_chroma():
@@ -42,7 +42,7 @@ def init_db():
     client =_wait_for_chroma()
 
     chroma_empty = _check_if_chroma_is_empty(client)
-    source = Path("/app/data/documents")
+    source = Path("/app/documents")
     source.mkdir(exist_ok=True)
 
     current_hashes = _compute_current_hashes(source)
