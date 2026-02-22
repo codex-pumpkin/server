@@ -57,6 +57,11 @@ This file, before running the REST-API via uvicorn, performs miscellaneous initi
 - Creating the database tables
 - Creating data directories
 
+**Only** on the initial, i.e. first, startup, one singular admin-account is created.
+The credentials refer to the ones set via the `ADMIN_USERNAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` environment variables.
+While these can be changed, as with every account, this is strongly discouraged.
+Other admin-accounts cannot be created after the initial startup.
+
 ## Deployment
 
 After the project has been built into an image, it can be used via docker.
@@ -78,6 +83,9 @@ An example docker-compose configuration [is provided](/docker-compose.yml).
 | DATABASE_URL         | The postgres url to connect to the database. Must be of format `postgresql://<user>:<password>@<host>:<port>/<name>` |                                 |
 | CHROMA_PORT          | The port of the chroma database.                                                                                     |                                 |
 | CHROMA_HOST          | The host of the chroma database.                                                                                     |                                 |
+| ADMIN_USERNAME       | The username of the created admin account.                                                                           |                                 |
+| ADMIN_EMAIL          | The email-address of the created admin account.                                                                      |                                 |
+| ADMIN_PASSWORD       | The password of the created admin account.                                                                           |                                 |
 
 ### Volumes
 The following directories are used by the container:

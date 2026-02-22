@@ -121,6 +121,11 @@ class PicturesSettings(BaseModel):
     """
     path: str
 
+class AdminSettings(BaseModel):
+    email: str
+    username: str
+    password: str
+
 class Settings(BaseModel):
     """
     Aggregated application settings container.
@@ -140,6 +145,7 @@ class Settings(BaseModel):
     database_settings: DatabaseSettings
     pictures_settings: PicturesSettings
     chroma_settings: ChromaSettings
+    admin_settings: AdminSettings
 
 load_dotenv()
 
@@ -187,6 +193,12 @@ chroma_settings = ChromaSettings(
     host=os.getenv("CHROMA_HOST"),
     port=os.getenv("CHROMA_PORT")
 )
+
+admin_settings = AdminSettings(
+    email=os.getenv("ADMIN_EMAIL"),
+    username=os.getenv("ADMIN_USERNAME"),
+    password=os.getenv("ADMIN_PASSWORD")
+)
     
 settings = Settings(
     mail_settings=mail_settings,
@@ -196,5 +208,6 @@ settings = Settings(
     google_settings=google_settings,
     database_settings=database_settings,
     pictures_settings=pictures_settings,
-    chroma_settings=chroma_settings
+    chroma_settings=chroma_settings,
+    admin_settings=admin_settings
 )

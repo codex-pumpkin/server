@@ -1,3 +1,7 @@
+import os
+import shutil
+
+from src.core import settings
 from src.persistence.impl.database.database import Base, sync_engine, session_factory, async_engine
 from src.persistence.impl.database.models import UsersOrm, QuotaOrm
 import asyncio
@@ -39,24 +43,18 @@ def create_quota():
 
 def create_user():
     """Create user."""
-    user = UsersOrm(
-        email="123",
-        username="123",
-        hashed_password=hash_password("123"),
+    admin = UsersOrm(
+        email=settings.admin_settings.email,
+        username=settings.admin_settings.username,
+        hashed_password=hash_password(settings.admin_settings.password),
         is_verified=True,
         is_admin=True,
     )
-    user1 = UsersOrm(
-        email="string",
-        username="string",
-        hashed_password=hash_password("string"),
-        is_verified=True,
-        is_admin=False,
-    )
     with session_factory() as session:
-        session.add(user)
-        session.add(user1)
+        session.add(admin)
         session.commit()
+        id = admin.id
+        shutil.copy(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) + "/static/admin_pp.jpeg", f"/app/pictures/{id}.jpg")
 
 async def test():
     """Test."""

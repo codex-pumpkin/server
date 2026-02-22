@@ -43,3 +43,6 @@ services:
       DATABASE_URL: "postgresql://codex_user:codex_password@db:5432/codex"
       CHROMA_PORT: 8000
       CHROMA_HOST: chroma
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
