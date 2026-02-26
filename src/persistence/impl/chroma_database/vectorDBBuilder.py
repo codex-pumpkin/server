@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import uuid
 import tiktoken
@@ -9,9 +10,7 @@ from src.core import settings
 
 enc = tiktoken.get_encoding("cl100k_base")
 
-documents = []
-metadatas = []
-ids = []
+collection_entries = []
 
 ''' Function to chunk text by tokens
     max_tokens: maximum tokens per chunk  
@@ -44,12 +43,17 @@ def main(source:Union[Path, str]) -> None:
         chunks = chunk_by_tokens(content)
 
         for i, chunk in enumerate(chunks):
-            documents.append(chunk)
-            metadatas.append({
+            metadata = {
                 "source": name,
                 "chunk": i
-            })
-            ids.append(str(uuid.uuid4()))
+            }
+
+            collection_entry = (chunk, metadata, str(uuid.uuid4()))
+            collection_entries.append(collection_entry)
+
+    if len(collection_entries) == 0:
+        logging.error("At minimum one PDF file that contains text needs to be present under /app/documents.")
+        exit(1)
 
     build_vector_db()        
 
@@ -66,8 +70,12 @@ def build_vector_db(source:Union[Path, str]="./chroma_db", namedb: str="SPICE_Do
         embedding_function=embedding_functions.DefaultEmbeddingFunction()
     )
 
+    docs = [entry[0] for entry in collection_entries]
+    metadatas = [entry[1] for entry in collection_entries]
+    ids = [entry[2] for entry in collection_entries]
+
     collection.add(
-        documents=documents,
+        documents=docs,
         metadatas=metadatas,
         ids=ids
     )
