@@ -29,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data/documents:/app/docs
+      - ./data/documents:/app/documents
       - ./data/pictures:/app/pictures
     environment:
       APP_MAIL: noreply@cloud.bumiller.me
