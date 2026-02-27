@@ -356,7 +356,8 @@ class EntityRepository(IEntityRepository):
                 response=message.response,
                 graph=message.graph,
                 generation_ms=message.generation_millis,
-                conversation_id=message.conversation_id
+                conversation_id=message.conversation_id,
+                name=message.name
             )
             session.add(orm)
             await session.commit()

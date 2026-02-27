@@ -118,6 +118,7 @@ class MessagesOrm(Base):
     response: Mapped[str] = mapped_column()
     graph: Mapped[str] = mapped_column()
     generation_ms: Mapped[int] = mapped_column()
+    name: Mapped[str] = mapped_column()
     conversation_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("conversations.id", ondelete="SET NULL"),
         nullable=True
@@ -135,6 +136,7 @@ class MessagesOrm(Base):
             message=self.prompt,
             response=self.response,
             graph=self.graph,
+            name=self.name,
             generation_millis=self.generation_ms
         )
 

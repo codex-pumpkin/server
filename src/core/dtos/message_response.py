@@ -37,6 +37,7 @@ class MessageResponse(BaseModel):
     response: StrictStr = Field(description="Raw LLM-generated response")
     graph: StrictStr = Field(default=None, description="Structured graph representation of the circuit, extracted from the LLM response by the server")
     created_at: float = Field(description="The instant when the object was created")
+    name: StrictStr = Field(default=None, description="A concise title for the conversation derived from the response")
     __properties: ClassVar[List[str]] = ["id", "message", "generation_millis", "response", "response_secondary", "created_at"]
 
     model_config = {
@@ -103,7 +104,8 @@ class MessageResponse(BaseModel):
             "message": obj.get("message"),
             "generation_millis": obj.get("generation_millis"),
             "response": obj.get("response"),
-            "response_secondary": obj.get("response_secondary"),
+            "graph": obj.get("graph"),
+            "name": obj.get("name"),
             "created_at": obj.get("created_at")
         })
         return _obj

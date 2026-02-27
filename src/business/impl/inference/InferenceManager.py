@@ -182,6 +182,7 @@ class InferenceManager(IInferenceManager):
 
         graph_gen = await PersistenceFactory.get_graph_generator()
         graph = await graph_gen.gen_graph(code=result)
+        name = await self._generate_conversation_name(result)
 
         message = MessageResponse(
             id=str(uuid.uuid4()),
@@ -189,7 +190,8 @@ class InferenceManager(IInferenceManager):
             message=request.message,
             response=result,
             graph=graph,
-            generation_millis=int((end - start) * 1000)
+            generation_millis=int((end - start) * 1000),
+            name=name
         )
         res = ConversationResponse(
             id=chat_id,
@@ -339,13 +341,15 @@ class InferenceManager(IInferenceManager):
             llm_url=model.api_url
         )
         graph = await self._get_graph_representation(result)
+        name = await self._generate_conversation_name(result)
         end = time.monotonic()
         message = Message(
             conversation_id=str(conversation_id),
             response=result,
             message=message_request.message,
             graph=graph,
-            generation_millis=int((end - start) * 1000)
+            generation_millis=int((end - start) * 1000),
+            name=name
         )
         return message
 
@@ -421,3 +425,13 @@ class InferenceManager(IInferenceManager):
             code = "\n".join(code.split("\n")[1:-1])
         return code
     
+    async def _generate_conversation_name(self, llm_response: str) -> str:
+        """
+        Generate a conversation name based on the initial LLM response.
+
+        @param llm_response (str): The first generated response in the conversation.
+
+        @return str: A concise title for the conversation derived from the response.
+        """
+
+        return llm_response.strip().splitlines()[0]
