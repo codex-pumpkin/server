@@ -434,4 +434,4 @@ class InferenceManager(IInferenceManager):
         @return str: A concise title for the conversation derived from the response.
         """
 
-        return llm_response.strip().splitlines()[0]
+        return llm_response.strip().splitlines()[0][2:]
