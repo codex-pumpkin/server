@@ -24,6 +24,19 @@ class GraphGenerator(IGraphGenerator):
                 subckt_circute = subckt_stmt.build(ground=0)
                 circute_dict[subckt_name] = await self._parse_circuit(subckt_circute.elements)
 
+            # --- Floating node detection & removal ---
+            for section_name, components in circute_dict.items():
+                floating = self._find_floating_nodes(components)
+                if floating:
+                    # Filter out all components that only have floating nodes
+                    filtered = []
+                    for comp in components:
+                        comp_nodes = set(comp.get("nodes", []))
+                        # Keep components that have at least one non-floating node
+                        if comp_nodes - floating:
+                            filtered.append(comp)
+                    circute_dict[section_name] = filtered
+
             return json.dumps(circute_dict)
         except Exception as e:
             print(f"ERROR parsing circuit: {e}")
@@ -35,6 +48,33 @@ class GraphGenerator(IGraphGenerator):
                 os.remove(tmp_path)
             except OSError:
                 pass
+
+    def _find_floating_nodes(self, components: list) -> set:
+        """
+        A node is floating if:
+          - It only appears in a single component, OR
+          - All its appearances are within the same component (e.g. R_ghost 5 5)
+        Ground node (0) is always excluded.
+        """
+        from collections import defaultdict
+
+        node_to_components = defaultdict(set)  # node -> set of component names that use it
+
+        for component in components:
+            comp_name = component.get("name", "unknown")
+            nodes = component.get("nodes", [])
+            unique_nodes_in_comp = set(nodes)  # deduplicate within same component
+            for node in unique_nodes_in_comp:
+                node_to_components[node].add(comp_name)
+
+        floating = set()
+        for node, comps in node_to_components.items():
+            if node == "0":  # ground is never floating
+                continue
+            if len(comps) <= 1:  # only seen by one (or zero) components
+                floating.add(node)
+
+        return floating
 
     async def _parse_circuit(self, circuit_elements):
         """Parse circuit."""
@@ -325,14 +365,31 @@ X1 1 2 3 4 DIFF_AMP
 
 """
 
+test6 = """
+* RC Circuit with a Floating Node
+* ------------------------------------
 
+V1 1 0 DC 5V
+R1 1 2 1k
+C1 2 0 10u
+R2 2 3 2.2k
+C2 3 0 4.7u
+
+* --- Floating node below ---
+* Node 5 is connected to nothing. It just exists. It floats.
+R_ghost 5 5 1MEG
+
+.tran 1ms 100ms
+.probe V(1) V(2) V(3)
+.end
+"""
 if __name__ == "__main__":
     """Test function for simple circuits and MOSFET circuits"""
     async def main():
         """Main."""
-        test_circuit = test2
+        test_circuit = test6
         generator = GraphGenerator()
         components = await generator.gen_graph(test_circuit)
-        print(json.dumps(components, indent=2))
+        print(components)
 
     asyncio.run(main())
