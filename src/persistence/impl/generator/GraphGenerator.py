@@ -307,17 +307,6 @@ class GraphGenerator(IGraphGenerator):
             }
             components_list.append(component_entry)
 
-        # Add ground component if node '0' is present
-        if '0' in all_nodes:
-            ground_component = {
-                'name': 'GND',
-                'type': 'Ground',
-                'nodes': ['0'],
-                'values': {'voltage': '0V'}
-            }
-            # Add it at the beginning so it appears first
-            components_list.insert(0, ground_component)
-
         return {'components': components_list}
 
     def _remove_floating_from_flat(self, flat_components):
