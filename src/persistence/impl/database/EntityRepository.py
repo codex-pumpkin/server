@@ -278,7 +278,7 @@ class EntityRepository(IEntityRepository):
             await session.commit()
             return True
 
-    async def is_token_valid(self, token_id: str) -> bool:
+    async def   is_token_valid(self, token_id: str) -> bool:
         """Is token valid."""
         async with self.async_session_factory() as session:
             token = await get_token_by_id(session=session, token_id=token_id)

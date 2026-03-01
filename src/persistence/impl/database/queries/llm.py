@@ -35,7 +35,7 @@ async def change_llm(
         stmt = (
             update(LlmModelsOrm)
             .where(LlmModelsOrm.id == llm_id)
-            .values(name=name, url=url)
+            .values(name=name, url=url, model_name=model_name)
         )
     else:
         stmt = (

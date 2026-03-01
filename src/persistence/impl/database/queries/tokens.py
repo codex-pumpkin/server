@@ -8,7 +8,7 @@ from src.persistence.impl.database.models import (
     TokenType
 )
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, and_
 from src.core.settings import settings
 from typing import Optional
 
@@ -40,7 +40,7 @@ async def invalidate_all_refresh(session:AsyncSession, user_id:str) -> None:
     """Invalidate all refresh."""
     stmt = (
         update(TokensOrm)
-        .where(TokensOrm.user_id == user_id and TokensOrm.type == TokenType.REFRESH)
+        .where(and_(TokensOrm.user_id == user_id, TokensOrm.type == TokenType.REFRESH))
         .values(valid=False)
     )
     await session.execute(stmt)

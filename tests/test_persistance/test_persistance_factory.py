@@ -81,3 +81,4 @@ async def test_code_validator():
 
     validator2 = await PersistenceFactory.get_code_validator()
     assert validator1 is validator2
+
