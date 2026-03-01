@@ -77,6 +77,9 @@ class InferenceManager(IInferenceManager):
             chat_id=str(conversation_id),
             message=message
         )
+        name = await self._generate_conversation_name(message.response)
+        chat = await repo.get_chat_by_id(str(conversation_id))
+        await repo.update_chat(chat_id=str(conversation_id), name=name, is_pinned=chat.pinned)
         return (await repo.get_messages(str(conversation_id)))[-1]
 
     async def message_regeneration(
@@ -182,6 +185,7 @@ class InferenceManager(IInferenceManager):
 
         graph_gen = await PersistenceFactory.get_graph_generator()
         graph = await graph_gen.gen_graph(code=result)
+        name = await self._generate_conversation_name(result)
 
         message = MessageResponse(
             id=str(uuid.uuid4()),
@@ -193,7 +197,7 @@ class InferenceManager(IInferenceManager):
         )
         res = ConversationResponse(
             id=chat_id,
-            name=request.name,
+            name=name,
             target_language=request.target_language,
             llm_model_config_id=request.llm_model_config_id,
             created_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp(),
@@ -339,6 +343,7 @@ class InferenceManager(IInferenceManager):
             llm_url=model.api_url
         )
         graph = await self._get_graph_representation(result)
+        
         end = time.monotonic()
         message = Message(
             conversation_id=str(conversation_id),
@@ -421,3 +426,13 @@ class InferenceManager(IInferenceManager):
             code = "\n".join(code.split("\n")[1:-1])
         return code
     
+    async def _generate_conversation_name(self, llm_response: str) -> str:
+        """
+        Generate a conversation name based on the initial LLM response.
+
+        @param llm_response (str): The first generated response in the conversation.
+
+        @return str: A concise title for the conversation derived from the response.
+        """
+
+        return llm_response.strip().splitlines()[0][2:]
