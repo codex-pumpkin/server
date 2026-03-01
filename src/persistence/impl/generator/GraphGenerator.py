@@ -37,7 +37,10 @@ class GraphGenerator(IGraphGenerator):
                             filtered.append(comp)
                     circute_dict[section_name] = filtered
 
-            return json.dumps(circute_dict)
+            # --- Add ground component ---
+            circute_dict = self._add_ground(circute_dict)
+
+            return json.dumps(circute_dict, indent=2)
         except Exception as e:
             print(f"ERROR parsing circuit: {e}")
             import traceback
@@ -48,6 +51,24 @@ class GraphGenerator(IGraphGenerator):
                 os.remove(tmp_path)
             except OSError:
                 pass
+
+    def _add_ground(self, circute_dict: dict) -> dict:
+        """Add a GND ground component to the circuit."""
+        for section_name, components in circute_dict.items():
+            # Add a ground component if any component uses node 0
+            has_ground = any("0" in comp.get("nodes", []) for comp in components)
+            if has_ground:
+                # Add ground component with node 0 and 0V value
+                ground_component = {
+                    "name": "GND",
+                    "type": "Ground",
+                    "nodes": ["0"],
+                    "values": {"voltage": "0V"}
+                }
+                # Add it at the beginning so it appears first
+                components.insert(0, ground_component)
+
+        return circute_dict
 
     def _find_floating_nodes(self, components: list) -> set:
         """
@@ -287,26 +308,18 @@ VIN 1 0 AC 0.1 SIN(0 1)
 """
 
 test3 = """
-* Complex Differential Amplifier Circuit
-.SUBCKT DIFF_AMP 1 2 3 4
-Q1 10 11 12 QNL
-Q2 13 14 12 QNL
-Q3 12 15 16 QNL
-Q4 16 16 17 QNL
-R1 1 10 1k
-R2 2 13 1k
-RC1 10 18 10k
-RC2 13 18 10k
-RBIAS 17 18 20k
-C1 4 18 1u
-VCC 18 0 DC 12
-VEE 19 0 DC -12
-VIN 1 0 AC 0.1 SIN(0 1k)
-.MODEL QNL NPN BF=100 RB=50 CJE=5P CJC=3P TF=0.5N TR=10N
-.ENDS
-X1 1 2 3 4 DIFF_AMP
-.TRAN 1N 100U
-.PRINT TRAN V(4)
+* Circuit with 2 MOSFETs and 2 resistors, 7 hour transient simulation
+.model MOSN NMOS (VTO=1 KP=50u)
+V1 1 0 DC 5
+R3 1 2 1000
+R1 2 0 1000
+M1 3 1 0 0 MOSN W=1u L=0.18u
+M2 0 2 0 0 MOSN W=1u L=0.18u
+Vgate1 3 0 DC 5
+Vgate2 4 0 DC 5
+Rgate2 4 2 1meg
+.TRAN 0.0001 25200
+.PRINT TRAN V(1) V(2) V(3) V(4) I(V1)
 .END
 """
 
@@ -387,7 +400,7 @@ if __name__ == "__main__":
     """Test function for simple circuits and MOSFET circuits"""
     async def main():
         """Main."""
-        test_circuit = test6
+        test_circuit = test3
         generator = GraphGenerator()
         components = await generator.gen_graph(test_circuit)
         print(components)
