@@ -3,7 +3,7 @@ import shutil
 import logging
 from sqlalchemy import inspect
 from src.core import settings
-from src.persistence.impl.database.database import Base
+from src.persistence.impl.database.database import Base, sync_engine, session_factory
 from src.persistence.impl.database.models import UsersOrm, QuotaOrm
 from src.persistence.impl.database.hash_util import hash_password
 
@@ -14,8 +14,7 @@ def tables_exist(engine) -> bool:
     return inspector.has_table("users")
 
 
-def create_tables(engine, sessionmaker):
-    """Create tables if they do not exist, using the given engine and sessionmaker."""
+def create_tables(engine=sync_engine, sessionmaker=session_factory):
     engine.echo = False
 
     if tables_exist(engine):
