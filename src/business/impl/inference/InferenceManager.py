@@ -77,6 +77,9 @@ class InferenceManager(IInferenceManager):
             chat_id=str(conversation_id),
             message=message
         )
+        name = await self._generate_conversation_name(message.response)
+        chat = await repo.get_chat_by_id(str(conversation_id))
+        await repo.update_chat(chat_id=str(conversation_id), name=name, is_pinned=chat.pinned)
         return (await repo.get_messages(str(conversation_id)))[-1]
 
     async def message_regeneration(
