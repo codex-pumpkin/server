@@ -16,7 +16,8 @@ from src.core.dtos import (
 from src.core.exceptions import (
     QuotaExceededError,
     NotFoundError,
-    AccessError
+    AccessError,
+    LLMRemovedError
 )
 
 from typing import List, Optional, Tuple, Annotated
@@ -65,6 +66,11 @@ class InferenceManager(IInferenceManager):
         if is_quota_exceeded:
             raise QuotaExceededError()
 
+        conversation = await repo.get_chat_by_id(str(conversation_id))
+        if conversation.llm_model_config_id is None:
+            raise LLMRemovedError()
+
+
         message = await self._get_message(
             conversation_id=conversation_id,
             message_request=message_request,
@@ -104,6 +110,10 @@ class InferenceManager(IInferenceManager):
         is_quota_exceeded = await repo.is_quota_exceeded(str(token_jwt.sub))
         if is_quota_exceeded:
             raise QuotaExceededError()
+
+        conversation = await repo.get_chat_by_id(str(conversation_id))
+        if conversation.llm_model_config_id is None:
+            raise LLMRemovedError()
 
         message = await self._get_message(
             conversation_id=conversation_id,

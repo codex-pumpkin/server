@@ -4,7 +4,7 @@ from src.core.exceptions import (
     AuthError,
     VerificationError,
     QuotaExceededError,
-    NotFoundError, 
+    NotFoundError,
     AccessError,
     LLMBadRequestError,
     LLMAPIConnectionError,
@@ -12,7 +12,7 @@ from src.core.exceptions import (
     LLMAuthenticationError,
     LLMNotFoundError,
     LLMPermissionDeniedError,
-    LLMRateLimitError
+    LLMRateLimitError, LLMRemovedError
 )
 
 from fastapi import FastAPI, Request, HTTPException, status
@@ -123,4 +123,12 @@ def register_error_handlers(app: FastAPI):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={"detail": "LLM rate limit exceeded", "issue": exc.message}
+        )
+
+    @app.exception_handler(LLMRemovedError)
+    async def llm_removed_error_handler(request: Request, exc: LLMRemovedError):
+        """Llm removed error"""
+        raise HTTPException (
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"detail":exc.message}
         )

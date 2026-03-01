@@ -12,6 +12,7 @@ from .LLMAuthenticationError import LLMAuthenticationError
 from .LLMNotFoundError import LLMNotFoundError
 from .LLMPermissionDeniedError import LLMPermissionDeniedError
 from .LLMRateLimitError import LLMRateLimitError
+from .LLMRemovedError import LLMRemovedError
 
 __all__ = [
     "AppError",
@@ -27,5 +28,6 @@ __all__ = [
     "LLMAuthenticationError",
     "LLMNotFoundError",
     "LLMPermissionDeniedError",
-    "LLMRateLimitError"
+    "LLMRateLimitError",
+    "LLMRemovedError"
 ]
