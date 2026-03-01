@@ -9,3 +9,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.log
+.copy
+htmlcov
+.coverage
+.venv

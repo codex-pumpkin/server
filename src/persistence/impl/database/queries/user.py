@@ -1,9 +1,14 @@
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 
 from src.persistence.impl.database.models import UsersOrm
-from typing import  Optional
+from typing import Optional, List
+
+async def get_all_users(session:AsyncSession) -> List[UsersOrm]:
+    query = select(UsersOrm)
+    result = await session.execute(query)
+    users = result.scalars().all()
+    return list(users)
 
 
 async def get_user_by_email_or_username(session:AsyncSession, email:str, username:str) -> Optional[UsersOrm]:

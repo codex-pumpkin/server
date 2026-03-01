@@ -1,0 +1,9 @@
+[run]
+branch = True
+source = src
+parallel = True
+include = src/*
+
+[report]
+show_missing = True
+skip_covered = False

@@ -61,7 +61,14 @@ class PersistenceFactory:
         return await cls._get_singleton(IMailSender, MailSender)
 
     @classmethod
-    async def get_semantic_repository(cls) -> ISemanticRepository:
+    async def get_semantic_repository(cls, connect: bool = True) -> ISemanticRepository:
         """Get semantic repository."""
         from src.persistence.impl.chroma_database import SemanticRepository
-        return await cls._get_singleton(ISemanticRepository, SemanticRepository)
+
+        if ISemanticRepository not in cls._singletons:
+            async with cls._lock:
+                if ISemanticRepository not in cls._singletons:
+                    # Pass 'connect' to constructor
+                    cls._singletons[ISemanticRepository] = SemanticRepository(connect=connect)
+
+        return cls._singletons[ISemanticRepository]
