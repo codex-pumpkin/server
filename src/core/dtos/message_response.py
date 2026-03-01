@@ -103,7 +103,7 @@ class MessageResponse(BaseModel):
             "message": obj.get("message"),
             "generation_millis": obj.get("generation_millis"),
             "response": obj.get("response"),
-            "response_secondary": obj.get("response_secondary"),
+            "graph": obj.get("graph"),
             "created_at": obj.get("created_at")
         })
         return _obj
