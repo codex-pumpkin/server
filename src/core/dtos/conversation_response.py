@@ -38,7 +38,7 @@ class ConversationResponse(BaseModel):
     id: UUID = Field(description="Id of the conversation")
     name: StrictStr = Field(description="Name of the conversation")
     pinned: Optional[StrictBool] = Field(default=None, description="Whether the conversation is pinned")
-    llm_model_config_id: StrictStr = Field(description="Id of the LLM-configuration")
+    llm_model_config_id: Optional[StrictStr] = Field(description="Id of the LLM-configuration")
     created_at: float = Field(description="The instant when the object was created")
     updated_at: float
     target_language: TargetLanguage
