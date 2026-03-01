@@ -190,12 +190,11 @@ class InferenceManager(IInferenceManager):
             message=request.message,
             response=result,
             graph=graph,
-            generation_millis=int((end - start) * 1000),
-            name=name
+            generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
             id=chat_id,
-            name=request.name,
+            name=name,
             target_language=request.target_language,
             llm_model_config_id=request.llm_model_config_id,
             created_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp(),
@@ -341,15 +340,14 @@ class InferenceManager(IInferenceManager):
             llm_url=model.api_url
         )
         graph = await self._get_graph_representation(result)
-        name = await self._generate_conversation_name(result)
+        
         end = time.monotonic()
         message = Message(
             conversation_id=str(conversation_id),
             response=result,
             message=message_request.message,
             graph=graph,
-            generation_millis=int((end - start) * 1000),
-            name=name
+            generation_millis=int((end - start) * 1000)
         )
         return message
 
