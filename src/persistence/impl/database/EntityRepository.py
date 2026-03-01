@@ -141,6 +141,8 @@ class EntityRepository(IEntityRepository):
         """Update user."""
         async with self.async_session_factory() as session:
             user = await get_user_by_id(session=session, user_id=user_id)
+            if user is None:
+                return False
             user.email = email
             user.username = username
             await session.commit()
