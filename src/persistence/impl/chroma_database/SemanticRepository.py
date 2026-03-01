@@ -14,12 +14,13 @@ _chroma_client: Optional[chromadb.PersistentClient] | None = None
 
 class SemanticRepository(ISemanticRepository):
 
-    def __init__(self, namedb: str="SPICE_Docs") -> None:
+    def __init__(self, namedb: str="SPICE_Docs", connect: bool=True) -> None:
         """Initialize the instance."""
-        self.collection = self.get_chroma_client().get_collection(
-            name=namedb,
-            embedding_function=embedding_functions.DefaultEmbeddingFunction()
-        )
+        if connect:
+            self.collection = self.get_chroma_client().get_collection(
+                name=namedb,
+                embedding_function=embedding_functions.DefaultEmbeddingFunction()
+            )
 
     @staticmethod
     def get_chroma_client() -> chromadb.PersistentClient:
