@@ -96,12 +96,13 @@ class EntityRepository(IEntityRepository):
                 return None
             return user.to_dto()
 
-    async def create_user(self, user: SignupRequest) -> AccountResponse:
+    async def create_user(self, user: SignupRequest, verified:bool=False) -> AccountResponse:
         """Create user."""
         user_orm = UsersOrm(
             email=user.email,
             hashed_password=hash_password(user.password),
-            username=user.username
+            username=user.username,
+            is_verified=verified
         )
         async with self.async_session_factory() as session:
             try:

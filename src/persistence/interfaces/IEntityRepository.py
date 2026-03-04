@@ -33,7 +33,7 @@ class IEntityRepository(ABC):
         """Get user by email."""
         ...
     @abstractmethod
-    async def create_user(self, user: SignupRequest) -> AccountResponse:
+    async def create_user(self, user: SignupRequest, verified:bool=False) -> AccountResponse:
         """Create user."""
         ...
     @abstractmethod
