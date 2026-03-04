@@ -3,6 +3,7 @@
 from typing import Dict, List  # noqa: F401
 
 from src.business.interfaces import IBasicAuthManager
+from src.core.dtos.google_login_request import GoogleLoginRequest
 
 from src.service.dependencies import get_auth_manager
 
@@ -44,43 +45,10 @@ from src.core.dtos import (
 router = APIRouter()
 
 from fastapi.responses import RedirectResponse
-import urllib.parse
 import httpx
 
-
-@router.get(
+@router.post(
     "/auth/google/login",
-    responses={
-        307: {"description": "Redirects the user to Google OAuth 2.0 login page."},
-        401: {"description": "Authentication could not be initiated."},
-    },
-    tags=["Authentication"],
-    summary="Initiate login using Google OAuth 2.0.",
-    response_model_by_alias=True,
-)
-async def auth_google_login_get():
-    """
-    Build Google OAuth login URL and redirect user to consent screen.
-
-    @return
-        RedirectResponse: Redirect response pointing to Google authorization endpoint.
-    """
-    params = {
-        "client_id": settings.google_settings.client_id,
-        "redirect_uri": settings.google_settings.redirect_uri,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "access_type": "offline",
-        "prompt": "consent",
-    }
-
-    url = settings.google_settings.url + urllib.parse.urlencode(params)
-
-    return RedirectResponse(url)
-
-
-@router.get(
-    "/auth/google/callback",
     responses={
         200: {
             "model": TokenResponse,
@@ -95,7 +63,7 @@ async def auth_google_login_get():
     response_model_by_alias=True,
 )
 async def google_callback(
-    code: str,
+    google_request: GoogleLoginRequest = Body(None, description=""),
     auth_manager: IBasicAuthManager = Depends(get_auth_manager)
 ) -> TokenResponse:
 
@@ -112,11 +80,11 @@ async def google_callback(
     token_url = settings.google_settings.token_url
 
     data = {
-        "code": code,
+        "code": google_request.id_token,
         "client_id": settings.google_settings.client_id,
         "client_secret": settings.google_settings.client_secret,
-        "redirect_uri": settings.google_settings.redirect_uri,
         "grant_type": "authorization_code",
+        "redirect_uri": "postmessage",
     }
 
     async with httpx.AsyncClient() as client:
