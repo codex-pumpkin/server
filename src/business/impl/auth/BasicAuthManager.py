@@ -92,7 +92,7 @@ class BasicAuthManager(IBasicAuthManager):
             password=password,
             username=username
         )
-        user = await repo.create_user(user=request)
+        user = await repo.create_user(user=request, verified=True)
         mail_sender = await PersistenceFactory.get_mail_sender()
         # Newly created OAuth users receive a generated temporary password via email
         # so they still have a recoverable credential path.
