@@ -70,7 +70,7 @@ async def test_create_user_single(async_session_factory_fixture):
         username="bro",
         password="asagkASD124.a!"
     )
-    await repo.create_user(user=user_dto)
+    await repo.create_user(user=user_dto, create_profile_picture=False)
 
     user = await repo.get_user_by_email("asda@gmail.com")
     assert user is not None
@@ -86,7 +86,7 @@ async def test_create_user_same_email_or_username_verified(async_session_factory
         username="bro",
         password="asagkASD124.a!"
     )
-    user = await repo.create_user(user=user_dto1)
+    user = await repo.create_user(user=user_dto1, create_profile_picture=False)
     await repo.verify_user(str(user.id))
 
     user_dto2 = SignupRequest(
@@ -95,7 +95,7 @@ async def test_create_user_same_email_or_username_verified(async_session_factory
         password="asagkASD124.a!"
     )
     with pytest.raises(UserConflictError):
-        await repo.create_user(user=user_dto2)
+        await repo.create_user(user=user_dto2, create_profile_picture=False)
 
 
     user_dto3 = SignupRequest(
@@ -104,7 +104,7 @@ async def test_create_user_same_email_or_username_verified(async_session_factory
         password="asagkASD124.a!"
     )
     with pytest.raises(UserConflictError):
-        await repo.create_user(user=user_dto3)
+        await repo.create_user(user=user_dto3, create_profile_picture=False)
 
 @pytest.mark.asyncio
 async def test_create_user_same_email_or_username_unverified(async_session_factory_fixture):
@@ -116,14 +116,14 @@ async def test_create_user_same_email_or_username_unverified(async_session_facto
         username="bro",
         password="asagkASD124.a!"
     )
-    await repo.create_user(user=user_dto1)
+    await repo.create_user(user=user_dto1, create_profile_picture=False)
 
     user_dto2 = SignupRequest(
         email="asda@gmail.com",
         username="bro2",
         password="asagkASD124.a!"
     )
-    await repo.create_user(user=user_dto2)
+    await repo.create_user(user=user_dto2, create_profile_picture=False)
 
 
     user_dto3 = SignupRequest(
@@ -131,7 +131,7 @@ async def test_create_user_same_email_or_username_unverified(async_session_facto
         username="bro",
         password="asagkASD124.a!"
     )
-    await repo.create_user(user=user_dto3)
+    await repo.create_user(user=user_dto3, create_profile_picture=False)
 
 async def test_get_user_by_id(async_session_factory_fixture):
     repo = EntityRepository(async_session_factory_fixture)
@@ -142,7 +142,7 @@ async def test_get_user_by_id(async_session_factory_fixture):
         username="bro",
         password="asagkASD124.a!"
     )
-    user = await repo.create_user(user=user_dto1)
+    user = await repo.create_user(user=user_dto1, create_profile_picture=False)
     user = await repo.get_user_by_id(user_id=str(user.id))
     assert user is not None
 
@@ -168,7 +168,7 @@ async def test_update_user(async_session_factory_fixture):
         username="bro",
         password="asagkASD124.a!"
     )
-    user = await repo.create_user(user_dto)
+    user = await repo.create_user(user_dto, create_profile_picture=False)
     res = await repo.update_user(str(user.id), "asfg@gmail.com", "babka")
     assert res == True
 
@@ -193,7 +193,7 @@ async def test_verification(async_session_factory_fixture):
         username="bro",
         password="asagkASD124.a!"
     )
-    user = await repo.create_user(user_dto)
+    user = await repo.create_user(user_dto, create_profile_picture=False)
 
     assert user.is_verified == False
     res = await repo.verify_user(user_id=str(user.id))
@@ -243,7 +243,8 @@ async def test_authenticate_user(
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
 
     result = await repo.authenticate(
@@ -277,7 +278,8 @@ async def test_is_user_admin(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
     res = await repo.is_user_admin(str(user.id))
     assert res == False
@@ -292,7 +294,8 @@ async def test_is_user_email_taken(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
     res = await repo.is_email_taken("asda@gmail.com")
     assert res == True
@@ -310,7 +313,8 @@ async def test_is_username_taken(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
     res = await repo.is_username_taken("bro")
     assert res == True
@@ -331,7 +335,8 @@ async def test_unverify_user(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
 
     res = await repo.unverify_user(str(user.id))
@@ -358,7 +363,8 @@ async def test_change_password(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
 
     res = await repo.change_password(user_id=str(user.id), new_password="asdasd")
@@ -381,14 +387,20 @@ async def test_create_token(async_session_factory_fixture):
             email="asda@gmail.com",
             username="bro",
             password="asagkASD124.a!"
-        )
+        ),
+        create_profile_picture=False
     )
 
 
 async def create_base_user(repo) -> str:
     """Helper to create a user since tokens require a valid user_id."""
     user = await repo.create_user(
-        SignupRequest(email=f"{uuid.uuid4()}@test.com", username=str(uuid.uuid4()), password="Password1!")
+        SignupRequest(
+            email=f"{uuid.uuid4()}@test.com",
+            username=str(uuid.uuid4()),
+            password="Password1!"
+        ),
+        create_profile_picture=False
     )
     return str(user.id)
 
@@ -544,11 +556,14 @@ async def setup_dependencies(async_session_factory_fixture):
     repo = EntityRepository(async_factory=async_session_factory_fixture)
 
     # Create User
-    user = await repo.create_user(SignupRequest(
-        email=f"user_{uuid.uuid4()}@test.com",
-        username=f"user_{uuid.uuid4()}",
-        password="Password123!"
-    ))
+    user = await repo.create_user(
+        SignupRequest(
+            email=f"user_{uuid.uuid4()}@test.com",
+            username=f"user_{uuid.uuid4()}",
+            password="Password123!"
+        ),
+        create_profile_picture=False
+    )
 
     # Create LLM Model (Directly via session since we aren't testing this part yet)
     llm_id = str(uuid.uuid4())
@@ -722,11 +737,14 @@ async def test_delete_chat_returns_false_when_not_found(async_session_factory_fi
 async def setup_chat(async_session_factory_fixture):
     """Setup User, LLM, and one Chat."""
     repo = EntityRepository(async_factory=async_session_factory_fixture)
-    user = await repo.create_user(SignupRequest(
-        email=f"u_{uuid.uuid4()}@test.com",
-        username=f"u_{uuid.uuid4()}",
-        password="Password123!"
-    ))
+    user = await repo.create_user(
+        SignupRequest(
+            email=f"u_{uuid.uuid4()}@test.com",
+            username=f"u_{uuid.uuid4()}",
+            password="Password123!"
+        ),
+        create_profile_picture=False
+    )
 
     llm_id = str(uuid.uuid4())
     async with async_session_factory_fixture() as session:

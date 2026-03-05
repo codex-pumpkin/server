@@ -106,7 +106,12 @@ class EntityRepository(IEntityRepository):
             shutil.copy(path_of_default_picture, path)
 
 
-    async def create_user(self, user: SignupRequest, verified:bool=False) -> AccountResponse:
+    async def create_user(
+        self,
+        user: SignupRequest,
+        verified: bool=False,
+        create_profile_picture: bool = False
+    ) -> AccountResponse:
         """Create user."""
         user_orm = UsersOrm(
             email=user.email,
@@ -140,7 +145,8 @@ class EntityRepository(IEntityRepository):
                 session.add(user_orm)
                 await session.commit()
                 await session.refresh(user_orm)
-                self._get_default_picture(user_orm.id)
+                if create_profile_picture:
+                    self._get_default_picture(user_orm.id)
                 return user_orm.to_dto()
 
             except IntegrityError as e:
