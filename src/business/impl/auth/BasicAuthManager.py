@@ -67,6 +67,7 @@ class BasicAuthManager(IBasicAuthManager):
         if user is not None:
             # Enforce single-session semantics by invalidating old refresh tokens
             # before issuing a fresh token pair for this login.
+            await repo.verify_user(str(user.id))
             await repo.invalidate_all_refresh_tokens(user_id=str(user.id))
             tokens = await self._generate_tokens_pair(
                 user=user,
