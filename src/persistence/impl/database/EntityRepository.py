@@ -14,6 +14,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncEngine
 from typing import Optional, Literal, Union
 from src.persistence.impl.database.hash_util import hash_password, validate_password
+import shutil
+from pathlib import Path
+from src.core.settings import settings
 
 from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
@@ -96,6 +99,13 @@ class EntityRepository(IEntityRepository):
                 return None
             return user.to_dto()
 
+    def _get_default_picture(self, user_id: str) -> None:
+        path = Path(settings.pictures_settings.path) / f"{user_id}.jpg"
+        path_of_default_picture = Path.cwd() / "static" / "user_pp.png"
+        if path.exists() and path_of_default_picture.exists():
+            shutil.copy(path_of_default_picture, path)
+
+
     async def create_user(self, user: SignupRequest, verified:bool=False) -> AccountResponse:
         """Create user."""
         user_orm = UsersOrm(
@@ -130,6 +140,7 @@ class EntityRepository(IEntityRepository):
                 session.add(user_orm)
                 await session.commit()
                 await session.refresh(user_orm)
+                self._get_default_picture(user_orm.id)
                 return user_orm.to_dto()
 
             except IntegrityError as e:
