@@ -103,7 +103,6 @@ class EntityRepository(IEntityRepository):
     def _get_default_picture(self, user_id: str) -> None:
         path = Path(settings.pictures_settings.path) / f"{user_id}.jpg"
         path_of_default_picture = Path.cwd() / "src" / "static" / "user_pp.png"
-        print(f"Copying default picture from {path_of_default_picture} to {path}")
         shutil.copy(path_of_default_picture, path)
 
 
