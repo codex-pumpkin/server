@@ -17,6 +17,7 @@ from src.persistence.impl.database.hash_util import hash_password, validate_pass
 import shutil
 from pathlib import Path
 from src.core.settings import settings
+import logging
 
 from src.persistence.impl.database.queries.user import (
     get_user_by_email_or_username,
@@ -102,15 +103,15 @@ class EntityRepository(IEntityRepository):
     def _get_default_picture(self, user_id: str) -> None:
         path = Path(settings.pictures_settings.path) / f"{user_id}.jpg"
         path_of_default_picture = Path.cwd() / "src" / "static" / "user_pp.png"
-        if path.exists() and path_of_default_picture.exists():
-            shutil.copy(path_of_default_picture, path)
+        print(f"Copying default picture from {path_of_default_picture} to {path}")
+        shutil.copy(path_of_default_picture, path)
 
 
     async def create_user(
         self,
         user: SignupRequest,
-        verified: bool=False,
-        create_profile_picture: bool = False
+        verified: bool = False,
+        create_profile_picture: bool = True
     ) -> AccountResponse:
         """Create user."""
         user_orm = UsersOrm(

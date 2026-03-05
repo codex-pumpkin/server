@@ -39,7 +39,7 @@ services:
       JWT_SECRET: 253ff144-32aa-4571-9f63-bec0717e8257
       CLIENT_SECRET: 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
       CLIENT_ID: 1058438557934-nu1fvr71olv1ueb3ton9p05ad5cffvdo.apps.googleusercontent.com
-      CLIENT_BASE_URL: "http://localhost:4200"
+      CLIENT_BASE_URL: "http://localhost:8080"
       DATABASE_URL: "postgresql://codex_user:codex_password@db:5432/codex"
       CHROMA_PORT: 8000
       CHROMA_HOST: chroma
