@@ -1,7 +1,6 @@
-from typer import prompt
+import litellm
 from typing_extensions import Final
 import textwrap
-from openai import APIConnectionError, APIError, AsyncOpenAI, AuthenticationError, BadRequestError, NotFoundError, PermissionDeniedError, RateLimitError
 from src.core.exceptions import (
     LLMAuthenticationError,
     LLMNotFoundError,
@@ -56,26 +55,6 @@ _PREPROMPT: Final[str] = textwrap.dedent("""
     - Add high-value resistor (1meg) to ground for floating nodes if needed
 
     **Before generating, think step-by-step internally: 1. Parse user request for components and analysis. 2. Assign unique nodes starting from 0 (ground) and 1 upward. 3. Ensure DC paths. 4. Choose appropriate source type. 5. Select reasonable tstep/tstop for .TRAN. Do not output this thinking—generate clean SPICE netlist only, no explanations.**
-
-    **Examples:**
-    **Example 1:**
-    Question: Generate a SPICE netlist for a DC voltage source of 10V connected to a 2k resistor to ground, with DC analysis.
-    * DC Voltage Source with Resistor
-    V1 1 0 DC 10
-    R1 1 0 2k
-    .DC V1 0 10 1
-    .PRINT DC V(1) I(V1)
-    .END
-
-    **Example 2:**
-    Question: Generate a SPICE netlist for an RL circuit with 5V pulse source, 100 ohm resistor, 1mH inductor, transient analysis for 1ms.
-    * RL Circuit with Pulse Source
-    V1 1 0 PULSE(0 5 0 1u 1u 100u 200u)
-    R1 1 2 100
-    L1 2 0 1m
-    .TRAN 1u 1m
-    .PRINT TRAN V(2) I(L1)
-    .END
 """)
 
 _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
@@ -148,12 +127,7 @@ class AIClient(IAIClient):
         Returns the AI-generated response as a string
         """
 
-        if model.startswith("gpt-5") or model.startswith("gpt-4.1") or model.startswith("o"):
-            return await self._get_response_new(user_question, retrieved_context, conversation_history, api_key, model, api_url)
-        else:
-            return await self._get_response_old(user_question, retrieved_context, conversation_history, api_key, model, api_url)
-
-
+        return await self._get_response(user_question, retrieved_context, conversation_history, api_key, model, api_url)
 
     async def regenerate(
         self,
@@ -172,228 +146,105 @@ class AIClient(IAIClient):
         Returns the AI-generated response as a string
         """
 
-        if model.startswith("gpt-5") or model.startswith("gpt-4.1") or model.startswith("o"):
-            return await self._regenerate_new(user_question, regeneration_context, code, api_key, model, api_url)
-        else:
-            return await self._regenerate_old(user_question, regeneration_context, code, api_key, model, api_url)
-
-
-
-    async def _get_response_new(
-        self,
-        user_question: str,
-        retrieved_context: str,
-        conversation_history: str,
-        api_key: str,
-        model: str="gpt-5-mini",
-        api_url: str="https://api.openai.com/v1",
-    ) -> str:
-
-        """Get response new."""
-        input_to_llm = [
-            {
-                "role": "system",
-                "content": _PREPROMPT,
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Context:\n{retrieved_context}\n\n"
-                    f"{conversation_history}\n\n"
-                    f"Question:\n{user_question}"
-                ),
-            },
-        ]
-        try:
-
-            client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=api_url,
-            )
-
-            resp = await client.responses.create(
-                model=model,
-                input=input_to_llm
-            )
-
-            return resp.output_text
+        return await self._regenerate(user_question, regeneration_context, code, api_key, model, api_url)
         
 
-        except AuthenticationError as e:
-            raise LLMAuthenticationError()
-
-        except APIConnectionError as e:
-            raise LLMAPIConnectionError()
-
-        except NotFoundError as e:
-            raise LLMNotFoundError()
-
-        except BadRequestError as e:
-            raise LLMBadRequestError()
-
-        except PermissionDeniedError as e:
-            raise LLMPermissionDeniedError()
-
-        except APIError as e:
-            raise LLMAPIError()
-        
-        except RateLimitError as e:
-            raise LLMRateLimitError()
-
-    async def _regenerate_new(
-            self, user_question: str,
-            regeneration_context: str,
-            code: str,
-            api_key: str,
-            model: str="gpt-5-mini",
-            api_url: str="https://api.openai.com/v1",
-            ) -> str:
-
-        """Regenerate new."""
-        input_to_llm=[
-            {
-                "role": "system",
-                "content": _REGENRATION_PREPROMPT,
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Question:\n{user_question}\n\n"
-                    f"Code:\n{code}\n\n"
-                    f"Context:\n{regeneration_context}\n"
-                ),
-            },
-        ]
-        try:
-
-            client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=api_url,
-                )
-
-            resp = await client.responses.create(
-            model=model,
-            input=input_to_llm
-            )
-
-            return resp.output_text
-
-        except AuthenticationError as e:
-            raise LLMAuthenticationError()
-
-        except APIConnectionError as e:
-            raise LLMAPIConnectionError()
-
-        except NotFoundError as e:
-            raise LLMNotFoundError()
-
-        except BadRequestError as e:
-            raise LLMBadRequestError()
-
-        except PermissionDeniedError as e:
-            raise LLMPermissionDeniedError()
-
-        except APIError as e:
-            raise LLMAPIError()
-        
-        except RateLimitError as e:
-            raise LLMRateLimitError()
-        
-
-    async def _get_response_old(
+    async def _get_response(
             self,
             user_question: str,
             retrieved_context: str,
             conversation_history: str,
             api_key: str,
-            model: str="gpt-o4-mini",
-            api_url: str="https://api.openai.com/v1",
+            model: str = None,
+            api_url: str = None,
             ) -> str:
         
-        """Get response old."""
+        """Get response using LiteLLM."""
         try:
-            client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=api_url,
-                )
-            resp = await client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system",  "content": _PREPROMPT},
+            kwargs = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": _PREPROMPT},
                     {"role": "user", "content": f"Context:\n{retrieved_context}\n\n{conversation_history}\n\nQuestion:\n{user_question}"}
-                    ],
-                temperature=0.2,
-                max_tokens=512,
-            )
+                ],
+                "max_tokens": 1024,
+                "api_key": api_key,
+            }
+
+            # Only set api_base for custom/local endpoints, not for default provider URLs
+            if api_url:
+                kwargs["api_base"] = api_url
+
+            resp = await litellm.acompletion(**kwargs)
             return resp.choices[0].message.content
         
-        except AuthenticationError as e:
+        except litellm.AuthenticationError:
             raise LLMAuthenticationError()
 
-        except APIConnectionError as e:
+        except litellm.APIConnectionError:
             raise LLMAPIConnectionError()
 
-        except NotFoundError as e:
+        except litellm.NotFoundError:
             raise LLMNotFoundError()
 
-        except BadRequestError as e:
+        except litellm.BadRequestError:
             raise LLMBadRequestError()
 
-        except PermissionDeniedError as e:
+        except litellm.PermissionDeniedError:
             raise LLMPermissionDeniedError()
 
-        except APIError as e:
+        except litellm.APIError:
             raise LLMAPIError()
-        
-        except RateLimitError as e:
+
+        except litellm.RateLimitError:
             raise LLMRateLimitError()
 
-    async def _regenerate_old(self,
+    async def _regenerate(self,
             user_question: str,
             regeneration_context: str,
             code: str,
             api_key: str,
-            model: str="gpt-o4-mini",
-            api_url: str="https://api.openai.com/v1"
+            model: str = None,
+            api_url: str = None,
             ) -> str:
         
-        """Regenerate old."""
+        """Regenerate using LiteLLM."""
         try:
-            client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=api_url,
-                )
-            resp = await client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system",  "content": _REGENRATION_PREPROMPT},
-                    {"role": "user", "content": f"Question:\n{user_question}\n \
-                    \n Code:\n{code} Context:\n{regeneration_context}\n"}
-                    ],
-                temperature=0.2,
-                max_tokens=512,
-            )
+            kwargs = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": _REGENRATION_PREPROMPT},
+                    {"role": "user", "content": f"Question:\n{user_question}\n\nCode:\n{code}\n\nContext:\n{regeneration_context}\n"}
+                ],
+                "max_tokens": 1024,
+                "api_key": api_key,
+            }
+
+            if api_url:
+                kwargs["api_base"] = api_url
+
+            resp = await litellm.acompletion(**kwargs)
             return resp.choices[0].message.content
         
-        except AuthenticationError as e:
+        except litellm.AuthenticationError:
             raise LLMAuthenticationError()
 
-        except APIConnectionError as e:
+        except litellm.APIConnectionError:
             raise LLMAPIConnectionError()
 
-        except NotFoundError as e:
+        except litellm.NotFoundError:
             raise LLMNotFoundError()
 
-        except BadRequestError as e:
+        except litellm.BadRequestError:
             raise LLMBadRequestError()
 
-        except PermissionDeniedError as e:
+        except litellm.PermissionDeniedError:
             raise LLMPermissionDeniedError()
 
-        except APIError as e:
+        except litellm.APIError:
             raise LLMAPIError()
-        
-        except RateLimitError as e:
+
+        except litellm.RateLimitError:
             raise LLMRateLimitError()
 
 
