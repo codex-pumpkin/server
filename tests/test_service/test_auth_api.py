@@ -34,12 +34,12 @@ def setup_test_app():
     def override_auth_manager():
         mgr = SimpleNamespace()
         mgr.authenticate = AsyncMock(return_value=TokenResponse(access_token="access", refresh_token="refresh"))
-        mgr.register = AsyncMock()
+        mgr.register = AsyncMock(return_value=None)
         mgr.refresh_access_token = AsyncMock(return_value=TokenResponse(access_token="new", refresh_token="newrefresh"))
-        mgr.user_logout = AsyncMock()
-        mgr.initiate_password_recovery = AsyncMock()
-        mgr.complete_password_recovery = AsyncMock()
-        mgr.verify_email_token = AsyncMock()
+        mgr.user_logout = AsyncMock(return_value=None)
+        mgr.initiate_password_recovery = AsyncMock(return_value=None)
+        mgr.complete_password_recovery = AsyncMock(return_value=None)
+        mgr.verify_email_token = AsyncMock(return_value=None)
         return mgr
 
     app.dependency_overrides[get_auth_manager] = override_auth_manager

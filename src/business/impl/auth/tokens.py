@@ -24,7 +24,7 @@ def encode_jwt(
     @return str: Encoded JWT string suitable for authorization headers.
     """
     payload_copy = payload.copy()
-    now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    now = datetime.datetime.now(datetime.UTC)
     if time_delta is not None:
         expire = now + time_delta
     else:

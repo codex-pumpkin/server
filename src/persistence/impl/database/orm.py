@@ -58,7 +58,7 @@ def create_user(session):
         "static",
         "admin_pp.jpeg"
     )
-    dest_path = f"/app/pictures/{user_id}.jpg"
+    dest_path = os.path.join(settings.pictures_settings.path, f"{user_id}.jpg")
     if os.path.exists(static_path):
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
         shutil.copy(static_path, dest_path)

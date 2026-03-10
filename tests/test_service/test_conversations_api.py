@@ -26,15 +26,15 @@ def setup_conv_app():
         mgr.get_conversations_by_user = AsyncMock(return_value=[])
         mgr.start_conversation = AsyncMock(return_value=ConversationResponse(
             id=uuid4(), name="c", pinned=None, llm_model_config_id=None,
-            created_at=0, updated_at=0, target_language="python", user_id=str(uuid4()), messages=[]
+            created_at=0, updated_at=0, target_language="spice_netlist", user_id=uuid4(), messages=[]
         ))
-        mgr.update_conversation = AsyncMock()
-        mgr.remove_conversation = AsyncMock()
+        mgr.update_conversation = AsyncMock(return_value=None)
+        mgr.remove_conversation = AsyncMock(return_value=None)
         mgr.message_regeneration = AsyncMock(return_value=MessageResponse(
-            id=uuid4(), message="msg", generation_millis=0, response="resp", graph="", created_at=0
+            id=str(uuid4()), message="msg", generation_millis=0, response="resp", graph="", created_at=0
         ))
         mgr.post_message_to_conversation = AsyncMock(return_value=MessageResponse(
-            id=uuid4(), message="msg2", generation_millis=0, response="resp2", graph="", created_at=0
+            id=str(uuid4()), message="msg2", generation_millis=0, response="resp2", graph="", created_at=0
         ))
         return mgr
 
@@ -55,9 +55,9 @@ def test_get_conversations_empty():
 
 
 def test_post_conversation():
-    body = {"message": "hello", "llm_model_config_id": str(uuid4()), "target_language": "python", "name": "test"}
+    body = {"message": "hello", "llm_model_config_id": str(uuid4()), "target_language": "spice_netlist", "name": "test"}
     resp = client.post("/conversations", json=body)
-    assert resp.status_code == 201
+    assert resp.status_code == 200
     data = resp.json()
     assert data["name"] == "c"
 
