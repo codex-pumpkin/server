@@ -37,6 +37,8 @@ class TargetLanguage(str, Enum):
     SPICE_NETLIST = 'spice_netlist'
     PYTHON = 'python'
     JAVA = 'java'
+    ENGLISH = 'english'
+    GERMAN = 'german'
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:

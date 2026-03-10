@@ -29,7 +29,11 @@ app = FastAPI(
 # Credentials are enabled to support authenticated browser requests.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://localhost:8080"],  # Angular Dev
+    allow_origins=[
+        "http://localhost:4200",
+        "http://localhost:4201",
+        "http://localhost:8080",
+    ],  # Angular Dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

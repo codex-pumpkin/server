@@ -1,0 +1,38 @@
+Server Test Summary
+Date: 2026-03-10
+
+Environment
+- Python: 3.14.3
+- Virtualenv: .venv
+- Test command: .\.venv\Scripts\python.exe -m pytest tests --cov=src --cov-report=term-missing --cov-report=xml
+
+Result
+- 142 tests passed
+- 0 tests failed
+
+Key Changes
+- Added server test bootstrap in tests\conftest.py for environment defaults and lightweight dependency stubs.
+- Added new business-layer coverage for prompt, system, user info, and inference managers.
+- Added service-layer coverage for API route functions, dependency providers, and app wiring.
+- Fixed JWT timestamp generation in src\business\impl\auth\tokens.py to use UTC-aware timestamps.
+- Fixed admin profile-picture bootstrap path in src\persistence\impl\database\orm.py to respect configured picture storage.
+- Updated pytest.ini to avoid workspace cache-directory issues during test runs.
+
+Coverage
+- Total coverage: 63%
+- Strongly covered areas:
+  - service APIs
+  - inference manager
+  - system manager
+  - user info manager
+  - persistence repository
+- Remaining low-coverage areas are dominated by large external-integration modules:
+  - src\main.py
+  - chroma/vector-db bootstrap modules
+  - graph generation internals
+  - OpenAI client transport internals
+  - validator subprocess paths
+
+Notes
+- The suite still emits warnings about the JWT secret length configured for tests and some resource cleanup warnings from coverage/SQLite teardown.
+- Coverage XML was generated at coverage.xml.
