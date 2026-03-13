@@ -19,7 +19,10 @@ class SemanticRepository(ISemanticRepository):
         if connect:
             self.collection = self.get_chroma_client().get_collection(
                 name=namedb,
-                embedding_function=embedding_functions.DefaultEmbeddingFunction()
+                embedding_function=embedding_functions.OpenAIEmbeddingFunction(
+                    api_key="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",
+                    model_name="text-embedding-3-small"
+                )
             )
 
     @staticmethod

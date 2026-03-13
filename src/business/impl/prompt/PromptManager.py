@@ -4,7 +4,7 @@ from src.business.interfaces import IPromptManager
 from typing import Tuple, List
 
 class PromptManager(IPromptManager):
-    async def retrieve_context(self, user_input: str, top_k: int = 2) -> str:
+    async def retrieve_context(self, user_input: str, top_k: int = 3) -> str:
         """
         Retrieve semantically similar documentation chunks for the user prompt.
 
