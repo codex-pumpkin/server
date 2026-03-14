@@ -92,7 +92,7 @@ async def _main():
     .end
     """
     validator = CodeValidator()
-    result = await validator.validate_code(code2)
+    result = await validator.validate_code(code)
 
     print(f"Valid: {result.isValid}")
     print(f"Exit code: {result.exitCode}")
