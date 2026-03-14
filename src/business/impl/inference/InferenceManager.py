@@ -401,6 +401,7 @@ class InferenceManager(IInferenceManager):
         aiclient = await PersistenceFactory.get_ai_client()
 
         doc_context = await prompt_manager.retrieve_context(user_input)
+        print(doc_context)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)
     
         code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key, model, llm_url)

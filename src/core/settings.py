@@ -169,6 +169,7 @@ refresh_settings = RefreshSettings(
 )
 
 llm_settings = LLMSettings(
+    api_key=os.getenv("OPENAI_API_KEY"),
     num_of_regenerations=1,
 )
 
