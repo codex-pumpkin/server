@@ -459,107 +459,80 @@ class InferenceManager(IInferenceManager):
 
         return llm_response.strip().splitlines()[0][2:]
 
+
     def _parse_ngspice_output(self, raw: str) -> Optional[str]:
-        """
-        Parse raw ngspice text output into a compact JSON string suitable for the frontend.
-    
-        Keeps the raw text untouched for LLM regeneration context — this is only called
-        when constructing the DTO to send to the client.
-    
-        @param raw (str): Raw stdout from ngspice.
-    
-        @return Optional[str]: JSON string with structured simulation data, or None if parsing fails.
-        """
-        try:
-            analysis_match = re.search(
-                r'\b(Transient Analysis|AC Analysis|DC Transfer Curve|DC transfer characteristics)\b', raw, re.IGNORECASE
-            )
-            analysis_type = "transient"
-            if analysis_match:
-                t = analysis_match.group(1).lower()
-                if "ac" in t:
-                    analysis_type = "ac"
-                elif "dc" in t:
-                    analysis_type = "dc"
+        lines = raw.splitlines()
 
-            block_pattern = re.compile(
-                r'^Index\s+(?:\S+\s+)*\S+\s*$',
-                re.MULTILINE
-            )
-            block_starts = [m.start() for m in block_pattern.finditer(raw)]
-    
-            if not block_starts:
-                return "no simulation result"
-    
-            blocks = []
-            for i, start in enumerate(block_starts):
-                end = block_starts[i + 1] if i + 1 < len(block_starts) else len(raw)
-                blocks.append(raw[start:end])
-    
-            x_values: list[float] = []
-            all_variables: dict[str, list[float]] = {}
+        header_pattern = re.compile(r"^\s*Index\s+")
+        separator_pattern = re.compile(r"^-{5,}")
+        data_pattern = re.compile(r"^\s*\d+\s")
 
-            data_row_re = re.compile(
-                r'^\d+\s+([\d.e+\-]+)((?:\s+[\d.e+\-]+)+)',
-                re.MULTILINE
-            )
-    
-            for block in blocks:
-                header_line = block.splitlines()[0].strip()
-                cols = header_line.split()
-                x_name = cols[1] if len(cols) > 1 else 'x'
-                var_names = cols[2:]
-    
-                block_x: list[float] = []
-                block_vars: list[list[float]] = [[] for _ in var_names]
-    
-                for match in data_row_re.finditer(block):
-                    row_cols = match.group(0).split()
-                    try:
-                        block_x.append(float(row_cols[1]))
-                    except (IndexError, ValueError):
-                        continue
-                    for i in range(len(var_names)):
-                        try:
-                            block_vars[i].append(float(row_cols[2 + i]))
-                        except (IndexError, ValueError):
-                            block_vars[i].append(0.0)
-    
-                if not block_x:
+        x_axis_name = None
+        x_values: List[float] = []
+
+        variables: Dict[str, List[float]] = {}
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+
+            if header_pattern.match(line):
+                headers = re.split(r"\s+", line.strip())
+
+                if len(headers) < 3:
+                    i += 1
                     continue
-    
-                if not x_values:
-                    x_values = block_x
-    
-                for i, name in enumerate(var_names):
-                    if name not in all_variables:
-                        all_variables[name] = block_vars[i]
-    
-            if not x_values or not all_variables:
-                return "no simulation result"
-    
-            total = len(x_values)
-            max_points = 300
-            if total > max_points:
-                step = total / max_points
-                indices = [int(i * step) for i in range(max_points)]
-                indices[-1] = total - 1
-                x_values = [x_values[i] for i in indices]
-                all_variables = {
-                    name: [vals[i] for i in indices]
-                    for name, vals in all_variables.items()
-                }
-    
-            result = {
-                "type": analysis_type,
-                "x_axis": {"name": x_name, "values": x_values},
-                "variables": [
-                    {"name": name, "values": vals}
-                    for name, vals in all_variables.items()
-                ]
-            }
-    
-            return json.dumps(result, separators=(',', ':'))
-    
-        except Exception:
-            return "no simulation result"
+
+                axis_name = headers[1]
+                var_names = headers[2:]
+
+                if x_axis_name is None:
+                    x_axis_name = axis_name
+
+                for name in var_names:
+                    if name not in variables:
+                        variables[name] = []
+
+                i += 1
+
+                if i < len(lines) and separator_pattern.match(lines[i]):
+                    i += 1
+
+                while i < len(lines) and data_pattern.match(lines[i]):
+                    parts = re.split(r"\s+", lines[i].strip())
+
+                    idx = int(parts[0])
+                    t = float(parts[1])
+
+                    if len(x_values) <= idx:
+                        x_values.append(t)
+
+                    for j, name in enumerate(var_names):
+                        if 2 + j < len(parts):
+                            variables[name].append(float(parts[2 + j]))
+
+                    i += 1
+
+                continue
+
+            i += 1
+
+        if not x_values or not variables:
+            return None
+
+        result = {
+            "type": "transient",
+            "x_axis": {
+                "name": x_axis_name,
+                "values": x_values,
+            },
+            "variables": [
+                {"name": name, "values": values}
+                for name, values in variables.items()
+            ],
+        }
+
+        return json.dumps(result)
+
+
+
