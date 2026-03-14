@@ -46,4 +46,4 @@ services:
       ADMIN_EMAIL: admin@example.com
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: admin
-
+      OPENAI_API_KEY: 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
