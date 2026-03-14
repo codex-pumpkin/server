@@ -428,7 +428,7 @@ class InferenceManager(IInferenceManager):
         else:
             return code, validation_result.rawOutput
 
-        return "Failed to generate valid code after multiple attempts.", None
+        return "Failed to generate valid code after multiple attempts."
     
     
     async def _clean_markdown(self, code: str) -> str:
