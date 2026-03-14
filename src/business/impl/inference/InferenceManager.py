@@ -207,7 +207,7 @@ class InferenceManager(IInferenceManager):
             message=request.message,
             response=result,
             graph=graph,
-            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else None,
+            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result",
             generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
@@ -466,7 +466,9 @@ class InferenceManager(IInferenceManager):
         @return Optional[str]: JSON string with structured simulation data, or None if parsing fails.
         """
         try:
-            analysis_match = re.search(r'\b(Transient Analysis|AC Analysis|DC Transfer Curve)\b', raw, re.IGNORECASE)
+            analysis_match = re.search(
+                r'\b(Transient Analysis|AC Analysis|DC Transfer Curve)\b', raw, re.IGNORECASE
+            )
             analysis_type = "transient"
             if analysis_match:
                 t = analysis_match.group(1).lower()
@@ -475,52 +477,80 @@ class InferenceManager(IInferenceManager):
                 elif "dc" in t:
                     analysis_type = "dc"
     
-            header_match = re.search(r'^(Index(?:\s+[\w().#]+)+)\s*$', raw, re.MULTILINE)
-            if not header_match:
+            block_pattern = re.compile(
+                r'^(Index(?:\s+[\w().#]+)+)\s*$',
+                re.MULTILINE
+            )
+            block_starts = [m.start() for m in block_pattern.finditer(raw)]
+    
+            if not block_starts:
                 return None
     
-            all_cols = header_match.group(0).strip().split()
-            x_name = all_cols[1]
-            var_names = all_cols[2:]
+            blocks = []
+            for i, start in enumerate(block_starts):
+                end = block_starts[i + 1] if i + 1 < len(block_starts) else len(raw)
+                blocks.append(raw[start:end])
     
-            data_row_re = re.compile(r'^\d+\t([\d.e+\-]+)(\t[\d.e+\-]+)+', re.MULTILINE)
+            x_values: list[float] = []
+            all_variables: dict[str, list[float]] = {}
     
-            x_values = []
-            var_values = [[] for _ in var_names]
+            data_row_re = re.compile(
+                r'^\d+\t([\d.e+\-]+)((?:\t[\d.e+\-]+)+)',
+                re.MULTILINE
+            )
     
-            for match in data_row_re.finditer(raw):
-                cols = match.group(0).strip().split('\t')
-                try:
-                    x_values.append(float(cols[1]))
-                except (IndexError, ValueError):
-                    continue
-                for i, _ in enumerate(var_names):
+            for block in blocks:
+                header_line = block.splitlines()[0].strip()
+                cols = header_line.split()
+                x_name = cols[1] if len(cols) > 1 else 'x'
+                var_names = cols[2:]
+    
+                block_x: list[float] = []
+                block_vars: list[list[float]] = [[] for _ in var_names]
+    
+                for match in data_row_re.finditer(block):
+                    row_cols = match.group(0).strip().split('\t')
                     try:
-                        var_values[i].append(float(cols[2 + i]))
+                        block_x.append(float(row_cols[1]))
                     except (IndexError, ValueError):
-                        var_values[i].append(0.0)
+                        continue
+                    for i in range(len(var_names)):
+                        try:
+                            block_vars[i].append(float(row_cols[2 + i]))
+                        except (IndexError, ValueError):
+                            block_vars[i].append(0.0)
     
-            if not x_values:
+                if not block_x:
+                    continue
+    
+                if not x_values:
+                    x_values = block_x
+    
+                for i, name in enumerate(var_names):
+                    if name not in all_variables:
+                        all_variables[name] = block_vars[i]
+    
+            if not x_values or not all_variables:
                 return None
     
-            max_points = 300
             total = len(x_values)
+            max_points = 300
             if total > max_points:
                 step = total / max_points
                 indices = [int(i * step) for i in range(max_points)]
-                indices[-1] = total - 1 
+                indices[-1] = total - 1
                 x_values = [x_values[i] for i in indices]
-                var_values = [[col[i] for i in indices] for col in var_values]
+                all_variables = {
+                    name: [vals[i] for i in indices]
+                    for name, vals in all_variables.items()
+                }
     
             result = {
                 "type": analysis_type,
-                "x_axis": {
-                    "name": x_name,
-                    "values": x_values
-                },
+                "x_axis": {"name": x_name, "values": x_values},
                 "variables": [
-                    {"name": name, "values": var_values[i]}
-                    for i, name in enumerate(var_names)
+                    {"name": name, "values": vals}
+                    for name, vals in all_variables.items()
                 ]
             }
     
