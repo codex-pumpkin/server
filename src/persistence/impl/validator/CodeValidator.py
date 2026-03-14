@@ -13,18 +13,18 @@ class CodeValidator(ICodeValidator):
     """
 
     async def validate_code(self, code: str) -> ValidationResult:
-        # Create a temporary .cir file with the SPICE code
-        """Validate code."""
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".cir", delete=False) as tmp_file:
             tmp_file.write(code)
             tmp_file.flush()
             tmp_path = tmp_file.name
 
+        out_path = tmp_path + ".out"  # ngspice output file
+
         try:
-            # Execute ngspice asynchronously (-b = batch mode, no GUI)
             process = await asyncio.create_subprocess_exec(
                 "ngspice",
                 "-b",
+                "-o", out_path,   # write output to a file
                 tmp_path,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -32,8 +32,8 @@ class CodeValidator(ICodeValidator):
 
             try:
                 stdout, stderr = await asyncio.wait_for(
-                process.communicate(),
-                timeout=7
+                    process.communicate(),
+                    timeout=7
                 )
             except asyncio.TimeoutError:
                 process.kill()
@@ -43,15 +43,22 @@ class CodeValidator(ICodeValidator):
                     exitCode=process.returncode,
                     rawOutput="Simulation timed out",
                 )
-            # Combine and decode output
-            output = (stdout + stderr).decode("utf-8", errors="ignore")
+
+            # Read the -o output file if it exists
+            file_output = ""
+            if os.path.exists(out_path):
+                with open(out_path, "r", errors="ignore") as f:
+                    file_output = f.read()
+
+            # Combine all sources
+            pipe_output = (stdout + stderr).decode("utf-8", errors="ignore")
+            output = (file_output + "\n" + pipe_output).strip()
 
             is_valid = process.returncode == 0
-            # Return structured result (camelCase field names!)
             return ValidationResult(
                 isValid=is_valid,
                 exitCode=process.returncode,
-                rawOutput=output.strip(),
+                rawOutput=output,
             )
 
         except FileNotFoundError:
@@ -60,20 +67,18 @@ class CodeValidator(ICodeValidator):
                 exitCode=-1,
                 rawOutput="Error: ngspice not found.",
             )
-
         except Exception as e:
             return ValidationResult(
                 isValid=False,
                 exitCode=-2,
                 rawOutput=f"Unexpected validation error: {e}",
             )
-
         finally:
-            # Cleanup temporary file
-            try:
-                os.remove(tmp_path)
-            except OSError:
-                pass
+            for path in (tmp_path, out_path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
 
 async def _main():
@@ -87,7 +92,7 @@ async def _main():
     .end
     """
     validator = CodeValidator()
-    result = await validator.validate_code(code)
+    result = await validator.validate_code(code2)
 
     print(f"Valid: {result.isValid}")
     print(f"Exit code: {result.exitCode}")

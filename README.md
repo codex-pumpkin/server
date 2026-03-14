@@ -86,6 +86,7 @@ An example docker-compose configuration [is provided](/docker-compose.yml).
 | ADMIN_USERNAME       | The username of the created admin account.                                                                           |                                 |
 | ADMIN_EMAIL          | The email-address of the created admin account.                                                                      |                                 |
 | ADMIN_PASSWORD       | The password of the created admin account.                                                                           |                                 |
+| OPENAI_API_KEY       | The OpenAi api key llm.                                                                           |                                 |
 
 ### Volumes
 The following directories are used by the container:

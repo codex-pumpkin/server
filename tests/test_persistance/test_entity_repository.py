@@ -780,7 +780,8 @@ async def test_add_message_and_verify_persistence(async_session_factory_fixture)
         message="* spice netlist example",
         generation_millis=150,
         response="Success",
-        graph="{}"
+        graph="{}",
+        simulation_result="Simulation results"
     )
 
     # Action
@@ -810,7 +811,8 @@ async def test_get_messages_order(async_session_factory_fixture):
             message=f"Prompt {i}",
             generation_millis=10,
             response=f"Resp {i}",
-            graph="{}"
+            graph="{}",
+            simulation_result="{}"
         )
         await repo.add_message(chat_id, msg)
         await asyncio.sleep(0.01)  # Ensure unique timestamps

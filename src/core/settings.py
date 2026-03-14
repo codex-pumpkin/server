@@ -76,6 +76,7 @@ class LLMSettings(BaseModel):
 
     @param num_of_regenerations (int): Maximum regeneration attempts after validation failure.
     """
+    api_key:str
     num_of_regenerations: int
 
 class GoogleAuthSettings(BaseModel):
