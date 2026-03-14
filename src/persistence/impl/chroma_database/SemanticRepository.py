@@ -20,7 +20,7 @@ class SemanticRepository(ISemanticRepository):
             self.collection = self.get_chroma_client().get_collection(
                 name=namedb,
                 embedding_function=embedding_functions.OpenAIEmbeddingFunction(
-                    api_key="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",
+                    api_key=settings.llm_settings.api_key,
                     model_name="text-embedding-3-small"
                 )
             )
