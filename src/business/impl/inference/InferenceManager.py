@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 import uuid
 from pydantic import Field
@@ -527,4 +528,5 @@ class InferenceManager(IInferenceManager):
             return json.dumps(result, separators=(',', ':'))
     
         except Exception:
+            logging.error("Returning null inside InferenceManager.py for _parse_ngspice_output")
             return None
