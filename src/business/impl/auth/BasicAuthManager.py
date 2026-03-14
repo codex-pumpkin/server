@@ -268,7 +268,7 @@ class BasicAuthManager(IBasicAuthManager):
         )
         return TokenResponse(
             access_token=access_token,
-            refresh_token=token
+            refresh_token=str(refresh_token.id)
         )
 
     async def register(self, request: SignupRequest):
