@@ -120,9 +120,7 @@ class MessagesOrm(Base):
     prompt: Mapped[str] = mapped_column()
     response: Mapped[str] = mapped_column()
     graph: Mapped[str] = mapped_column()
-    simulation_result: Mapped[str] = mapped_column(
-        nullable=True
-    )
+    simulation_result: Mapped[str] = mapped_column()
     generation_ms: Mapped[int] = mapped_column()
     conversation_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("conversations.id", ondelete="SET NULL"),
