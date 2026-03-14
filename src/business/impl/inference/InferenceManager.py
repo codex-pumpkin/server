@@ -380,9 +380,12 @@ class InferenceManager(IInferenceManager):
 
         @return str: Graph serialization produced by the graph generator backend.
         """
-        graph_generator = await PersistenceFactory.get_graph_generator()
-        graph = await graph_generator.gen_graph(llm_response)
-        return graph
+        try:
+            graph_generator = await PersistenceFactory.get_graph_generator()
+            graph = await graph_generator.gen_graph(llm_response)
+            return graph
+        except Exception:
+            return None
 
     async def _get_llm_response_and_validate(
         self,
@@ -486,7 +489,7 @@ class InferenceManager(IInferenceManager):
             block_starts = [m.start() for m in block_pattern.finditer(raw)]
     
             if not block_starts:
-                return None
+                return "no simulation result"
     
             blocks = []
             for i, start in enumerate(block_starts):
@@ -533,7 +536,7 @@ class InferenceManager(IInferenceManager):
                         all_variables[name] = block_vars[i]
     
             if not x_values or not all_variables:
-                return None
+                return "no simulation result"
     
             total = len(x_values)
             max_points = 300
@@ -559,5 +562,4 @@ class InferenceManager(IInferenceManager):
             return json.dumps(result, separators=(',', ':'))
     
         except Exception:
-            logging.error("Returning null inside InferenceManager.py for _parse_ngspice_output")
-            return None
+            return "no simulation result"
