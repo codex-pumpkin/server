@@ -365,7 +365,7 @@ class InferenceManager(IInferenceManager):
             response=result,
             message=message_request.message,
             graph=graph,
-            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else None,
+            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result",
             generation_millis=int((end - start) * 1000)
         )
         return message
