@@ -2,6 +2,9 @@ import datetime
 import time
 import uuid
 from pydantic import Field
+import re
+import json
+from typing import Optional
 
 from src.core.dtos import (
     TokenModel,
@@ -184,7 +187,7 @@ class InferenceManager(IInferenceManager):
         model = await repo.get_model(request.llm_model_config_id)
 
         start = time.monotonic()
-        result = await self._get_llm_response_and_validate(
+        result, simulation_result = await self._get_llm_response_and_validate(
             user_input=request.message,
             conversation_history=[],
             api_key=api_key,
@@ -204,6 +207,7 @@ class InferenceManager(IInferenceManager):
             message=request.message,
             response=result,
             graph=graph,
+            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else None,
             generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
@@ -346,7 +350,7 @@ class InferenceManager(IInferenceManager):
         if remove_last:
             messages = messages[:-1]
         start = time.monotonic()
-        result = await self._get_llm_response_and_validate(
+        result, simulation_result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
             conversation_history=messages,
             api_key=model.api_key,
@@ -361,6 +365,7 @@ class InferenceManager(IInferenceManager):
             response=result,
             message=message_request.message,
             graph=graph,
+            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else None,
             generation_millis=int((end - start) * 1000)
         )
         return message
@@ -384,7 +389,7 @@ class InferenceManager(IInferenceManager):
         api_key: str,
         model: str,
         llm_url: str
-    ) -> str:
+    ) -> Tuple[str, str]:
         """
         Generate code, validate it, and regenerate when validation fails.
 
@@ -419,9 +424,9 @@ class InferenceManager(IInferenceManager):
                 
                 validation_result = await validator.validate_code(code) 
                 if validation_result.isValid:
-                    return code
+                    return code, validation_result.rawOutput
         else:
-            return code       
+            return code, validation_result.rawOutput
 
         return "Failed to generate valid code after multiple attempts."
     
@@ -448,3 +453,78 @@ class InferenceManager(IInferenceManager):
         """
 
         return llm_response.strip().splitlines()[0][2:]
+
+    def _parse_ngspice_output(self, raw: str) -> Optional[str]:
+        """
+        Parse raw ngspice text output into a compact JSON string suitable for the frontend.
+    
+        Keeps the raw text untouched for LLM regeneration context — this is only called
+        when constructing the DTO to send to the client.
+    
+        @param raw (str): Raw stdout from ngspice.
+    
+        @return Optional[str]: JSON string with structured simulation data, or None if parsing fails.
+        """
+        try:
+            analysis_match = re.search(r'\b(Transient Analysis|AC Analysis|DC Transfer Curve)\b', raw, re.IGNORECASE)
+            analysis_type = "transient"
+            if analysis_match:
+                t = analysis_match.group(1).lower()
+                if "ac" in t:
+                    analysis_type = "ac"
+                elif "dc" in t:
+                    analysis_type = "dc"
+    
+            header_match = re.search(r'^(Index(?:\s+[\w().#]+)+)\s*$', raw, re.MULTILINE)
+            if not header_match:
+                return None
+    
+            all_cols = header_match.group(0).strip().split()
+            x_name = all_cols[1]
+            var_names = all_cols[2:]
+    
+            data_row_re = re.compile(r'^\d+\t([\d.e+\-]+)(\t[\d.e+\-]+)+', re.MULTILINE)
+    
+            x_values = []
+            var_values = [[] for _ in var_names]
+    
+            for match in data_row_re.finditer(raw):
+                cols = match.group(0).strip().split('\t')
+                try:
+                    x_values.append(float(cols[1]))
+                except (IndexError, ValueError):
+                    continue
+                for i, _ in enumerate(var_names):
+                    try:
+                        var_values[i].append(float(cols[2 + i]))
+                    except (IndexError, ValueError):
+                        var_values[i].append(0.0)
+    
+            if not x_values:
+                return None
+    
+            max_points = 300
+            total = len(x_values)
+            if total > max_points:
+                step = total / max_points
+                indices = [int(i * step) for i in range(max_points)]
+                indices[-1] = total - 1 
+                x_values = [x_values[i] for i in indices]
+                var_values = [[col[i] for i in indices] for col in var_values]
+    
+            result = {
+                "type": analysis_type,
+                "x_axis": {
+                    "name": x_name,
+                    "values": x_values
+                },
+                "variables": [
+                    {"name": name, "values": var_values[i]}
+                    for i, name in enumerate(var_names)
+                ]
+            }
+    
+            return json.dumps(result, separators=(',', ':'))
+    
+        except Exception:
+            return None
