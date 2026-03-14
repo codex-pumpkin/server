@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 import uuid
 from pydantic import Field
@@ -357,6 +358,7 @@ class InferenceManager(IInferenceManager):
             model=model.model_name,
             llm_url=model.api_url
         )
+        parsed_sim_result = self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result"
         graph = await self._get_graph_representation(result)
         
         end = time.monotonic()
@@ -365,7 +367,7 @@ class InferenceManager(IInferenceManager):
             response=result,
             message=message_request.message,
             graph=graph,
-            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result",
+            simulation_result=parsed_sim_result,
             generation_millis=int((end - start) * 1000)
         )
         return message
@@ -470,7 +472,7 @@ class InferenceManager(IInferenceManager):
         """
         try:
             analysis_match = re.search(
-                r'\b(Transient Analysis|AC Analysis|DC Transfer Curve)\b', raw, re.IGNORECASE
+                r'\b(Transient Analysis|AC Analysis|DC Transfer Curve|DC transfer characteristics)\b', raw, re.IGNORECASE
             )
             analysis_type = "transient"
             if analysis_match:
@@ -479,9 +481,9 @@ class InferenceManager(IInferenceManager):
                     analysis_type = "ac"
                 elif "dc" in t:
                     analysis_type = "dc"
-    
+
             block_pattern = re.compile(
-                r'^(Index(?:\s+[\w().#]+)+)\s*$',
+                r'^Index\s+(?:\S+\s+)*\S+\s*$',
                 re.MULTILINE
             )
             block_starts = [m.start() for m in block_pattern.finditer(raw)]
@@ -496,9 +498,9 @@ class InferenceManager(IInferenceManager):
     
             x_values: list[float] = []
             all_variables: dict[str, list[float]] = {}
-    
+
             data_row_re = re.compile(
-                r'^\d+\t([\d.e+\-]+)((?:\t[\d.e+\-]+)+)',
+                r'^\d+\s+([\d.e+\-]+)((?:\s+[\d.e+\-]+)+)',
                 re.MULTILINE
             )
     
@@ -512,7 +514,7 @@ class InferenceManager(IInferenceManager):
                 block_vars: list[list[float]] = [[] for _ in var_names]
     
                 for match in data_row_re.finditer(block):
-                    row_cols = match.group(0).strip().split('\t')
+                    row_cols = match.group(0).split()
                     try:
                         block_x.append(float(row_cols[1]))
                     except (IndexError, ValueError):
