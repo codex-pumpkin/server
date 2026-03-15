@@ -32,6 +32,7 @@ class MailSettings(BaseModel):
     logo:str
     client_base_url:str
     client_base_url:str
+    verification_required:bool
 
 class JWTSettings(BaseModel):
     """
@@ -156,7 +157,8 @@ mail_settings = MailSettings(
     app_mail=os.getenv("APP_MAIL"),
     password=os.getenv("MAIL_PASSWORD"),
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
-    client_base_url=os.getenv("CLIENT_BASE_URL")
+    client_base_url=os.getenv("CLIENT_BASE_URL"),
+    verification_required=not (os.getenv("EMAIL_VERIFICATION_REQUIRED").lower() == "false")
 )
 
 jwt_settings = JWTSettings(
