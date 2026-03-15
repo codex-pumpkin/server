@@ -30,8 +30,8 @@ def encode_jwt(
     else:
         expire = now + datetime.timedelta(minutes=expire_minutes)
     payload_copy.update(
-        toc=now.timestamp(),
-        exp=expire.timestamp()
+        toc=int(now.timestamp()),
+        exp=int(expire.timestamp())
     )
     return jwt.encode(
         payload_copy,
@@ -56,7 +56,7 @@ def decode_jwt(
     return jwt.decode(
         encoded,
         secret_key,
-        algorithms=algorithm
+        algorithms=[algorithm]
     )
 
 def check_if_jwt_valid(jwt_token:str) -> bool:

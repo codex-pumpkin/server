@@ -4,6 +4,11 @@ from typing import Annotated
 from dotenv import load_dotenv
 import os
 
+
+def getenv(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return value if value is not None else default
+
 class MailSettings(BaseModel):
     """
     Mail transport and branding configuration.
@@ -150,17 +155,27 @@ class Settings(BaseModel):
 load_dotenv()
 
 mail_settings = MailSettings(
+<<<<<<< Updated upstream
     smtp_server=os.getenv("APP_MAIL_SMTP_SERVER", "localhost"),
     port=int(os.getenv("APP_MAIL_SMTP_PORT", "25")),
     app_mail=os.getenv("APP_MAIL", "test@example.com"),
     password=os.getenv("MAIL_PASSWORD", "password"),
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
     client_base_url=os.getenv("CLIENT_BASE_URL", "http://localhost")
+=======
+    smtp_server=getenv("APP_MAIL_SMTP_SERVER", "localhost"),
+    port=getenv("APP_MAIL_SMTP_PORT", "25"),
+    app_mail=getenv("APP_MAIL", "noreply@example.com"),
+    password=getenv("MAIL_PASSWORD", ""),
+    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
+    client_base_url=getenv("CLIENT_BASE_URL", "http://localhost:8080"),
+    verification_required=getenv("EMAIL_VERIFICATION_REQUIRED", "true").lower() != "false"
+>>>>>>> Stashed changes
 )
 
 jwt_settings = JWTSettings(
     algorithm="HS256",
-    secret_key=os.getenv("JWT_SECRET"),
+    secret_key=getenv("JWT_SECRET", "test-secret"),
     expire_time=15
 )
 
@@ -169,20 +184,24 @@ refresh_settings = RefreshSettings(
 )
 
 llm_settings = LLMSettings(
+<<<<<<< Updated upstream
+=======
+    api_key=getenv("OPENAI_API_KEY", "test-openai-key"),
+>>>>>>> Stashed changes
     num_of_regenerations=1,
 )
 
 google_settings = GoogleAuthSettings(
-    client_id=os.getenv("CLIENT_ID"),
+    client_id=getenv("CLIENT_ID", "test-client-id"),
     token_url="https://oauth2.googleapis.com/token",
-    client_secret=os.getenv("CLIENT_SECRET"),
+    client_secret=getenv("CLIENT_SECRET", "test-client-secret"),
     redirect_uri="http://localhost:8000/auth/google/callback",
     url="https://accounts.google.com/o/oauth2/auth?",
     user_info_url="https://www.googleapis.com/oauth2/v3/userinfo"
 )
 
 database_settings = DatabaseSettings(
-    url=os.getenv("DATABASE_URL")
+    url=getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 )
 
 pictures_settings = PicturesSettings(
@@ -190,14 +209,14 @@ pictures_settings = PicturesSettings(
 )
 
 chroma_settings = ChromaSettings(
-    host=os.getenv("CHROMA_HOST"),
-    port=os.getenv("CHROMA_PORT")
+    host=getenv("CHROMA_HOST", "localhost"),
+    port=getenv("CHROMA_PORT", "8000")
 )
 
 admin_settings = AdminSettings(
-    email=os.getenv("ADMIN_EMAIL"),
-    username=os.getenv("ADMIN_USERNAME"),
-    password=os.getenv("ADMIN_PASSWORD")
+    email=getenv("ADMIN_EMAIL", "admin@example.com"),
+    username=getenv("ADMIN_USERNAME", "admin"),
+    password=getenv("ADMIN_PASSWORD", "admin")
 )
     
 settings = Settings(
