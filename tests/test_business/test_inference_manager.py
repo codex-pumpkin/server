@@ -370,7 +370,7 @@ async def test_get_llm_response_and_validate_handles_regeneration(monkeypatch):
 
     result = await InferenceManager()._get_llm_response_and_validate("question", [("u", "a")], "key", "model", "http://llm")
 
-    assert result == "fixed code"
+    assert result[0] == "fixed code"
     ai_client.regenerate.assert_awaited_once()
 
 
@@ -409,7 +409,7 @@ async def test_get_llm_response_and_validate_returns_failure_after_retries(monke
     finally:
         settings.llm_settings.num_of_regenerations = original_retries
 
-    assert result == "Failed to generate valid code after multiple attempts."
+    assert result[0] == "Failed to generate valid code after multiple attempts."
 
 
 @pytest.mark.asyncio
