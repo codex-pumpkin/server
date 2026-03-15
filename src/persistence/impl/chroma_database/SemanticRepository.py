@@ -15,9 +15,9 @@ class SemanticRepository(ISemanticRepository):
         if connect:
             api_key = settings.llm_settings.api_key
             if api_key is None or api_key == "":
-                function = embedding_functions.DefaultEmbeddingFunction()
+                function = self._embedding_functions().DefaultEmbeddingFunction()
             else:
-                function = embedding_functions.OpenAIEmbeddingFunction(
+                function = self._embedding_functions().OpenAIEmbeddingFunction(
                     api_key=settings.llm_settings.api_key,
                     model_name="text-embedding-3-small"
                 )
