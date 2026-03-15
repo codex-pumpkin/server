@@ -18,8 +18,8 @@ class SemanticRepository(ISemanticRepository):
         """Initialize the instance."""
         if connect:
             api_key = settings.llm_settings.api_key
-            if api_key is None:
-                function = embedding_functions.DefaultEmbeddingFunction();
+            if api_key is None or api_key == "":
+                function = embedding_functions.DefaultEmbeddingFunction()
             else:
                 function = embedding_functions.OpenAIEmbeddingFunction(
                     api_key=settings.llm_settings.api_key,
