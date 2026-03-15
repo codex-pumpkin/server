@@ -1,6 +1,7 @@
 import datetime
 
 from src.business.interfaces import IBasicAuthManager
+from src.core import settings
 
 from src.core.dtos import (
     AccountResponse,
@@ -312,7 +313,7 @@ class BasicAuthManager(IBasicAuthManager):
         if user is None:
             raise AuthError("User is not found!")
 
-        if not user.is_verified:
+        if (not user.is_verified) and settings.mail_settings.verification_required:
             # If a user that is not email-verified tries to login,
             # the request fails but we send the verification email.
             await self.generate_email_verification(user.id, user.email)
