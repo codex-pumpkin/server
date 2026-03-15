@@ -65,7 +65,7 @@ class SystemManager(ISystemManager):
         repo = await PersistenceFactory.get_entity_repository()
         return await repo.get_usage_data(analytics_request.period_of_days, analytics_request.time_interval_minutes)
 
-    async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
+    async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest) -> LLMConfigurationResponse:
         """
         Save a new LLM configuration entry.
 
@@ -77,12 +77,13 @@ class SystemManager(ISystemManager):
             None: Stores the model configuration in persistence.
         """
         repo = await PersistenceFactory.get_entity_repository()
-        await repo.add_model(
+        id = await repo.add_model(
             name=llm_configuration_request.name,
             url=llm_configuration_request.api_url,
             key=llm_configuration_request.api_key,
             model_name=llm_configuration_request.model_name
         )
+        return await repo.get_model(id)
 
     async def update_llm_config(
         self,
