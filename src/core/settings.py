@@ -4,6 +4,11 @@ from typing import Annotated
 from dotenv import load_dotenv
 import os
 
+
+def getenv(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return value if value is not None else default
+
 class MailSettings(BaseModel):
     """
     Mail transport and branding configuration.
@@ -152,6 +157,12 @@ class Settings(BaseModel):
 load_dotenv()
 
 mail_settings = MailSettings(
+    smtp_server=os.getenv("APP_MAIL_SMTP_SERVER", "localhost"),
+    port=int(os.getenv("APP_MAIL_SMTP_PORT", "25")),
+    app_mail=os.getenv("APP_MAIL", "test@example.com"),
+    password=os.getenv("MAIL_PASSWORD", "password"),
+    logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
+    client_base_url=os.getenv("CLIENT_BASE_URL", "http://localhost")
     smtp_server=os.getenv("APP_MAIL_SMTP_SERVER", "smtp.example.com"),
     port=os.getenv("APP_MAIL_SMTP_PORT", "465"),
     app_mail=os.getenv("APP_MAIL", "mail@example.com"),
@@ -186,7 +197,7 @@ google_settings = GoogleAuthSettings(
 )
 
 database_settings = DatabaseSettings(
-    url=os.getenv("DATABASE_URL", "postgresql://example.com/codex")
+    url=getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 )
 
 pictures_settings = PicturesSettings(
@@ -194,14 +205,14 @@ pictures_settings = PicturesSettings(
 )
 
 chroma_settings = ChromaSettings(
-    host=os.getenv("CHROMA_HOST", "localhost"),
-    port=os.getenv("CHROMA_PORT", "1234")
+    host=getenv("CHROMA_HOST", "localhost"),
+    port=getenv("CHROMA_PORT", "8000")
 )
 
 admin_settings = AdminSettings(
-    email=os.getenv("ADMIN_EMAIL", "admin@example.com"),
-    username=os.getenv("ADMIN_USERNAME", "admin"),
-    password=os.getenv("ADMIN_PASSWORD", "admin")
+    email=getenv("ADMIN_EMAIL", "admin@example.com"),
+    username=getenv("ADMIN_USERNAME", "admin"),
+    password=getenv("ADMIN_PASSWORD", "admin")
 )
 
 settings = Settings(

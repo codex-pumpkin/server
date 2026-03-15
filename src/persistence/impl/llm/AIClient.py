@@ -51,8 +51,11 @@ _PREPROMPT: Final[str] = textwrap.dedent("""
     CRITICAL CIRCUIT RULES:
     - Every node must have a DC path to ground (resistor, source, or .IC)
     - NEVER connect capacitor directly between two nodes without resistance to ground
-    - RC circuits need: source → resistor → capacitor → ground
-    - Add high-value resistor (1meg) to ground for floating nodes if needed
+    - RC circuits need: source -> resistor -> capacitor -> ground
+    - NO floating or dangling nodes are allowed
+    - Every non-ground node must be used by at least two component terminals (both sides connected)
+    - For transistor chains, connect all requested transistors in sequence; never leave the last transistor unconnected
+    - If any node is single-ended, reconnect the topology instead of adding filler parts unless explicitly requested
 
     **Before generating, think step-by-step internally: 1. Parse user request for components and analysis. 2. Assign unique nodes starting from 0 (ground) and 1 upward. 3. Ensure DC paths. 4. Choose appropriate source type. 5. Select reasonable tstep/tstop for .TRAN. Do not output this thinking—generate clean SPICE netlist only, no explanations.**
 """)
@@ -98,8 +101,11 @@ _REGENRATION_PREPROMPT: Final[str] = textwrap.dedent("""\
     CRITICAL CIRCUIT RULES:
     - Every node must have a DC path to ground (resistor, source, or .IC)
     - NEVER connect capacitor directly between two nodes without resistance to ground
-    - RC circuits need: source → resistor → capacitor → ground
-    - Add high-value resistor (1meg) to ground for floating nodes if needed
+    - RC circuits need: source -> resistor -> capacitor -> ground
+    - NO floating or dangling nodes are allowed
+    - Every non-ground node must be used by at least two component terminals (both sides connected)
+    - For transistor chains, connect all requested transistors in sequence; never leave the last transistor unconnected
+    - If any node is single-ended, reconnect the topology instead of adding filler parts unless explicitly requested
 
     **Before generating, think step-by-step internally: 1. Parse user request for components and analysis. 2. Assign unique nodes starting from 0 (ground) and 1 upward. 3. Ensure DC paths. 4. Choose appropriate source type. 5. Select reasonable tstep/tstop for .TRAN. Do not output this thinking—generate clean SPICE netlist only, no explanations.**
                                                      

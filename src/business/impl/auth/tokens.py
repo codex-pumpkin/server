@@ -24,14 +24,14 @@ def encode_jwt(
     @return str: Encoded JWT string suitable for authorization headers.
     """
     payload_copy = payload.copy()
-    now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    now = datetime.datetime.now(datetime.UTC)
     if time_delta is not None:
         expire = now + time_delta
     else:
         expire = now + datetime.timedelta(minutes=expire_minutes)
     payload_copy.update(
-        toc=now.timestamp(),
-        exp=expire.timestamp()
+        toc=int(now.timestamp()),
+        exp=int(expire.timestamp())
     )
     return jwt.encode(
         payload_copy,
@@ -56,7 +56,7 @@ def decode_jwt(
     return jwt.decode(
         encoded,
         secret_key,
-        algorithms=algorithm
+        algorithms=[algorithm]
     )
 
 def check_if_jwt_valid(jwt_token:str) -> bool:

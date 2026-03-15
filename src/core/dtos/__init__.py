@@ -22,6 +22,9 @@ from .token_info import TokenInfo
 from .token_response import TokenResponse
 from .update_account_request import UpdateAccountRequest
 from .update_conversation_request import UpdateConversationRequest
+from .ngspice_circuit_response import NgspiceCircuitResponse, NgspiceCircuitRequest
+from .ngspice_simulation_response import NgspiceSimulationResponse, NgspiceSimulationRequest
+from .rag_document_response import RagDocumentResponse, RagDocumentRequest, RagDocumentChunkResponse
 
 __all__ = [
     "AccountResponse",
@@ -47,7 +50,14 @@ __all__ = [
     "TokenInfo",
     "TokenResponse",
     "UpdateAccountRequest",
-    "UpdateConversationRequest"
+    "UpdateConversationRequest",
+    "NgspiceCircuitResponse",
+    "NgspiceCircuitRequest",
+    "NgspiceSimulationResponse",
+    "NgspiceSimulationRequest",
+    "RagDocumentResponse",
+    "RagDocumentRequest",
+    "RagDocumentChunkResponse"
 ]
 
 
