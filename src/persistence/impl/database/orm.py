@@ -60,13 +60,8 @@ def create_user(session):
     )
     dest_path = os.path.join(settings.pictures_settings.path, f"{user_id}.jpg")
     if os.path.exists(static_path):
-<<<<<<< Updated upstream
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        shutil.copy(static_path, dest_path)
-=======
         try:
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy(static_path, dest_path)
         except OSError:
             logging.warning("Skipping admin picture copy for path %s", dest_path)
->>>>>>> Stashed changes
