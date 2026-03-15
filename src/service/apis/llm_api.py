@@ -86,7 +86,7 @@ async def llm_configurations_post(
         get_token_jwt_mandatory_admin
     ),
     system_manager: ISystemManager = Depends(get_system_manager)
-) -> None:
+) -> LLMConfigurationResponse:
     """
     Create a new LLM configuration entry.
 

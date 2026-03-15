@@ -15,6 +15,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.core import settings
 from src.service.error_handlers import register_error_handlers
 from src.service.apis import main_router
 
@@ -29,11 +30,7 @@ app = FastAPI(
 # Credentials are enabled to support authenticated browser requests.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4200",
-        "http://localhost:4201",
-        "http://localhost:8080",
-    ],  # Angular Dev
+    allow_origins=["http://localhost:4200", "http://localhost:4201", "http://localhost:8080", settings.mail_settings.client_base_url],  # Angular Dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

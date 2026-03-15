@@ -110,6 +110,7 @@ async def create_message_at_time(async_session_factory_fixture, conversation_id,
             prompt="hi",
             response="hello",
             graph="{}",
+            simulation_result="{}",
             generation_ms=10,
             conversation_id=conversation_id
         )

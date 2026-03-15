@@ -28,7 +28,8 @@ Required:
 
 To run the server, do:
 ```bash
-python -m venv .venv
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 python -m src.main
 ```
@@ -70,22 +71,24 @@ An example docker-compose configuration [is provided](/docker-compose.yml).
 
 ### Environment parameters
 
-| Parameter Name       | Description                                                                                                          |
-|----------------------|----------------------------------------------------------------------------------------------------------------------|
-| APP_MAIL             | The username to the SMTP server. Usually the email-address.                                                          |
-| MAIL_PASSWORD        | The password to the SMTP server.                                                                                     |
-| APP_MAIL_SMTP_SERVER | The host of the SMTP server.                                                                                         |                                 |
-| APP_MAIL_SMTP_PORT   | The port of the SMTP server.                                                                                         |                                 |
-| JWT_SECRET           | The secret used to sign JWT's.                                                                                       |                                 |
-| CLIENT_SECRET        | The client secret of the google cloud project.                                                                       |                                 |
-| CLIENT_ID            | The client ID of the google cloud project.                                                                           |                                 |
-| CLIENT_BASE_URL      | The base url on which the frontend is running. No trailing slash.                                                    |                                 |
-| DATABASE_URL         | The postgres url to connect to the database. Must be of format `postgresql://<user>:<password>@<host>:<port>/<name>` |                                 |
-| CHROMA_PORT          | The port of the chroma database.                                                                                     |                                 |
-| CHROMA_HOST          | The host of the chroma database.                                                                                     |                                 |
-| ADMIN_USERNAME       | The username of the created admin account.                                                                           |                                 |
-| ADMIN_EMAIL          | The email-address of the created admin account.                                                                      |                                 |
-| ADMIN_PASSWORD       | The password of the created admin account.                                                                           |                                 |
+| Parameter Name              | Description                                                                                                          |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------|
+| APP_MAIL                    | The username to the SMTP server. Usually the email-address.                                                          |
+| MAIL_PASSWORD               | The password to the SMTP server.                                                                                     |
+| APP_MAIL_SMTP_SERVER        | The host of the SMTP server.                                                                                         |                                 |
+| APP_MAIL_SMTP_PORT          | The port of the SMTP server.                                                                                         |                                 |
+| JWT_SECRET                  | The secret used to sign JWT's.                                                                                       |                                 |
+| CLIENT_SECRET               | The client secret of the google cloud project.                                                                       |                                 |
+| CLIENT_ID                   | The client ID of the google cloud project.                                                                           |                                 |
+| CLIENT_BASE_URL             | The base url on which the frontend is running. No trailing slash.                                                    |                                 |
+| DATABASE_URL                | The postgres url to connect to the database. Must be of format `postgresql://<user>:<password>@<host>:<port>/<name>` |                                 |
+| CHROMA_PORT                 | The port of the chroma database.                                                                                     |                                 |
+| CHROMA_HOST                 | The host of the chroma database.                                                                                     |                                 |
+| ADMIN_USERNAME              | The username of the created admin account.                                                                           |                                 |
+| ADMIN_EMAIL                 | The email-address of the created admin account.                                                                      |                                 |
+| ADMIN_PASSWORD              | The password of the created admin account.                                                                           |                                 |
+| OPENAI_API_KEY              | The OpenAi api key for the embedding function.                                                                       |                                 |
+| EMAIL_VERIFICATION_REQUIRED | Whether users should have to verify their email to access the server. Only used for load tests.                      |                                 |
 
 ### Volumes
 The following directories are used by the container:

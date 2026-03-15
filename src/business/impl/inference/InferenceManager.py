@@ -2,6 +2,9 @@ import datetime
 import time
 import uuid
 from pydantic import Field
+import re
+import json
+from typing import Dict, Optional
 
 from src.core.dtos import (
     TokenModel,
@@ -184,7 +187,7 @@ class InferenceManager(IInferenceManager):
         model = await repo.get_model(request.llm_model_config_id)
 
         start = time.monotonic()
-        result = await self._get_llm_response_and_validate(
+        result, simulation_result = await self._get_llm_response_and_validate(
             user_input=request.message,
             conversation_history=[],
             api_key=api_key,
@@ -204,6 +207,7 @@ class InferenceManager(IInferenceManager):
             message=request.message,
             response=result,
             graph=graph,
+            simulation_result=self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result",
             generation_millis=int((end - start) * 1000)
         )
         res = ConversationResponse(
@@ -346,13 +350,14 @@ class InferenceManager(IInferenceManager):
         if remove_last:
             messages = messages[:-1]
         start = time.monotonic()
-        result = await self._get_llm_response_and_validate(
+        result, simulation_result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
             conversation_history=messages,
             api_key=model.api_key,
             model=model.model_name,
             llm_url=model.api_url
         )
+        parsed_sim_result = self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result"
         graph = await self._get_graph_representation(result)
         
         end = time.monotonic()
@@ -361,6 +366,7 @@ class InferenceManager(IInferenceManager):
             response=result,
             message=message_request.message,
             graph=graph,
+            simulation_result=parsed_sim_result,
             generation_millis=int((end - start) * 1000)
         )
         return message
@@ -373,9 +379,12 @@ class InferenceManager(IInferenceManager):
 
         @return str: Graph serialization produced by the graph generator backend.
         """
-        graph_generator = await PersistenceFactory.get_graph_generator()
-        graph = await graph_generator.gen_graph(llm_response)
-        return graph
+        try:
+            graph_generator = await PersistenceFactory.get_graph_generator()
+            graph = await graph_generator.gen_graph(llm_response)
+            return graph
+        except Exception:
+            return None
 
     async def _get_llm_response_and_validate(
         self,
@@ -384,7 +393,7 @@ class InferenceManager(IInferenceManager):
         api_key: str,
         model: str,
         llm_url: str
-    ) -> str:
+    ) -> Tuple[str, str]:
         """
         Generate code, validate it, and regenerate when validation fails.
 
@@ -401,6 +410,7 @@ class InferenceManager(IInferenceManager):
         aiclient = await PersistenceFactory.get_ai_client()
 
         doc_context = await prompt_manager.retrieve_context(user_input)
+        print(doc_context)
         conversation_history = prompt_manager.get_conversation_context(conversation_history)
     
         code = await aiclient.get_response(user_input, doc_context, conversation_history, api_key, model, llm_url)
@@ -418,11 +428,11 @@ class InferenceManager(IInferenceManager):
                 
                 validation_result = await validator.validate_code(code) 
                 if validation_result.isValid:
-                    return code
+                    return code, validation_result.rawOutput
         else:
-            return code       
+            return code, validation_result.rawOutput
 
-        return "Failed to generate valid code after multiple attempts."
+        return "Failed to generate valid code after multiple attempts.", None
     
     
     async def _clean_markdown(self, code: str) -> str:
@@ -447,3 +457,81 @@ class InferenceManager(IInferenceManager):
         """
 
         return llm_response.strip().splitlines()[0][2:]
+
+
+    def _parse_ngspice_output(self, raw: str) -> Optional[str]:
+        lines = raw.splitlines()
+
+        header_pattern = re.compile(r"^\s*Index\s+")
+        separator_pattern = re.compile(r"^-{5,}")
+        data_pattern = re.compile(r"^\s*\d+\s")
+
+        x_axis_name = None
+        x_values: List[float] = []
+
+        variables: Dict[str, List[float]] = {}
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+
+            if header_pattern.match(line):
+                headers = re.split(r"\s+", line.strip())
+
+                if len(headers) < 3:
+                    i += 1
+                    continue
+
+                axis_name = headers[1]
+                var_names = headers[2:]
+
+                if x_axis_name is None:
+                    x_axis_name = axis_name
+
+                for name in var_names:
+                    if name not in variables:
+                        variables[name] = []
+
+                i += 1
+
+                if i < len(lines) and separator_pattern.match(lines[i]):
+                    i += 1
+
+                while i < len(lines) and data_pattern.match(lines[i]):
+                    parts = re.split(r"\s+", lines[i].strip())
+
+                    idx = int(parts[0])
+                    t = float(parts[1])
+
+                    if len(x_values) <= idx:
+                        x_values.append(t)
+
+                    for j, name in enumerate(var_names):
+                        if 2 + j < len(parts):
+                            variables[name].append(float(parts[2 + j]))
+
+                    i += 1
+
+                continue
+
+            i += 1
+
+        if not x_values or not variables:
+            return None
+
+        result = {
+            "type": "transient",
+            "x_axis": {
+                "name": x_axis_name,
+                "values": x_values,
+            },
+            "variables": [
+                {"name": name, "values": values}
+                for name, values in variables.items()
+            ],
+        }
+
+        return json.dumps(result)
+
+
+

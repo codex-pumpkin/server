@@ -34,7 +34,7 @@ class ISystemManager(ABC):
         pass
 
     @abstractmethod
-    async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest):
+    async def validate_and_persist_llm_config(self, llm_configuration_request: LLMConfigurationRequest)  -> LLMConfigurationResponse:
         """Validate and persist llm config."""
         pass
 

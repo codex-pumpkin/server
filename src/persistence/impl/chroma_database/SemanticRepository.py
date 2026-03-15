@@ -13,15 +13,17 @@ class SemanticRepository(ISemanticRepository):
         """Initialize the semantic repository."""
         self.collection = None
         if connect:
-            chromadb = self._chromadb()
-            embedding_functions = self._embedding_functions()
+            api_key = settings.llm_settings.api_key
+            if api_key is None or api_key == "":
+                function = embedding_functions.DefaultEmbeddingFunction()
+            else:
+                function = embedding_functions.OpenAIEmbeddingFunction(
+                    api_key=settings.llm_settings.api_key,
+                    model_name="text-embedding-3-small"
+                )
             self.collection = self.get_chroma_client().get_collection(
                 name=namedb,
-<<<<<<< Updated upstream
-                embedding_function=embedding_functions.DefaultEmbeddingFunction()
-=======
-                embedding_function=embedding_functions.DefaultEmbeddingFunction(),
->>>>>>> Stashed changes
+                embedding_function=function
             )
 
     @staticmethod

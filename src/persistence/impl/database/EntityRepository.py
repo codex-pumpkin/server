@@ -387,6 +387,7 @@ class EntityRepository(IEntityRepository):
                 response=message.response,
                 graph=message.graph,
                 generation_ms=message.generation_millis,
+                simulation_result=message.simulation_result,
                 conversation_id=message.conversation_id
             )
             session.add(orm)
