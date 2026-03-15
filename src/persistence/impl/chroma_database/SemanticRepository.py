@@ -17,12 +17,17 @@ class SemanticRepository(ISemanticRepository):
     def __init__(self, namedb: str="SPICE_Docs", connect: bool=True) -> None:
         """Initialize the instance."""
         if connect:
-            self.collection = self.get_chroma_client().get_collection(
-                name=namedb,
-                embedding_function=embedding_functions.OpenAIEmbeddingFunction(
+            api_key = settings.llm_settings.api_key
+            if api_key is None:
+                function = embedding_functions.DefaultEmbeddingFunction();
+            else:
+                function = embedding_functions.OpenAIEmbeddingFunction(
                     api_key=settings.llm_settings.api_key,
                     model_name="text-embedding-3-small"
                 )
+            self.collection = self.get_chroma_client().get_collection(
+                name=namedb,
+                embedding_function=function
             )
 
     @staticmethod
