@@ -1,11 +1,10 @@
 import datetime
-import logging
 import time
 import uuid
 from pydantic import Field
 import re
 import json
-from typing import Optional
+from typing import Dict, Optional
 
 from src.core.dtos import (
     TokenModel,

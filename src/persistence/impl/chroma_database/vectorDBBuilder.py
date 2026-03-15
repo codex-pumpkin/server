@@ -221,14 +221,19 @@ def build_vector_db(
         client.delete_collection(namedb)
     except Exception:
         pass
- 
-    collection = client.get_or_create_collection(
-        name=namedb,
-        embedding_function=embedding_functions.OpenAIEmbeddingFunction(
+    
+    api_key = settings.llm_settings.api_key
+    if api_key is None:
+        function = embedding_functions.DefaultEmbeddingFunction();
+    else:
+        function = embedding_functions.OpenAIEmbeddingFunction(
             api_key=settings.llm_settings.api_key,
             model_name="text-embedding-3-small"
-        ),
-        metadata={"hnsw:space": "cosine"},  
+        )
+    collection = client.get_or_create_collection(
+        name=namedb,
+        embedding_function=function,
+        metadata={"hnsw:space": "cosine"},
     )
  
     docs = [e[0] for e in collection_entries]
