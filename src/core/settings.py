@@ -152,18 +152,18 @@ class Settings(BaseModel):
 load_dotenv()
 
 mail_settings = MailSettings(
-    smtp_server=os.getenv("APP_MAIL_SMTP_SERVER"),
-    port=os.getenv("APP_MAIL_SMTP_PORT"),
-    app_mail=os.getenv("APP_MAIL"),
-    password=os.getenv("MAIL_PASSWORD"),
+    smtp_server=os.getenv("APP_MAIL_SMTP_SERVER", "smtp.example.com"),
+    port=os.getenv("APP_MAIL_SMTP_PORT", "465"),
+    app_mail=os.getenv("APP_MAIL", "mail@example.com"),
+    password=os.getenv("MAIL_PASSWORD", "password"),
     logo="https://avatars.githubusercontent.com/u/246187360?s=400&u=5ffccaf72b3fb7f855e275fabf1ab438fded4a0a&v=4",
-    client_base_url=os.getenv("CLIENT_BASE_URL"),
-    verification_required=not (os.getenv("EMAIL_VERIFICATION_REQUIRED").lower() == "false")
+    client_base_url=os.getenv("CLIENT_BASE_URL", ""),
+    verification_required=not (os.getenv("EMAIL_VERIFICATION_REQUIRED", "true").lower() == "false")
 )
 
 jwt_settings = JWTSettings(
     algorithm="HS256",
-    secret_key=os.getenv("JWT_SECRET"),
+    secret_key=os.getenv("JWT_SECRET", ""),
     expire_time=15
 )
 
@@ -172,21 +172,21 @@ refresh_settings = RefreshSettings(
 )
 
 llm_settings = LLMSettings(
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=os.getenv("OPENAI_API_KEY", ""),
     num_of_regenerations=1,
 )
 
 google_settings = GoogleAuthSettings(
-    client_id=os.getenv("CLIENT_ID"),
+    client_id=os.getenv("CLIENT_ID", ""),
     token_url="https://oauth2.googleapis.com/token",
-    client_secret=os.getenv("CLIENT_SECRET"),
+    client_secret=os.getenv("CLIENT_SECRET", ""),
     redirect_uri="http://localhost:8000/auth/google/callback",
     url="https://accounts.google.com/o/oauth2/auth?",
     user_info_url="https://www.googleapis.com/oauth2/v3/userinfo"
 )
 
 database_settings = DatabaseSettings(
-    url=os.getenv("DATABASE_URL")
+    url=os.getenv("DATABASE_URL", "postgresql://example.com/codex")
 )
 
 pictures_settings = PicturesSettings(
@@ -194,16 +194,16 @@ pictures_settings = PicturesSettings(
 )
 
 chroma_settings = ChromaSettings(
-    host=os.getenv("CHROMA_HOST"),
-    port=os.getenv("CHROMA_PORT")
+    host=os.getenv("CHROMA_HOST", "localhost"),
+    port=os.getenv("CHROMA_PORT", "1234")
 )
 
 admin_settings = AdminSettings(
-    email=os.getenv("ADMIN_EMAIL"),
-    username=os.getenv("ADMIN_USERNAME"),
-    password=os.getenv("ADMIN_PASSWORD")
+    email=os.getenv("ADMIN_EMAIL", "admin@example.com"),
+    username=os.getenv("ADMIN_USERNAME", "admin"),
+    password=os.getenv("ADMIN_PASSWORD", "admin")
 )
-    
+
 settings = Settings(
     mail_settings=mail_settings,
     jwt_settings=jwt_settings,
