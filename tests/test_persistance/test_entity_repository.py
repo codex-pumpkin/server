@@ -835,10 +835,17 @@ async def test_delete_last_message_logic(async_session_factory_fixture):
 
     # Add two messages
     for i in ["First", "Last"]:
-        await repo.add_message(chat_id, Message(
-            conversation_id=chat_id, message=i,
-            generation_millis=5, response="ok", graph="{}"
-        ))
+        await repo.add_message(
+            chat_id,
+            Message(
+                conversation_id=chat_id,
+                message=i,
+                generation_millis=5,
+                response="ok",
+                graph="{}",
+                simulation_result="{}"
+            )
+        )
 
     # Action: Delete last
     success = await repo.delete_last_message(chat_id)
@@ -1103,6 +1110,7 @@ async def create_message(async_session_factory_fixture, conversation_id):
             prompt="hi",
             response="hello",
             graph="{}",
+            simulation_result="{}",
             generation_ms=10,
             conversation_id=conversation_id
         )
