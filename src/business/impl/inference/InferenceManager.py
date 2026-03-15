@@ -35,6 +35,13 @@ from uuid import UUID
 
 class InferenceManager(IInferenceManager):
 
+    @staticmethod
+    def _split_generation_result(result: str | Tuple[str, Optional[str]]) -> Tuple[str, Optional[str]]:
+        """Normalize LLM generation output to a `(code, simulation_result)` tuple."""
+        if isinstance(result, tuple):
+            return result
+        return result, None
+
     async def get_conversations_by_user(self, token_jwt: TokenModel) -> List[ConversationResponse]:
         """
         Retrieve all conversations belonging to the authenticated user.
@@ -187,13 +194,14 @@ class InferenceManager(IInferenceManager):
         model = await repo.get_model(request.llm_model_config_id)
 
         start = time.monotonic()
-        result, simulation_result = await self._get_llm_response_and_validate(
+        generation_result = await self._get_llm_response_and_validate(
             user_input=request.message,
             conversation_history=[],
             api_key=api_key,
             model=model.model_name,
             llm_url=model.api_url
         )
+        result, simulation_result = self._split_generation_result(generation_result)
         end = time.monotonic()
         chat_id = uuid.uuid4()
 
@@ -350,13 +358,14 @@ class InferenceManager(IInferenceManager):
         if remove_last:
             messages = messages[:-1]
         start = time.monotonic()
-        result, simulation_result = await self._get_llm_response_and_validate(
+        generation_result = await self._get_llm_response_and_validate(
             user_input=message_request.message,
             conversation_history=messages,
             api_key=model.api_key,
             model=model.model_name,
             llm_url=model.api_url
         )
+        result, simulation_result = self._split_generation_result(generation_result)
         parsed_sim_result = self._parse_ngspice_output(simulation_result) if simulation_result else "No simulation result"
         graph = await self._get_graph_representation(result)
         
