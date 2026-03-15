@@ -419,3 +419,63 @@ async def test_clean_markdown_and_generate_name():
     assert await manager._clean_markdown("```spice\nR1 1 0 1k\n```") == "R1 1 0 1k"
     assert await manager._clean_markdown("plain") == "plain"
     assert await manager._generate_conversation_name("* My Circuit\nR1 1 0 1k") == "My Circuit"
+
+
+@pytest.mark.asyncio
+async def test_get_graph_representation_returns_none_on_failure(monkeypatch):
+    graph_generator = AsyncMock()
+    graph_generator.gen_graph.side_effect = RuntimeError("bad graph")
+
+    async def fake_get_graph_generator(cls):
+        return graph_generator
+
+    monkeypatch.setattr(PersistenceFactory, "get_graph_generator", classmethod(fake_get_graph_generator))
+
+    assert await InferenceManager()._get_graph_representation("code") is None
+
+
+@pytest.mark.asyncio
+async def test_get_llm_response_and_validate_returns_first_valid_result(monkeypatch):
+    prompt_manager = AsyncMock()
+    prompt_manager.retrieve_context.return_value = "docs"
+    prompt_manager.get_conversation_context.return_value = "history"
+    validator = AsyncMock()
+    validator.validate_code.return_value = ValidationResult(isValid=True, exitCode=0, rawOutput="ok")
+    ai_client = AsyncMock()
+    ai_client.get_response.return_value = "```spice\nvalid code\n```"
+
+    async def fake_get_prompt_manager(cls):
+        return prompt_manager
+
+    async def fake_get_code_validator(cls):
+        return validator
+
+    async def fake_get_ai_client(cls):
+        return ai_client
+
+    monkeypatch.setattr(BusinessFactory, "get_prompt_manager", classmethod(fake_get_prompt_manager))
+    monkeypatch.setattr(PersistenceFactory, "get_code_validator", classmethod(fake_get_code_validator))
+    monkeypatch.setattr(PersistenceFactory, "get_ai_client", classmethod(fake_get_ai_client))
+
+    result = await InferenceManager()._get_llm_response_and_validate("question", [], "key", "model", "http://llm")
+
+    assert result == ("valid code", "ok")
+    ai_client.regenerate.assert_not_called()
+
+
+def test_parse_ngspice_output_returns_json_and_none():
+    manager = InferenceManager()
+    raw = "\n".join(
+        [
+            "Index   time    v(out)   i(v1)",
+            "-------------------------------",
+            "0 0.0 1.0 0.5",
+            "1 1.0 2.0 0.4",
+        ]
+    )
+
+    parsed = manager._parse_ngspice_output(raw)
+
+    assert parsed is not None
+    assert "transient" in parsed
+    assert manager._parse_ngspice_output("no useful data") is None

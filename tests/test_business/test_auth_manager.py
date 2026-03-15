@@ -22,7 +22,7 @@ from src.core.dtos import (
     SignupRequest,
     TokenInfo,
 )
-from src.core.exceptions import AuthError, VerificationError
+from src.core.exceptions import AuthError, NotFoundError, VerificationError
 from src.persistence import PersistenceFactory
 
 
@@ -163,6 +163,29 @@ def test_refresh_access_token_rejects_wrong_token_type(monkeypatch):
         asyncio.run(manager.refresh_access_token(request))
 
 
+def test_refresh_access_token_raises_when_token_missing(monkeypatch):
+    repo = AsyncMock()
+    repo.get_token.return_value = None
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(NotFoundError):
+        asyncio.run(manager.refresh_access_token(RefreshRequest(refresh_token=uuid.uuid4())))
+
+
+def test_refresh_access_token_rejects_expired_token(monkeypatch):
+    repo = AsyncMock()
+    expired = _token_info(expires_delta_minutes=-1)
+    repo.get_token.return_value = expired
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(AuthError):
+        asyncio.run(manager.refresh_access_token(RefreshRequest(refresh_token=expired.id)))
+
+
 def test_verify_email_token_invalid_type_raises(monkeypatch):
     """Test verify email token invalid type raises."""
     repo = AsyncMock()
@@ -175,6 +198,31 @@ def test_verify_email_token_invalid_type_raises(monkeypatch):
 
     with pytest.raises(VerificationError):
         asyncio.run(manager.verify_email_token(request))
+
+
+def test_verify_email_token_success_invalidates_and_verifies(monkeypatch):
+    repo = AsyncMock()
+    token = _token_info(token_type="email")
+    repo.get_token.return_value = token
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+    asyncio.run(manager.verify_email_token(EmailVerificationSubmitRequest(verification_token=token.id)))
+
+    repo.invalidate_token.assert_awaited_once_with(str(token.id))
+    repo.verify_user.assert_awaited_once_with(str(token.user_id))
+
+
+def test_verify_email_token_rejects_expired(monkeypatch):
+    repo = AsyncMock()
+    token = _token_info(token_type="email", expires_delta_minutes=-1)
+    repo.get_token.return_value = token
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(VerificationError):
+        asyncio.run(manager.verify_email_token(EmailVerificationSubmitRequest(verification_token=token.id)))
 
 
 def test_initiate_password_recovery_sends_mail(monkeypatch):
@@ -196,6 +244,17 @@ def test_initiate_password_recovery_sends_mail(monkeypatch):
     mail_sender.send_password_reset_email.assert_awaited_once_with(user.email, str(token.id))
 
 
+def test_initiate_password_recovery_raises_when_email_missing(monkeypatch):
+    repo = AsyncMock()
+    repo.get_user_by_email.return_value = None
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(AuthError):
+        asyncio.run(manager.initiate_password_recovery(PasswordResetRequestRequest(email="missing@example.com")))
+
+
 def test_complete_password_recovery_changes_password(monkeypatch):
     """Test complete password recovery changes password."""
     repo = AsyncMock()
@@ -209,6 +268,29 @@ def test_complete_password_recovery_changes_password(monkeypatch):
 
     repo.invalidate_token.assert_awaited_once_with(str(token.id))
     repo.change_password.assert_awaited_once_with(str(token.user_id), "new-secret")
+
+
+def test_complete_password_recovery_raises_when_token_missing(monkeypatch):
+    repo = AsyncMock()
+    repo.get_token.return_value = None
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(NotFoundError):
+        asyncio.run(manager.complete_password_recovery(PasswordResetSubmitRequest(reset_token="missing", new_password="new-secret")))
+
+
+def test_complete_password_recovery_rejects_invalid_token(monkeypatch):
+    repo = AsyncMock()
+    token = _token_info(token_type="password", valid=False)
+    repo.get_token.return_value = token
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(AuthError):
+        asyncio.run(manager.complete_password_recovery(PasswordResetSubmitRequest(reset_token=str(token.id), new_password="new-secret")))
 
 
 def test_register_creates_user_and_sends_verification(monkeypatch):
@@ -226,4 +308,72 @@ def test_register_creates_user_and_sends_verification(monkeypatch):
 
     repo.create_user.assert_awaited_once_with(request)
     manager.generate_email_verification.assert_awaited_once_with(user.id, user.email)
+
+
+def test_generate_email_verification_creates_token_and_sends_mail(monkeypatch):
+    repo = AsyncMock()
+    mail_sender = AsyncMock()
+    token = _token_info(token_type="email")
+    repo.create_token.return_value = token
+    _patch_repo(monkeypatch, repo)
+    _patch_mail_sender(monkeypatch, mail_sender)
+
+    manager = BasicAuthManager()
+    asyncio.run(manager.generate_email_verification(token.user_id, "user@example.com"))
+
+    repo.create_token.assert_awaited_once_with(str(token.user_id), "email")
+    mail_sender.send_confirmation_email.assert_awaited_once_with("user@example.com", str(token.id))
+
+
+def test_user_logout_raises_when_invalidate_fails(monkeypatch):
+    repo = AsyncMock()
+    repo.invalidate_token.return_value = False
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+
+    with pytest.raises(AuthError):
+        asyncio.run(manager.user_logout(uuid.uuid4()))
+
+
+def test_google_callback_existing_user_invalidates_old_tokens(monkeypatch):
+    repo = AsyncMock()
+    user = _user_dto()
+    repo.get_user_by_email.return_value = user
+    _patch_repo(monkeypatch, repo)
+
+    manager = BasicAuthManager()
+    manager._generate_tokens_pair = AsyncMock(return_value=SimpleNamespace(access_token="a", refresh_token="b"))
+
+    result = asyncio.run(manager.google_callback(user.username, user.email, "pic"))
+
+    assert result.refresh_token == "b"
+    repo.verify_user.assert_awaited_once_with(str(user.id))
+    repo.invalidate_all_refresh_tokens.assert_awaited_once_with(user_id=str(user.id))
+
+
+def test_google_callback_creates_user_with_incremented_username(monkeypatch):
+    repo = AsyncMock()
+    mail_sender = AsyncMock()
+    created_user = _user_dto()
+    repo.get_user_by_email.return_value = None
+    repo.is_username_taken.side_effect = [True, False]
+    repo.create_user.return_value = created_user
+    _patch_repo(monkeypatch, repo)
+    _patch_mail_sender(monkeypatch, mail_sender)
+
+    manager = BasicAuthManager()
+    manager._generate_password = lambda: "temp-pass"
+    manager._generate_tokens_pair = AsyncMock(return_value=SimpleNamespace(access_token="a", refresh_token="b"))
+
+    asyncio.run(manager.google_callback("tester", created_user.email, "pic"))
+
+    created_request = repo.create_user.await_args.kwargs["user"]
+    assert created_request.username == "tester1"
+    assert created_request.password == "temp-pass"
+    assert repo.create_user.await_args.kwargs["verified"] is True
+    mail_sender.send_temporary_password_email.assert_awaited_once_with(
+        to_email=created_user.email,
+        password="temp-pass",
+    )
 
