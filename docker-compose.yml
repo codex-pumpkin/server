@@ -21,6 +21,13 @@ services:
     volumes:
       - ./data/chroma:/data
 
+  mock-llm:
+    build:
+      context: ./mock-llm
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+
   server:
     image: codex/server
     depends_on:

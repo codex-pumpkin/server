@@ -3,3 +3,4 @@ Dockerfile
 database.db
 tests
 data
+mock-llm
