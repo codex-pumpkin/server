@@ -468,79 +468,134 @@ class InferenceManager(IInferenceManager):
         return llm_response.strip().splitlines()[0][2:]
 
 
-    def _parse_ngspice_output(self, raw: str) -> Optional[str]:
-        lines = raw.splitlines()
-
-        header_pattern = re.compile(r"^\s*Index\s+")
-        separator_pattern = re.compile(r"^-{5,}")
-        data_pattern = re.compile(r"^\s*\d+\s")
-
-        x_axis_name = None
-        x_values: List[float] = []
-
-        variables: Dict[str, List[float]] = {}
-
-        i = 0
-        while i < len(lines):
-            line = lines[i]
-
-            if header_pattern.match(line):
-                headers = re.split(r"\s+", line.strip())
-
-                if len(headers) < 3:
+    def _parse_ngspice_output(self, raw: str) -> str:
+        """
+        Parse raw ngspice text output into a compact JSON string suitable for the frontend.
+    
+        Based on a line-by-line approach. Handles:
+        - Transient/DC: single block, all variable columns per row
+        - AC: one block per variable (each starting at Index 0)
+        - Page-break repeated headers (index resets mid-table)
+    
+        @param raw (str): Raw stdout from ngspice.
+        @return str: JSON string with structured simulation data, or "" if parsing fails.
+        """
+        try:
+            analysis_match = re.search(
+                r'\b(Transient Analysis|AC Analysis|DC Transfer Curve|DC transfer characteristics)\b',
+                raw, re.IGNORECASE
+            )
+            analysis_type = "transient"
+            if analysis_match:
+                t = analysis_match.group(1).lower()
+                if "ac" in t:
+                    analysis_type = "ac"
+                elif "dc" in t:
+                    analysis_type = "dc"
+    
+            lines = raw.splitlines()
+    
+            header_pattern    = re.compile(r"^\s*Index\s+")
+            separator_pattern = re.compile(r"^-{5,}")
+            data_pattern      = re.compile(r"^\s*\d+\t")  
+    
+            x_axis_name: Optional[str] = None
+            x_values: List[float] = []
+            variables: Dict[str, List[float]] = {}
+    
+            collected_vars_in_current_block: List[str] = []
+            current_block_x_collected = False
+    
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+    
+                if header_pattern.match(line):
+                    headers = re.split(r"\s+", line.strip())
+    
+                    if len(headers) < 3:
+                        i += 1
+                        continue
+    
+                    axis_name = headers[1]
+                    var_names = headers[2:]
+    
+                    if x_axis_name is None:
+                        x_axis_name = axis_name
+    
+                    is_new_block = any(name not in variables for name in var_names)
+                    current_block_x_collected = not is_new_block  
+    
+                    for name in var_names:
+                        if name not in variables:
+                            variables[name] = []
+    
+                    collected_vars_in_current_block = var_names
+    
                     i += 1
+    
+                    if i < len(lines) and separator_pattern.match(lines[i]):
+                        i += 1
+    
+                    while i < len(lines) and data_pattern.match(lines[i]):
+                        parts = lines[i].strip().split('\t')
+    
+                        try:
+                            idx = int(parts[0])
+                            t   = float(parts[1])
+                        except (IndexError, ValueError):
+                            i += 1
+                            continue
+    
+                        if not current_block_x_collected and len(x_values) <= idx:
+                            x_values.append(t)
+    
+                        for j, name in enumerate(collected_vars_in_current_block):
+                            try:
+                                val = float(parts[2 + j])
+                            except (IndexError, ValueError):
+                                val = 0.0
+                            if is_new_block or len(variables[name]) <= idx:
+                                variables[name].append(val)
+    
+                        i += 1
+    
                     continue
-
-                axis_name = headers[1]
-                var_names = headers[2:]
-
-                if x_axis_name is None:
-                    x_axis_name = axis_name
-
-                for name in var_names:
-                    if name not in variables:
-                        variables[name] = []
-
+    
                 i += 1
-
-                if i < len(lines) and separator_pattern.match(lines[i]):
-                    i += 1
-
-                while i < len(lines) and data_pattern.match(lines[i]):
-                    parts = re.split(r"\s+", lines[i].strip())
-
-                    idx = int(parts[0])
-                    t = float(parts[1])
-
-                    if len(x_values) <= idx:
-                        x_values.append(t)
-
-                    for j, name in enumerate(var_names):
-                        if 2 + j < len(parts):
-                            variables[name].append(float(parts[2 + j]))
-
-                    i += 1
-
-                continue
-
-            i += 1
-
-        if not x_values or not variables:
-            return None
-
-        result = {
-            "type": "transient",
-            "x_axis": {
-                "name": x_axis_name,
-                "values": x_values,
-            },
-            "variables": [
-                {"name": name, "values": values}
-                for name, values in variables.items()
-            ],
-        }
-
-        return json.dumps(result)
+    
+            if not x_values or not variables:
+                return ""
+    
+            #Downsample to max 300 points 
+            total = len(x_values)
+            max_points = 300
+            if total > max_points:
+                step = total / max_points
+                indices = [int(i * step) for i in range(max_points)]
+                indices[-1] = total - 1
+                x_values = [x_values[i] for i in indices]
+                variables = {
+                    name: [vals[i] for i in indices if i < len(vals)]
+                    for name, vals in variables.items()
+                }
+    
+            result = {
+                "type": analysis_type,
+                "x_axis": {
+                    "name": x_axis_name,
+                    "values": x_values,
+                },
+                "variables": [
+                    {"name": name, "values": vals}
+                    for name, vals in variables.items()
+                ],
+            }
+    
+            return json.dumps(result, separators=(',', ':'))
+    
+        except Exception:
+            return ""
 
 
 

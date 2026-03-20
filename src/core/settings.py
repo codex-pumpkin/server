@@ -69,7 +69,7 @@ class RefreshSettings(BaseModel):
 
     @param expire_time (int): Refresh-token expiry time in minutes.
     """
-    expire_time:int
+    expire_time:int    
 
 class LLMSettings(BaseModel):
     """
@@ -119,6 +119,8 @@ class DatabaseSettings(BaseModel):
 class ChromaSettings(BaseModel):
     host: str
     port: int
+    chunk_size: int
+    chunk_overlap: int
     
 class PicturesSettings(BaseModel):
     """
@@ -153,6 +155,7 @@ class Settings(BaseModel):
     pictures_settings: PicturesSettings
     chroma_settings: ChromaSettings
     admin_settings: AdminSettings
+    
 
 load_dotenv()
 
@@ -200,7 +203,9 @@ pictures_settings = PicturesSettings(
 
 chroma_settings = ChromaSettings(
     host=getenv("CHROMA_HOST", "localhost"),
-    port=getenv("CHROMA_PORT", "8000")
+    port=getenv("CHROMA_PORT", "8000"),
+    chunk_size= 400,
+    chunk_overlap= 80,
 )
 
 admin_settings = AdminSettings(

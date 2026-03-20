@@ -9,8 +9,8 @@ from chromadb.utils import embedding_functions
  
 from src.core import settings
  
-CHUNK_MAX_TOKENS = 400
-CHUNK_OVERLAP_TOKENS = 80
+CHUNK_MAX_TOKENS = settings.chroma_settings.chunk_size
+CHUNK_OVERLAP_TOKENS = settings.chroma_settings.chunk_overlap
  
 enc = tiktoken.get_encoding("cl100k_base")
  
