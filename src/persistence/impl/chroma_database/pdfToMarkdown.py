@@ -1,8 +1,10 @@
-import pymupdf4llm
+import opendataloader_pdf
 import pymupdf
 import re
+import tempfile
 from pathlib import Path
 from typing import Union
+
 
 def clean_ocr_text(text: str) -> str:
     """
@@ -34,7 +36,7 @@ def clean_ocr_text(text: str) -> str:
 def extract_toc(pdf_path: Path) -> list[dict]:
     """Extract table of contents entries from PDF."""
     doc = pymupdf.open(str(pdf_path))
-    toc = doc.get_toc()  # [[level, title, page], ...]
+    toc = doc.get_toc()
     doc.close()
     return [{"level": lvl, "title": title, "page": pg} for lvl, title, pg in toc]
 
@@ -68,35 +70,51 @@ def convert_pdf_to_markdown(source: Union[Path, str], output: Union[Path, str]) 
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
 
-    for pdf_file in source.glob("*.pdf"):
-        name = pdf_file.stem
-        md_path = output / f"{name}.md"
+    pdf_files = list(source.glob("*.pdf"))
+    if not pdf_files:
+        return
 
-        toc = extract_toc(pdf_file)
-        doc = pymupdf.open(str(pdf_file))
-        parts = []
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
 
-        for page_num in range(len(doc)):
-            page_md = pymupdf4llm.to_markdown(str(pdf_file), pages=[page_num])
-            page_md = clean_ocr_text(page_md)
+        opendataloader_pdf.convert(
+            input_path=[str(f) for f in pdf_files],
+            output_dir=str(tmp_path),
+            format="markdown",
+        )
 
-            if not page_md.strip():
+        for pdf_file in pdf_files:
+            name = pdf_file.stem
+            md_path = output / f"{name}.md"
+            raw_md_path = tmp_path / f"{name}.md"
+
+            if not raw_md_path.exists():
                 continue
 
-            chapter, section = get_section_for_page(page_num, toc)
+            raw_markdown = raw_md_path.read_text(encoding="utf-8")
+            toc = extract_toc(pdf_file)
 
-            # Metadata marker — used by vectorDBBuilder for heading-prefixed chunks
-            marker = (
-                f"\n<!-- PAGE:{page_num + 1} | "
-                f"CHAPTER:{chapter} | "
-                f"SECTION:{section} -->\n"
-            )
-            parts.append(marker + page_md)
+            page_separator = re.compile(r'\f|(?:^---\s*$)', re.MULTILINE)
+            pages = page_separator.split(raw_markdown)
 
-        doc.close()
+            parts = []
+            for page_num, page_content in enumerate(pages):
+                page_content = clean_ocr_text(page_content)
 
-        full_md = "\n".join(parts)
-        md_path.write_text(full_md, encoding="utf-8")
+                if not page_content.strip():
+                    continue
+
+                chapter, section = get_section_for_page(page_num, toc)
+
+                marker = (
+                    f"\n<!-- PAGE:{page_num + 1} | "
+                    f"CHAPTER:{chapter} | "
+                    f"SECTION:{section} -->\n"
+                )
+                parts.append(marker + page_content)
+
+            full_md = "\n".join(parts)
+            md_path.write_text(full_md, encoding="utf-8")
 
 
 def main() -> None:
