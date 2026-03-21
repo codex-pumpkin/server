@@ -8,6 +8,10 @@ RUN apt update && apt install -y --no-install-recommends \
     ngspice \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 RUN python -m pip install --upgrade pip

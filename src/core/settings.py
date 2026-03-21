@@ -121,6 +121,7 @@ class ChromaSettings(BaseModel):
     port: int
     chunk_size: int
     chunk_overlap: int
+    num_of_chunks: int
     
 class PicturesSettings(BaseModel):
     """
@@ -204,8 +205,9 @@ pictures_settings = PicturesSettings(
 chroma_settings = ChromaSettings(
     host=getenv("CHROMA_HOST", "localhost"),
     port=getenv("CHROMA_PORT", "8000"),
-    chunk_size= 400,
-    chunk_overlap= 80,
+    chunk_size= 500,
+    chunk_overlap= 100,
+    num_of_chunks= 2,
 )
 
 admin_settings = AdminSettings(
