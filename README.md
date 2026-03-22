@@ -92,7 +92,7 @@ An example docker-compose configuration [is provided](/docker-compose.yml).
 
 ### Volumes
 The following directories are used by the container:
-- `/app/docs`: Input directory for the PDF-files used as an input for the RAG-system
+- `/app/docs`: Input directory for the PDF-files used as an input for the RAG-system. This directory **must** at all times contain at least one PDF-File with text-content. Otherwise, the server will immediately shutdown after startup. 
 - `/app/pictures`: Storage directory for profile-pictures of accounts
 
 They can be bound to volumes or local paths.
