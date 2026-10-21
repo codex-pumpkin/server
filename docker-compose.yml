@@ -39,19 +39,19 @@ services:
       - ./data/documents:/app/documents
       - ./data/pictures:/app/pictures
     environment:
-      APP_MAIL: noreply@cloud.bumiller.me
-      MAIL_PASSWORD: p69#%!ES%hPojT
-      APP_MAIL_SMTP_SERVER: smtp.ionos.de
-      APP_MAIL_SMTP_PORT: 465
-      JWT_SECRET: 253ff144-32aa-4571-9f63-bec0717e8257
-      CLIENT_SECRET: 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
-      CLIENT_ID: 1058438557934-nu1fvr71olv1ueb3ton9p05ad5cffvdo.apps.googleusercontent.com
-      CLIENT_BASE_URL: "http://localhost:8080"
+      APP_MAIL: <noreply-email>
+      MAIL_PASSWORD: <noreply-email-password>
+      APP_MAIL_SMTP_SERVER: <noreply-email-server>
+      APP_MAIL_SMTP_PORT: <noreply-email-smtp-port>
+      JWT_SECRET: <make-up-your-own>
+      CLIENT_SECRET: <google-client-id>
+      CLIENT_ID: <google-client-secret>
+      CLIENT_BASE_URL: <url-of-client>
       DATABASE_URL: "postgresql://codex_user:codex_password@db:5432/codex"
       CHROMA_PORT: 8000
       CHROMA_HOST: chroma
-      ADMIN_EMAIL: admin@example.com
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin
+      ADMIN_EMAIL: <admin-email>
+      ADMIN_USERNAME: <admin-username>
+      ADMIN_PASSWORD: <admin-password>
       OPENAI_API_KEY: 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
       EMAIL_VERIFICATION_REQUIRED: false
