@@ -53,5 +53,5 @@ services:
       ADMIN_EMAIL: <admin-email>
       ADMIN_USERNAME: <admin-username>
       ADMIN_PASSWORD: <admin-password>
-      OPENAI_API_KEY: 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
+      OPENAI_API_KEY: <openai-api-key>
       EMAIL_VERIFICATION_REQUIRED: false
